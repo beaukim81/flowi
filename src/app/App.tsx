@@ -62,12 +62,14 @@ const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] =
   { key: "shoesOff", label: "Schoenen uit", hint: "op hun plek" },
   { key: "unpackBag", label: "Tas uitpakken", hint: "na school" },
   { key: "drinkWater", label: "Water drinken", hint: "slokjes nemen" },
+  { key: "drinkCupKitchen", label: "Beker opruimen", hint: "beker naar keuken" },
   { key: "snack", label: "Snack eten", hint: "rustig aan tafel" },
-  { key: "outsidePlay", label: "Buiten spelen", hint: "tuin, lucht" },
+  { key: "outsidePlayGiraffe", label: "Buiten spelen", hint: "tuin, bal, bellen" },
   { key: "moveBreak", label: "Bewegen", hint: "springen, wiebelen" },
   { key: "homework", label: "Huiswerk", hint: "boek, potlood" },
   { key: "reading", label: "Lezen", hint: "boekje lezen" },
-  { key: "creative", label: "Knutselen", hint: "tekenen, maken" },
+  { key: "craftGiraffe", label: "Knutselen", hint: "plakken, maken" },
+  { key: "creative", label: "Tekenen", hint: "potlood, papier" },
   { key: "toysClean", label: "Speelgoed opruimen", hint: "mand, kamer" },
   { key: "roomClean", label: "Kamer opruimen", hint: "bed, spullen" },
   { key: "laundry", label: "Wasmand", hint: "vieze was" },
@@ -83,6 +85,7 @@ const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] =
   { key: "calmCard", label: "Rustkaart", hint: "kies rust" },
   { key: "breatheBed", label: "Ademen in bed", hint: "rustige adem" },
   { key: "dimLight", label: "Licht zachter", hint: "lampje dimmen" },
+  { key: "headphonesRest", label: "Koptelefoon", hint: "rust met geluid" },
   { key: "askHelp", label: "Vraag hulp", hint: "hand, ouder" },
   { key: "wallPush", label: "Duw tegen muur", hint: "stevig duwen" }
 ];
@@ -537,16 +540,17 @@ function DaySettingsPartPage() {
   const { dayPart = "ochtend" } = useParams();
   const part = dayPart as DayPart;
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
-  const { data: completions, reload: reloadCompletions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], [part]);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   const draggedTaskIdRef = useRef<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const dragHoldTimerRef = useRef<number | null>(null);
+  const dragReadyRef = useRef(false);
   const reorderingRef = useRef(false);
   const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
-  const complete = async (task: Task) => {
-    await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "done", completedAt: now() });
-    await reloadCompletions();
+  const deleteTask = async (task: Task) => {
+    await db.tasks.delete(task.id);
+    await db.taskCompletions.where("taskId").equals(task.id).delete();
     await reload();
   };
   const moveTask = async (sourceTaskId: string, targetTaskId: string) => {
@@ -576,15 +580,25 @@ function DaySettingsPartPage() {
     if (target.closest("button, a, input, textarea, select")) return;
     draggedTaskIdRef.current = taskId;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
-    setDraggedTaskId(taskId);
-    setDragOverTaskId(taskId);
+    dragReadyRef.current = false;
+    if (dragHoldTimerRef.current) window.clearTimeout(dragHoldTimerRef.current);
+    dragHoldTimerRef.current = window.setTimeout(() => {
+      dragReadyRef.current = true;
+      setDraggedTaskId(taskId);
+      setDragOverTaskId(taskId);
+    }, 520);
     event.currentTarget.setPointerCapture?.(event.pointerId);
   };
   const updateReorder = async (event: React.PointerEvent<HTMLDivElement>) => {
     const sourceTaskId = draggedTaskIdRef.current;
     const start = dragStartRef.current;
     if (!sourceTaskId || !start) return;
-    const movedEnough = Math.abs(event.clientY - start.y) > 12 || Math.abs(event.clientX - start.x) > 12;
+    const movedBeforeHold = Math.abs(event.clientY - start.y) > 10 || Math.abs(event.clientX - start.x) > 10;
+    if (!dragReadyRef.current) {
+      if (movedBeforeHold) finishReorder();
+      return;
+    }
+    const movedEnough = Math.abs(event.clientY - start.y) > 18 || Math.abs(event.clientX - start.x) > 18;
     if (!movedEnough) return;
     event.preventDefault();
     const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-reorder-task-id]");
@@ -594,6 +608,11 @@ function DaySettingsPartPage() {
     await moveTask(sourceTaskId, targetTaskId);
   };
   const finishReorder = () => {
+    if (dragHoldTimerRef.current) {
+      window.clearTimeout(dragHoldTimerRef.current);
+      dragHoldTimerRef.current = null;
+    }
+    dragReadyRef.current = false;
     draggedTaskIdRef.current = null;
     dragStartRef.current = null;
     setDraggedTaskId(null);
@@ -614,7 +633,7 @@ function DaySettingsPartPage() {
             onPointerCancel={finishReorder}
             className={`reorder-task-card ${draggedTaskId === task.id ? "is-dragging" : ""} ${dragOverTaskId === task.id && draggedTaskId !== task.id ? "is-drag-over" : ""}`}
           >
-            <TaskCard task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} onDone={() => complete(task)} onEdit={() => navigate(`/tasks/${task.id}/edit`)} editable />
+            <TaskCard task={task} done={false} onEdit={() => navigate(`/tasks/${task.id}/edit`)} onDelete={() => deleteTask(task)} editable />
           </div>
         ))}
       </div>
@@ -1189,31 +1208,46 @@ function AboutPage() {
   return (
     <>
       <PageHeader title="Over Flowi" subtitle="Voor ouders en verzorgers." />
-      <section className="rounded-[1.6rem] bg-white p-5 shadow-soft">
-        <h2 className="text-3xl font-black text-navy">Waarom Flowi?</h2>
-        <div className="mt-4 grid gap-3 text-base font-bold leading-7 text-navy/66">
-          <p>Flowi is gemaakt voor jonge kinderen die hulp kunnen gebruiken bij voelen, tot rust komen en kleine stappen zetten door de dag heen.</p>
-          <p>De app gebruikt grote plaatjes, eenvoudige keuzes en een vast giraffe-maatje. Zo hoeft een kind niet veel te lezen om toch iets te kunnen aangeven.</p>
-          <p>Flowi kan helpen bij emoties herkennen, kiezen wat nodig is, korte oefeningen doen en een dagplanning volgen. Een ouder stelt de dagindeling in; het kind kan vooral kijken, kiezen en afvinken.</p>
+      <section className="overflow-hidden rounded-[1.8rem] bg-gradient-to-b from-sky/18 via-white to-mint/12 p-5 shadow-soft">
+        <div className="grid grid-cols-[1fr_auto] items-end gap-3">
+          <div>
+            <h2 className="text-3xl font-black text-navy">Waarom Flowi?</h2>
+            <p className="mt-2 text-lg font-black leading-7 text-navy/62">Een rustige hulp voor jonge kinderen die snel vol zitten, vastlopen of extra structuur nodig hebben.</p>
+          </div>
+          <AvatarMascot emotion="rustig" size="small" showCaption={false} />
         </div>
       </section>
 
-      <section className="mt-4 rounded-[1.6rem] bg-white p-5 shadow-soft">
-        <h2 className="text-xl font-black text-navy">Groeiboom</h2>
-        <div className="mt-3 grid gap-3 text-base font-bold leading-7 text-navy/62">
-          <p>De groeiboom is een rustige visuele aanmoediging voor oefenen en reflectie. Het is geen scorebord voor goed gedrag.</p>
-          <p>Na een oefening of reflectie kan Flowi de boom water geven. Extra oefenen op dezelfde dag kan het zonnetje laten schijnen.</p>
-          <p>Taken afvinken staat los van de boom. Zo groeit de boom niet te snel en blijft hij gericht op emotieregulatie.</p>
-          <p>Elke week begint de boom visueel opnieuw klein. Oude gegevens blijven lokaal bewaard.</p>
+      <section className="mt-4 grid gap-3">
+        <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
+          <h3 className="text-xl font-black text-navy">Voor wie?</h3>
+          <p className="mt-2 text-lg font-bold leading-8 text-navy/64">Flowi is bedoeld voor kinderen die nog niet altijd kunnen zeggen wat ze voelen of nodig hebben.</p>
+        </div>
+        <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
+          <h3 className="text-xl font-black text-navy">Hoe helpt Flowi?</h3>
+          <p className="mt-2 text-lg font-bold leading-8 text-navy/64">Met grote plaatjes, eenvoudige keuzes en korte oefeningen. Zo kan een kind aanwijzen, kiezen en weer een klein stapje verder.</p>
+        </div>
+        <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
+          <h3 className="text-xl font-black text-navy">Wat doet de ouder?</h3>
+          <p className="mt-2 text-lg font-bold leading-8 text-navy/64">De ouder stelt de dagindeling in. Het kind ziet daarna vooral wat er komt en kan taken afvinken of hulp vragen.</p>
         </div>
       </section>
 
-      <section className="mt-4 rounded-[1.6rem] bg-white p-5 shadow-soft">
-        <h2 className="text-xl font-black text-navy">Gegevens en backup</h2>
-        <p className="mt-2 text-base font-bold leading-7 text-navy/62">Flowi gebruikt geen account en geen externe database. De gegevens staan lokaal op dit apparaat. Maak af en toe een backup als je Flowi op een telefoon gebruikt of gegevens later wilt terugzetten.</p>
+      <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
+        <h2 className="text-2xl font-black text-navy">Groeiboom</h2>
+        <div className="mt-3 grid gap-3 text-lg font-bold leading-8 text-navy/64">
+          <p>De groeiboom is een zachte aanmoediging. Het is geen scorebord.</p>
+          <p>Na oefenen of reflecteren kan Flowi de boom water geven. Extra momenten kunnen het zonnetje laten schijnen.</p>
+          <p>Taken afvinken staat los van de boom. Zo blijft groei gericht op oefenen met rust en gevoel.</p>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
+        <h2 className="text-2xl font-black text-navy">Gegevens en backup</h2>
+        <p className="mt-2 text-lg font-bold leading-8 text-navy/64">Flowi gebruikt geen account. Gegevens blijven op dit apparaat. Met een backup kun je ze later zelf terugzetten.</p>
         <div className="mt-4 grid gap-3">
           <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={20} />Backup maken</PrimaryButton>
-          <label className="grid min-h-14 cursor-pointer place-items-center rounded-2xl border border-lavender/20 bg-white px-5 text-lg font-black text-navy shadow-card"><icons.Upload className="mr-2 inline" size={20} />Backup terugzetten<input type="file" accept="application/json" className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
+          <label className="grid min-h-14 cursor-pointer place-items-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={20} />Backup terugzetten<input type="file" accept="application/json" className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
           {message ? <p className="font-black text-mint">{message}</p> : null}
         </div>
       </section>

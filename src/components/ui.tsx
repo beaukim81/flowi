@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, ChevronRight, Download, GripVertical, Heart, HelpCircle, Home, Leaf, MoreHorizontal, Pencil, Plus, Settings, Sparkles, Upload, UserRound } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Download, GripVertical, Heart, HelpCircle, Home, Leaf, MoreHorizontal, Pencil, Plus, Settings, Sparkles, Trash2, Upload, UserRound } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import type { Avatar, Emotion, EmotionType, Need, NeedType, Task } from "../types/schema";
@@ -234,7 +234,7 @@ export function DayPartCard({ title, progress, to }: { title: string; icon: stri
   );
 }
 
-export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit, editable = false, showDetails = true }: { task: Task; done: boolean; needsHelp?: boolean; onDone: () => void; onHelp?: () => void; onEdit?: () => void; editable?: boolean; showDetails?: boolean }) {
+export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit, onDelete, editable = false, showDetails = true }: { task: Task; done: boolean; needsHelp?: boolean; onDone?: () => void; onHelp?: () => void; onEdit?: () => void; onDelete?: () => void; editable?: boolean; showDetails?: boolean }) {
   return (
     <article className={`rounded-[1.6rem] border p-4 shadow-card ring-1 ${done ? "border-mint/35 bg-gradient-to-b from-white to-mint/10 ring-mint/12" : needsHelp ? "border-lavender/30 bg-gradient-to-b from-white to-lavender/8 ring-lavender/12" : "border-white/85 bg-white/94 ring-lavender/8"}`}>
       <div className="flex items-center gap-4">
@@ -249,16 +249,19 @@ export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit
         {onHelp ? <button aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-lilac/40 bg-white text-lavender">
           <HelpCircle size={27} />
         </button> : null}
-        <button aria-label={`${task.title} afvinken`} onClick={onDone} className={`grid h-14 w-14 place-items-center rounded-2xl border-2 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
+        {editable && onDelete ? <button aria-label={`${task.title} verwijderen`} onClick={onDelete} className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-coral/25 bg-coral/10 text-coral">
+          <Trash2 size={25} />
+        </button> : null}
+        {!editable && onDone ? <button aria-label={`${task.title} afvinken`} onClick={onDone} className={`grid h-14 w-14 place-items-center rounded-2xl border-2 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
           <Check size={28} />
-        </button>
+        </button> : null}
       </div>
-      {done ? (
+      {!editable && done ? (
         <div className="mt-3 flex items-center gap-2 rounded-2xl bg-mint/10 px-3 py-2.5 text-sm font-black text-mint">
           <Sparkles size={17} />
           <span>Gelukt vandaag</span>
         </div>
-      ) : needsHelp ? (
+      ) : !editable && needsHelp ? (
         <div className="mt-3 flex items-center gap-2 rounded-2xl bg-lavender/10 px-3 py-2.5 text-sm font-black text-lavender">
           <Sparkles size={17} />
           <span>Goed geprobeerd</span>

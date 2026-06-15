@@ -580,6 +580,20 @@ input, textarea, select {
   aspect-ratio: 15 / 16;
 }
 
+.task-art-outsidePlayGiraffe,
+.task-art-craftGiraffe,
+.task-art-drinkCupKitchen,
+.task-art-headphonesRest {
+  background-image: url("/assets/flowi-task-specific-sheet.png");
+  background-size: 200% 200%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-outsidePlayGiraffe { background-position: 0% 0%; }
+.task-art-craftGiraffe { background-position: 100% 0%; }
+.task-art-drinkCupKitchen { background-position: 0% 100%; }
+.task-art-headphonesRest { background-position: 100% 100%; }
+
 .task-art-makeBed,
 .task-art-drinkWater,
 .task-art-dishwasher { background-position: 0% 0%; }

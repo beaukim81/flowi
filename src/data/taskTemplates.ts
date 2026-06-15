@@ -44,7 +44,7 @@ const templates: TemplateSeed[] = [
   { title: "Beweegpauze", category: "Bewegen", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Spring 10 keer.", "Schud je armen.", "Adem uit."] },
   { title: "Huiswerk starten", category: "School", ageGroups: ["8-9", "10-12"], dayPart: "naSchool", steps: ["Leg spullen klaar.", "Doe één opdracht.", "Vraag hulp als nodig."] },
   { title: "Lezen", category: "School", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak een boek.", "Lees een stukje.", "Leg je boek terug."] },
-  { title: "Tekenen of knutselen", category: "Creatief", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak papier.", "Maak iets.", "Ruim op."] },
+  { title: "Knutselen", category: "Creatief", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak papier.", "Pak lijm of kleurtjes.", "Maak iets.", "Ruim op."] },
 
   { title: "Speelgoed opruimen", category: "Opruimen", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "avond", steps: ["Pak één ding.", "Leg het op zijn plek.", "Doe nog één ding."] },
   { title: "Kamer 5 minuten opruimen", category: "Opruimen", ageGroups: ["8-9", "10-12"], dayPart: "avond", steps: ["Zet timer.", "Ruim 5 minuten op.", "Stop als de timer gaat."] },
@@ -73,8 +73,7 @@ const templates: TemplateSeed[] = [
   { title: "Rustige plek kiezen", category: "Emotieregulatie", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "vrij", steps: ["Kies je rustige plek.", "Ga erheen.", "Adem zacht."] },
   { title: "Duw tegen de muur", category: "Emotieregulatie", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "vrij", steps: ["Zet voeten stevig.", "Duw 5 keer.", "Adem uit."] },
   { title: "Spring 10 keer", category: "Bewegen", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "vrij", steps: ["Sta stevig.", "Spring 10 keer.", "Voel je voeten."] },
-  { title: "Teken je gevoel", category: "Creatief", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "vrij", steps: ["Pak papier.", "Teken je gevoel.", "Laat zien of bewaar."] },
-  { title: "Drink water", category: "Eten & drinken", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "vrij", steps: ["Pak water.", "Neem 3 slokken.", "Klaar."] }
+  
 ];
 
 const iconFor = (title: string) => {
