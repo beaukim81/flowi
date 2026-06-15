@@ -30,6 +30,7 @@ const safeReturnPath = (value: string | null) => value?.startsWith("/") ? value 
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
+const clampTimerSeconds = (seconds: number) => Math.min(300, Math.max(60, Math.round(seconds / 60) * 60));
 const startOfWeek = () => {
   const date = new Date();
   const day = date.getDay() || 7;
@@ -246,7 +247,7 @@ function ActionPage() {
   const { actionId } = useParams();
   const { selectedEmotion, selectedNeed } = useCurrentFlow();
   const action = calmStrategies.find((strategy) => strategy.id === actionId) ?? chooseStrategy(selectedEmotion, selectedNeed);
-  const suggestedDuration = action.durationSeconds ?? 120;
+  const suggestedDuration = clampTimerSeconds(action.durationSeconds ?? 120);
   const [duration, setDuration] = useState(suggestedDuration);
   const [timerOpen, setTimerOpen] = useState(false);
   const [running, setRunning] = useState(false);
@@ -276,9 +277,8 @@ function ActionPage() {
     const rest = (seconds % 60).toString().padStart(2, "0");
     return `${minutes}:${rest}`;
   };
-  const durationOptions = [30, 60, 120, 180, 300];
   const setActionDuration = (seconds: number) => {
-    const next = Math.min(600, Math.max(20, seconds));
+    const next = clampTimerSeconds(seconds);
     setDuration(next);
     setRemaining(next);
     setRunning(false);
@@ -291,15 +291,13 @@ function ActionPage() {
       {timerOpen ? (
         <section className="mt-5 rounded-[1.55rem] bg-white/92 p-4 shadow-card">
           <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-lavender/10 text-4xl font-black text-lavender ring-8 ring-lavender/8">{formatTime(remaining)}</div>
-          <div className="mt-4 grid grid-cols-5 gap-2">
-            {durationOptions.map((seconds) => (
-              <button key={seconds} type="button" onClick={() => setActionDuration(seconds)} className={`timer-preset ${duration === seconds ? "active" : ""}`}>{seconds < 60 ? `${seconds}s` : `${seconds / 60}m`}</button>
-            ))}
-          </div>
-          <div className="mt-3 flex items-center justify-center gap-2">
-            <button aria-label="Korter" className="grid h-11 w-11 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setActionDuration(duration - 30)}><Minus size={18} /></button>
-            <span className="min-w-20 text-center font-black text-navy">{duration < 60 ? `${duration} sec` : `${Math.round(duration / 60)} min`}</span>
-            <button aria-label="Langer" className="grid h-11 w-11 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setActionDuration(duration + 30)}><Plus size={18} /></button>
+          <div className="timer-slider-card mt-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-black text-navy/55">Kort</span>
+              <span className="rounded-full bg-lavender/10 px-4 py-1.5 text-lg font-black text-lavender">{duration / 60} min</span>
+              <span className="text-sm font-black text-navy/55">Rustig</span>
+            </div>
+            <input aria-label="Timer tijd" className="timer-slider mt-4" type="range" min={1} max={5} step={1} value={duration / 60} onChange={(event) => setActionDuration(Number(event.target.value) * 60)} />
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
             <SecondaryButton onClick={() => { setRemaining(duration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
@@ -1027,7 +1025,7 @@ function PracticePage() {
 
   useEffect(() => {
     if (!activeExercise) return;
-    const nextDuration = activeExercise.durationSeconds ?? 90;
+    const nextDuration = clampTimerSeconds(activeExercise.durationSeconds ?? 90);
     setDuration(nextDuration);
     setRemaining(nextDuration);
     setRounds(activeExercise.defaultRounds ?? 3);
@@ -1049,14 +1047,11 @@ function PracticePage() {
   }, [running, remaining, activeExercise]);
 
   const setExerciseDuration = (value: number) => {
-    const min = activeExercise?.minSeconds ?? 20;
-    const max = activeExercise?.maxSeconds ?? 600;
-    const next = Math.min(max, Math.max(min, value));
+    const next = clampTimerSeconds(value);
     setDuration(next);
     setRemaining(next);
     setRunning(false);
   };
-  const durationOptions = [30, 60, 120, 180, 300];
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60).toString();
@@ -1086,18 +1081,13 @@ function PracticePage() {
             <span className="text-lg font-black">Timer</span>
             <button type="button" onClick={() => { setTimerEnabled((value) => !value); setRunning(false); }} className={`min-h-12 rounded-2xl px-5 text-base font-black ${timerEnabled ? "bg-lavender text-white" : "bg-lavender/10 text-lavender"}`}>{timerEnabled ? "Aan" : "Uit"}</button>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="font-black">Tijd</span>
-            <div className="flex items-center gap-2">
-              <button aria-label="Korter" className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setExerciseDuration(duration - 30)}><Minus size={18} /></button>
-              <span className="min-w-20 text-center font-black">{duration < 60 ? `${duration} sec` : `${Math.round(duration / 60)} min`}</span>
-              <button aria-label="Langer" className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setExerciseDuration(duration + 30)}><Plus size={18} /></button>
+          <div className="timer-slider-card">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-black text-navy/55">Kort</span>
+              <span className="rounded-full bg-lavender/10 px-4 py-1.5 text-lg font-black text-lavender">{duration / 60} min</span>
+              <span className="text-sm font-black text-navy/55">Rustig</span>
             </div>
-          </div>
-          <div className="grid grid-cols-5 gap-2">
-            {durationOptions.map((seconds) => (
-              <button key={seconds} type="button" onClick={() => { setTimerEnabled(true); setExerciseDuration(seconds); }} className={`timer-preset ${duration === seconds ? "active" : ""}`}>{seconds < 60 ? `${seconds}s` : `${seconds / 60}m`}</button>
-            ))}
+            <input aria-label="Timer tijd" className="timer-slider mt-4" type="range" min={1} max={5} step={1} value={duration / 60} onChange={(event) => { setTimerEnabled(true); setExerciseDuration(Number(event.target.value) * 60); }} />
           </div>
           <div className="flex items-center justify-between">
             <span className="font-black">Keer</span>
