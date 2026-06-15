@@ -169,6 +169,7 @@ function emotionForNeed(need: NeedType): EmotionType {
 function HomePage() {
   const navigate = useNavigate();
   const { data: profile } = useProfile();
+  const childName = profile?.name?.trim();
   return (
     <section className="phone-screen home-scene relative overflow-hidden px-5 pb-4 pt-5">
       <div className="cloud cloud-a" />
@@ -178,7 +179,7 @@ function HomePage() {
       <div className="home-content relative z-10">
         <div className="flowi-logo mb-1">Flowi<span>♥</span></div>
         <div className="home-copy">
-          <p className="text-[1.35rem] font-black text-lavender">Hoe is het in je lijf?</p>
+          <p className="text-[1.35rem] font-black text-lavender">{childName ? `Hoi ${childName}` : "Hoe is het in je lijf?"}</p>
           <p className="mt-3 text-sm font-bold leading-6 text-navy/62">Flowi helpt je voelen, kiezen en kleine stappen zetten die je goed doen.</p>
         </div>
         <div className="home-mascot-wrap relative" aria-label={`Flowi helpt ${profile?.name ?? "jou"}`}>
@@ -333,6 +334,8 @@ function ActionPage() {
 
 function HelpNowPage() {
   const navigate = useNavigate();
+  const { data: profile } = useProfile();
+  const childName = profile?.name?.trim();
   const fast = ["Ga naar je rustige plek", "Adem zacht", "Zeg: stop, ik heb hulp nodig", "Pak iets zachts"].map((title) => calmStrategies.find((strategy) => strategy.title === title)).filter(Boolean) as CalmStrategy[];
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
@@ -342,7 +345,7 @@ function HelpNowPage() {
         <div className="relative z-10 grid grid-cols-[1fr_auto] items-end gap-2">
           <div>
             <h2 className="text-2xl font-black text-navy">Flowi blijft bij je</h2>
-            <p className="mt-2 text-sm font-bold leading-6 text-navy/58">Je hoeft niet alles tegelijk. Kies wat nu kan.</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-navy/58">{childName ? `${childName}, je hoeft niet alles tegelijk. Kies wat nu kan.` : "Je hoeft niet alles tegelijk. Kies wat nu kan."}</p>
           </div>
           <AvatarMascot emotion="rustig" size="medium" />
         </div>
@@ -467,12 +470,14 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
 }
 
 function DayPage() {
+  const { data: profile } = useProfile();
   const { data: tasks } = useLiveData(() => db.tasks.where("childProfileId").equals("default-child").toArray(), [] as Task[], []);
   const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
+  const childName = profile?.name?.trim();
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Mijn dag" subtitle="Vink af wat klaar is." back={false} />
+      <PageHeader title={childName ? `${childName}'s dag` : "Mijn dag"} subtitle="Vink af wat klaar is." back={false} />
       <div className="grid gap-3">
         {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
           const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled);
@@ -488,10 +493,12 @@ function DayPage() {
 function DayPartPage() {
   const { dayPart = "ochtend" } = useParams();
   const part = dayPart as DayPart;
+  const { data: profile } = useProfile();
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
   const { data: completions, reload: reloadCompletions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], [part]);
   const [helpTask, setHelpTask] = useState<Task | null>(null);
   const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
+  const childName = profile?.name?.trim();
   const complete = async (task: Task) => {
     await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "done", completedAt: now() });
     await reloadCompletions();
@@ -505,7 +512,7 @@ function DayPartPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle="Alleen afvinken wat klaar is." />
+      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle={childName ? `Voor ${childName}: alleen afvinken wat klaar is.` : "Alleen afvinken wat klaar is."} />
       <div className="grid gap-3">
         {visibleTasks.length ? visibleTasks.map((task) => (
           <TaskCard key={task.id} task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} needsHelp={completions.some((completion) => completion.taskId === task.id && completion.status === "needsHelp")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} showDetails={false} />
@@ -1202,7 +1209,7 @@ function ParentsPage() {
     <>
       <PageHeader title="Voor ouders" subtitle="Alles blijft op dit apparaat bewaard." back={false} />
       <div className="grid gap-3">
-        <ParentCard icon={<SlidersHorizontal />} title="Profiel kind" text="Leeftijd aanpassen." to="/settings" />
+        <ParentCard icon={<SlidersHorizontal />} title="Profiel kind" text="Naam voor persoonlijke teksten." to="/settings" />
         <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day-settings" />
         <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken zoeken en toevoegen." to="/task-library" />
         <ParentCard icon={<Database />} title="Over Flowi & backup" text="Uitleg over de app en gegevens bewaren." to="/about" />
@@ -1214,14 +1221,19 @@ function ParentsPage() {
 
 function SettingsPage() {
   const { data: profile } = useProfile();
-  const [age, setAge] = useState(7);
-  useEffect(() => { if (profile) setAge(profile.age); }, [profile]);
-  const save = async () => { if (profile) await db.childProfiles.update(profile.id, { age, updatedAt: now() }); };
+  const [name, setName] = useState("");
+  useEffect(() => { if (profile) setName(profile.name); }, [profile]);
+  const save = async () => { if (profile) await db.childProfiles.update(profile.id, { name: name.trim() || "Flowi vriend", updatedAt: now() }); };
   return (
     <>
       <PageHeader title="Profiel kind" subtitle="Alleen wat nodig is." />
+      <section className="mb-4 rounded-[1.55rem] bg-white/94 p-4 shadow-card">
+        <h2 className="text-xl font-black text-navy">Waarom een naam?</h2>
+        <p className="mt-1.5 text-base leading-6 text-navy/68">Flowi gebruikt de naam alleen om de app persoonlijker te maken voor een kind dat kan lezen.</p>
+        <p className="mt-2 text-base leading-6 text-navy/68">Je ziet de naam terug op de homepage, bij Mijn dag en bij Help mij nu. Zo voelt Flowi meer alsof hij tegen het kind zelf praat.</p>
+      </section>
       <div className="grid gap-3 rounded-[1.6rem] bg-white p-4 shadow-soft">
-        <input aria-label="Leeftijd kind" type="number" min={4} max={9} value={age} onChange={(event) => setAge(Number(event.target.value))} placeholder="Leeftijd" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold placeholder:text-navy/32" />
+        <input aria-label="Naam kind" value={name} onChange={(event) => setName(event.target.value)} placeholder="Naam kind" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold placeholder:text-navy/32" />
         <PrimaryButton onClick={save}>Opslaan</PrimaryButton>
       </div>
       <button onClick={async () => { await db.delete(); location.reload(); }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white p-4 font-black text-coral shadow-card"><Trash2 size={18} /> Data resetten</button>
