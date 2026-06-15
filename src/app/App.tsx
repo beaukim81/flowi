@@ -267,7 +267,6 @@ function ActionPage() {
             <AvatarMascot emotion="inDeWar" size="small" showCaption={false} />
             <div>
               <h2 className="font-black text-navy">Vraag hulp</h2>
-              <p className="text-sm font-bold leading-5 text-navy/55">Laat dit scherm zien aan je ouder.</p>
             </div>
           </div>
           <div className="mt-3 grid gap-2">
