@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { BookOpen, CalendarDays, Database, HeartHandshake, Minus, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, SlidersHorizontal, Sparkles, Trash2 } from "lucide-react";
@@ -34,13 +34,47 @@ const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] =
   { key: "breakfast", label: "Eten", hint: "ontbijt, drinken" },
   { key: "teeth", label: "Tanden", hint: "poetsen, badkamer" },
   { key: "school", label: "School", hint: "tas, naar school" },
-  { key: "coat", label: "Jas/tas", hint: "ophangen, thuiskomen" },
   { key: "hands", label: "Wassen", hint: "handen, schoon" },
   { key: "rest", label: "Rust", hint: "pauze, rustig plekje" },
-  { key: "study", label: "Lezen", hint: "boek, huiswerk, tekenen" },
   { key: "shower", label: "Douchen", hint: "bad, douche" },
   { key: "pajamas", label: "Pyjama", hint: "avondroutine" },
-  { key: "sleep", label: "Slapen", hint: "bedtijd, naar bed" }
+  { key: "sleep", label: "Slapen", hint: "bedtijd, naar bed" },
+  { key: "makeBed", label: "Bed opmaken", hint: "slaapkamer, dekbed" },
+  { key: "curtains", label: "Gordijnen open", hint: "raam, ochtendlicht" },
+  { key: "hair", label: "Haren kammen", hint: "spiegel, borstel" },
+  { key: "faceWash", label: "Gezicht wassen", hint: "wastafel, fris" },
+  { key: "medicine", label: "Medicijn", hint: "samen met ouder" },
+  { key: "lunchbox", label: "Broodtrommel", hint: "in de schooltas" },
+  { key: "drinkBottle", label: "Drinkbeker", hint: "beker in tas" },
+  { key: "shoesOn", label: "Schoenen aan", hint: "klaar om te gaan" },
+  { key: "coatOn", label: "Jas aan", hint: "naar buiten" },
+  { key: "coatHang", label: "Jas ophangen", hint: "thuiskomen" },
+  { key: "shoesOff", label: "Schoenen uit", hint: "op hun plek" },
+  { key: "unpackBag", label: "Tas uitpakken", hint: "na school" },
+  { key: "drinkWater", label: "Water drinken", hint: "slokjes nemen" },
+  { key: "snack", label: "Snack eten", hint: "rustig aan tafel" },
+  { key: "outsidePlay", label: "Buiten spelen", hint: "tuin, lucht" },
+  { key: "moveBreak", label: "Bewegen", hint: "springen, wiebelen" },
+  { key: "homework", label: "Huiswerk", hint: "boek, potlood" },
+  { key: "reading", label: "Lezen", hint: "boekje lezen" },
+  { key: "creative", label: "Knutselen", hint: "tekenen, maken" },
+  { key: "toysClean", label: "Speelgoed opruimen", hint: "mand, kamer" },
+  { key: "roomClean", label: "Kamer opruimen", hint: "bed, spullen" },
+  { key: "laundry", label: "Wasmand", hint: "vieze was" },
+  { key: "setTable", label: "Tafel dekken", hint: "bord, bestek" },
+  { key: "clearTable", label: "Tafel afruimen", hint: "naar keuken" },
+  { key: "dishwasher", label: "Vaatwasser", hint: "helpen in keuken" },
+  { key: "waterPlants", label: "Planten water", hint: "gieter, plant" },
+  { key: "petFood", label: "Huisdier eten", hint: "samen zorgen" },
+  { key: "sportsBag", label: "Sportspullen", hint: "tas, sport" },
+  { key: "agenda", label: "Agenda", hint: "morgen bekijken" },
+  { key: "weekPlan", label: "Weekplanning", hint: "planningbord" },
+  { key: "screenOff", label: "Scherm uit", hint: "tablet weg" },
+  { key: "calmCard", label: "Rustkaart", hint: "kies rust" },
+  { key: "breatheBed", label: "Ademen in bed", hint: "rustige adem" },
+  { key: "dimLight", label: "Licht zachter", hint: "lampje dimmen" },
+  { key: "askHelp", label: "Vraag hulp", hint: "hand, ouder" },
+  { key: "wallPush", label: "Duw tegen muur", hint: "stevig duwen" }
 ];
 const sortTasks = (tasks: Task[]) => [...tasks].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.createdAt.localeCompare(b.createdAt));
 
@@ -68,19 +102,18 @@ function HomePage() {
       <div className="leaf-float leaf-b" />
       <div className="relative z-10">
         <div className="flowi-logo mb-1">Flowi<span>♥</span></div>
-        <p className="text-[1.35rem] font-black text-lavender">Hoe is het in je lijf?</p>
-        <p className="mt-3 max-w-[15rem] text-sm font-bold leading-6 text-navy/62">Flowi helpt je voelen, kiezen en kleine stappen zetten die je goed doen.</p>
-        <div className="relative mt-1">
-          <AvatarMascot avatar={avatar} size="large" />
-          <div className="speech-bubble">Ik ben jouw maatje.<br /><span>♥</span></div>
+        <div className="home-copy">
+          <p className="text-[1.35rem] font-black text-lavender">Hoe is het in je lijf?</p>
+          <p className="mt-3 text-sm font-bold leading-6 text-navy/62">Flowi helpt je voelen, kiezen en kleine stappen zetten die je goed doen.</p>
         </div>
-        <div className="mt-5 grid gap-3">
+        <div className="home-mascot-wrap relative">
+          <AvatarMascot avatar={avatar} size="large" />
+          <div className="speech-bubble">Ik help jou.<br /><span>♥</span></div>
+        </div>
+        <div className="mt-1 grid gap-3">
           <PrimaryButton onClick={() => navigate("/check-in")} className="flowi-pill">♥ Hoe voel ik me?</PrimaryButton>
           <button onClick={() => navigate("/day")} className="flowi-pill min-h-12 rounded-[1.35rem] bg-gradient-to-b from-[#9bd886] to-[#59b477] px-5 font-extrabold text-white shadow-[0_14px_24px_rgba(89,180,119,.24)]">🍃 Mijn dag</button>
           <SecondaryButton onClick={() => navigate("/help-now")} className="flowi-pill">Help mij nu</SecondaryButton>
-        </div>
-        <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-          {["Voelen", "Kiezen", "Groeien"].map((word, index) => <div key={word} className="mini-value-card p-3 text-xs font-black">{["♡", "🍃", "⭐"][index]}<br />{word}<span>{["Herken je gevoel", "Wat heb je nodig?", "Elke dag een stapje"][index]}</span></div>)}
         </div>
       </div>
     </section>
@@ -194,13 +227,12 @@ function ReflectionPage() {
 }
 
 function DayPage() {
-  const navigate = useNavigate();
   const { data: tasks } = useLiveData(() => db.tasks.where("childProfileId").equals("default-child").toArray(), [] as Task[], []);
   const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Mijn dag" subtitle="Kleine stappen. Tijd is optioneel." />
+      <PageHeader title="Mijn dag" subtitle="Vink af wat klaar is." back={false} />
       <div className="grid gap-3">
         {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
           const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled);
@@ -208,20 +240,17 @@ function DayPage() {
           return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day/${part}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/tasks/new")}>Tijd toevoegen</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
       </div>
     </>
   );
 }
 
 function DayPartPage() {
-  const navigate = useNavigate();
   const { dayPart = "ochtend" } = useParams();
   const part = dayPart as DayPart;
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
   const { data: completions, reload: reloadCompletions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], [part]);
   const [helpTask, setHelpTask] = useState<Task | null>(null);
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
   const complete = async (task: Task) => {
     await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "done", completedAt: now() });
@@ -229,36 +258,133 @@ function DayPartPage() {
     await reloadCompletions();
     await reload();
   };
-  const moveTask = async (targetTaskId: string) => {
-    if (!draggedTaskId || draggedTaskId === targetTaskId) return;
+  return (
+    <>
+      <div className="phone-screen px-4 pb-5 pt-4">
+      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle="Alleen afvinken wat klaar is." />
+      <div className="grid gap-3">
+        {visibleTasks.length ? visibleTasks.map((task) => (
+          <TaskCard key={task.id} task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} />
+        )) : (
+          <div className="rounded-[1.5rem] bg-white/90 p-5 text-center shadow-card">
+            <TaskArt title={dayParts[part]?.title ?? "Rust"} />
+            <p className="mt-3 font-black text-navy">Er staat hier nog niets klaar.</p>
+            <p className="text-sm font-bold text-navy/52">Een ouder kan taken toevoegen bij Meer.</p>
+          </div>
+        )}
+      </div>
+      {helpTask ? <div className="mt-4 rounded-[1.5rem] bg-white p-4 shadow-soft"><h2 className="font-black">Help mij starten</h2><p className="text-sm font-bold text-navy/55">Eerste mini-stap: {helpTask.steps[0] ?? "Begin klein."}</p><div className="mt-3 grid grid-cols-2 gap-2">{["Te veel", "Boos", "Moe", "In de war"].map((label) => <span key={label} className="rounded-2xl bg-lavender/10 px-3 py-2 text-center text-xs font-black text-lavender">{label}</span>)}</div></div> : null}
+      </div>
+    </>
+  );
+}
+
+function DaySettingsPage() {
+  const navigate = useNavigate();
+  const { data: tasks } = useLiveData(() => db.tasks.where("childProfileId").equals("default-child").toArray(), [] as Task[], []);
+  const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
+  return (
+    <>
+      <div className="phone-screen px-4 pb-5 pt-4">
+      <PageHeader title="Dagindeling" subtitle="Voor ouders: routine instellen." />
+      <div className="grid gap-3">
+        {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
+          const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled);
+          const done = partTasks.filter((task) => completions.some((completion) => completion.taskId === task.id && completion.status === "done")).length;
+          return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}`} />;
+        })}
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
+      </div>
+    </>
+  );
+}
+
+function DaySettingsPartPage() {
+  const navigate = useNavigate();
+  const { dayPart = "ochtend" } = useParams();
+  const part = dayPart as DayPart;
+  const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
+  const { data: completions, reload: reloadCompletions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], [part]);
+  const [helpTask, setHelpTask] = useState<Task | null>(null);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
+  const draggedTaskIdRef = useRef<string | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const reorderingRef = useRef(false);
+  const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
+  const complete = async (task: Task) => {
+    await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "done", completedAt: now() });
+    await db.rewards.add({ id: id(), childProfileId: "default-child", label: "Ik maakte het af", icon: "✅", reason: task.title, earnedAt: now() });
+    await reloadCompletions();
+    await reload();
+  };
+  const moveTask = async (sourceTaskId: string, targetTaskId: string) => {
+    if (sourceTaskId === targetTaskId || reorderingRef.current) return;
+    reorderingRef.current = true;
     const current = sortTasks(tasks.filter((task) => task.isEnabled));
-    const fromIndex = current.findIndex((task) => task.id === draggedTaskId);
+    const fromIndex = current.findIndex((task) => task.id === sourceTaskId);
     const toIndex = current.findIndex((task) => task.id === targetTaskId);
-    if (fromIndex < 0 || toIndex < 0) return;
+    if (fromIndex < 0 || toIndex < 0) {
+      reorderingRef.current = false;
+      return;
+    }
     const reordered = [...current];
     const [moved] = reordered.splice(fromIndex, 1);
     reordered.splice(toIndex, 0, moved);
-    await db.transaction("rw", db.tasks, async () => {
-      await Promise.all(reordered.map((task, sortOrder) => db.tasks.update(task.id, { sortOrder, updatedAt: now() })));
-    });
+    try {
+      await db.transaction("rw", db.tasks, async () => {
+        await Promise.all(reordered.map((task, sortOrder) => db.tasks.update(task.id, { sortOrder, updatedAt: now() })));
+      });
+      await reload();
+    } finally {
+      reorderingRef.current = false;
+    }
+  };
+  const startReorder = (event: React.PointerEvent<HTMLDivElement>, taskId: string) => {
+    const target = event.target as HTMLElement;
+    if (target.closest("button, a, input, textarea, select")) return;
+    draggedTaskIdRef.current = taskId;
+    dragStartRef.current = { x: event.clientX, y: event.clientY };
+    setDraggedTaskId(taskId);
+    setDragOverTaskId(taskId);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+  const updateReorder = async (event: React.PointerEvent<HTMLDivElement>) => {
+    const sourceTaskId = draggedTaskIdRef.current;
+    const start = dragStartRef.current;
+    if (!sourceTaskId || !start) return;
+    const movedEnough = Math.abs(event.clientY - start.y) > 12 || Math.abs(event.clientX - start.x) > 12;
+    if (!movedEnough) return;
+    event.preventDefault();
+    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-reorder-task-id]");
+    const targetTaskId = target?.dataset.reorderTaskId;
+    if (!targetTaskId || targetTaskId === sourceTaskId || targetTaskId === dragOverTaskId) return;
+    setDragOverTaskId(targetTaskId);
+    await moveTask(sourceTaskId, targetTaskId);
+  };
+  const finishReorder = () => {
+    draggedTaskIdRef.current = null;
+    dragStartRef.current = null;
     setDraggedTaskId(null);
-    await reload();
+    setDragOverTaskId(null);
   };
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={`${dayParts[part]?.title ?? "Dag"}routine`} subtitle="Tijd optioneel" />
+      <PageHeader title={`${dayParts[part]?.title ?? "Dag"} instellen`} subtitle="Voor ouders: aanpassen en slepen." />
       <div className="grid gap-3">
         {visibleTasks.map((task) => (
           <div
             key={task.id}
-            draggable
-            onDragStart={() => setDraggedTaskId(task.id)}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={() => moveTask(task.id)}
-            className={draggedTaskId === task.id ? "opacity-60" : ""}
+            data-reorder-task-id={task.id}
+            onPointerDown={(event) => startReorder(event, task.id)}
+            onPointerMove={updateReorder}
+            onPointerUp={finishReorder}
+            onPointerCancel={finishReorder}
+            className={`reorder-task-card ${draggedTaskId === task.id ? "is-dragging" : ""} ${dragOverTaskId === task.id && draggedTaskId !== task.id ? "is-drag-over" : ""}`}
           >
-            <TaskCard task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} onEdit={() => navigate(`/tasks/${task.id}/edit`)} />
+            <TaskCard task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} onEdit={() => navigate(`/tasks/${task.id}/edit`)} editable />
           </div>
         ))}
       </div>
@@ -288,12 +414,12 @@ function TaskFormPage() {
     const currentTasks = await db.tasks.where("dayPart").equals(dayPart).toArray();
     const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: steps.split("\n").filter(Boolean), repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
     await db.tasks.put(task);
-    navigate(`/day/${dayPart}`);
+    navigate(`/day-settings/${dayPart}`);
   };
   const remove = async () => {
     if (!existing || !confirm("Wil je deze taak verwijderen?")) return;
     await db.tasks.delete(existing.id);
-    navigate(`/day/${existing.dayPart}`);
+    navigate(`/day-settings/${existing.dayPart}`);
   };
   return (
     <>
@@ -363,7 +489,7 @@ function TaskLibraryPage() {
           <button key={item} onClick={() => setCategory(item)} className={`min-h-10 shrink-0 rounded-2xl px-4 text-sm font-black ${item === category ? "bg-mint text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => <button key={template.id} onClick={() => add(template)} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card"><TaskArt title={template.title} /><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p></button>)}</div>
+      <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => <button key={template.id} onClick={() => add(template)} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card"><TaskArt title={template.title} visualKey={template.visualKey as TaskVisualKey | undefined} /><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p></button>)}</div>
       </div>
     </>
   );
@@ -591,7 +717,7 @@ function ParentsPage() {
         <ParentCard icon={<Database />} title="Geen account nodig" text="Flowi gebruikt geen externe database." />
         <ParentCard icon={<ShieldCheck />} title="Backup mogelijk" text="Exporteer en importeer JSON." to="/backup" />
         <ParentCard icon={<SlidersHorizontal />} title="Profiel & instellingen" text="Naam, leeftijd, helper en voorkeuren." to="/settings" />
-        <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day" />
+        <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day-settings" />
         <ParentCard icon={<Palette />} title="Mijn Flowi" text="Het vaste giraffe-maatje van de app." to="/avatar" />
         <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken per leeftijd toevoegen." to="/task-library" />
         <ParentCard icon={<HeartHandshake />} title="Privacy" text="Lokale opslag en veiligheid." to="/privacy" />
@@ -675,6 +801,8 @@ function AppRoutes() {
         <Route path="/reflection" element={<ReflectionPage />} />
         <Route path="/day" element={<DayPage />} />
         <Route path="/day/:dayPart" element={<DayPartPage />} />
+        <Route path="/day-settings" element={<DaySettingsPage />} />
+        <Route path="/day-settings/:dayPart" element={<DaySettingsPartPage />} />
         <Route path="/tasks" element={<Navigate to="/day" />} />
         <Route path="/tasks/new" element={<TaskFormPage />} />
         <Route path="/tasks/:taskId/edit" element={<TaskFormPage />} />

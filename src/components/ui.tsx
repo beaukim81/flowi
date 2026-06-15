@@ -160,13 +160,13 @@ export function DayPartCard({ title, icon, progress, to }: { title: string; icon
   );
 }
 
-export function TaskCard({ task, done, onDone, onHelp, onEdit }: { task: Task; done: boolean; onDone: () => void; onHelp?: () => void; onEdit?: () => void }) {
+export function TaskCard({ task, done, onDone, onHelp, onEdit, editable = false }: { task: Task; done: boolean; onDone: () => void; onHelp?: () => void; onEdit?: () => void; editable?: boolean }) {
   return (
     <article className="rounded-[1.45rem] border border-white/85 bg-white/94 p-4 shadow-card ring-1 ring-lavender/8">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-8 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Sleep om te verplaatsen">
+        {editable ? <span className="grid h-10 w-8 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Sleep om te verplaatsen">
           <GripVertical size={18} />
-        </span>
+        </span> : null}
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
         <div className="flex-1">
           <h3 className="font-black">{task.title}</h3>

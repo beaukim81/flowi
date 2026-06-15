@@ -1,10 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="Flowi">
-  <rect width="192" height="192" rx="48" fill="#f5f0ff"/>
-  <circle cx="96" cy="98" r="62" fill="#ffc65b"/>
-  <circle cx="73" cy="85" r="8" fill="#18245b"/>
-  <circle cx="119" cy="85" r="8" fill="#18245b"/>
-  <path d="M75 118c12 11 30 11 42 0" fill="none" stroke="#18245b" stroke-width="8" stroke-linecap="round"/>
-  <path d="M62 45c-5-18 9-26 20-12M130 45c5-18-9-26-20-12" fill="none" stroke="#a56018" stroke-width="9" stroke-linecap="round"/>
-  <circle cx="132" cy="121" r="12" fill="#ff8d70" opacity=".65"/>
-  <circle cx="60" cy="121" r="12" fill="#ff8d70" opacity=".65"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="Flowi lachende giraffe">
+  <defs>
+    <linearGradient id="bg" x1="28" y1="8" x2="164" y2="184" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f4efff"/>
+      <stop offset=".55" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dff2c8"/>
+    </linearGradient>
+    <linearGradient id="fur" x1="62" y1="32" x2="126" y2="151" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffd86f"/>
+      <stop offset="1" stop-color="#f1a72a"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0" cy="0" r="1" gradientTransform="matrix(56 65 -71 61 68 45)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff6bd"/>
+      <stop offset="1" stop-color="#ffc04a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="192" height="192" rx="44" fill="url(#bg)"/>
+  <circle cx="38" cy="39" r="17" fill="#c8e8ff" opacity=".65"/>
+  <circle cx="154" cy="151" r="22" fill="#c8e8ff" opacity=".5"/>
+  <path d="M72 139c4-21 10-34 24-34s20 13 24 34l6 32H66l6-32Z" fill="url(#fur)"/>
+  <path d="M48 80c-19-18-7-40 20-30 8 3 14 9 16 17L64 88c-6 5-11 2-16-8Z" fill="#ffc24d"/>
+  <path d="M144 80c19-18 7-40-20-30-8 3-14 9-16 17l20 21c6 5 11 2 16-8Z" fill="#ffc24d"/>
+  <path d="M57 77c-6-8-1-17 12-12 4 2 7 5 8 8L64 83c-3 2-5 1-7-6ZM135 77c6-8 1-17-12-12-4 2-7 5-8 8l13 10c3 2 5 1 7-6Z" fill="#ffad78"/>
+  <path d="M75 49c-7-21 3-34 17-18M117 49c7-21-3-34-17-18" fill="none" stroke="#9b570f" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="72" cy="23" r="9" fill="#9b570f"/>
+  <circle cx="120" cy="23" r="9" fill="#9b570f"/>
+  <path d="M96 34c36 0 55 24 55 59 0 38-23 67-55 67s-55-29-55-67c0-35 19-59 55-59Z" fill="url(#fur)"/>
+  <path d="M96 34c36 0 55 24 55 59 0 38-23 67-55 67s-55-29-55-67c0-35 19-59 55-59Z" fill="url(#shine)" opacity=".7"/>
+  <ellipse cx="96" cy="112" rx="34" ry="28" fill="#ffe9a8"/>
+  <circle cx="76" cy="88" r="8" fill="#15225d"/>
+  <circle cx="116" cy="88" r="8" fill="#15225d"/>
+  <circle cx="79" cy="85" r="3" fill="#fff"/>
+  <circle cx="119" cy="85" r="3" fill="#fff"/>
+  <circle cx="85" cy="107" r="4" fill="#9b570f"/>
+  <circle cx="107" cy="107" r="4" fill="#9b570f"/>
+  <path d="M79 123c9 13 25 13 34 0" fill="none" stroke="#9b570f" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="61" cy="113" r="11" fill="#ff8d70" opacity=".67"/>
+  <circle cx="131" cy="113" r="11" fill="#ff8d70" opacity=".67"/>
+  <circle cx="92" cy="52" r="8" fill="#b66a16" opacity=".72"/>
+  <circle cx="113" cy="62" r="7" fill="#b66a16" opacity=".72"/>
+  <circle cx="71" cy="132" r="8" fill="#b66a16" opacity=".68"/>
+  <circle cx="119" cy="136" r="9" fill="#b66a16" opacity=".68"/>
+  <path d="M38 149c21 14 95 22 119-1" fill="none" stroke="#8a6df1" stroke-width="8" stroke-linecap="round" opacity=".32"/>
 </svg>

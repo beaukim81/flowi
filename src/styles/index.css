@@ -65,6 +65,29 @@ button, input, textarea, select {
     linear-gradient(180deg, rgba(238, 248, 255, 0.98) 0%, rgba(255, 255, 255, 0.96) 56%, rgba(231, 246, 218, 0.92) 100%);
 }
 
+.home-copy {
+  max-width: 16rem;
+}
+
+.home-mascot-wrap {
+  margin: -0.2rem -1.2rem 0 auto;
+  min-height: 15.8rem;
+}
+
+.home-mascot-wrap .flowi-mascot-image {
+  margin-right: 0;
+  width: 15.8rem;
+  height: 15.8rem;
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
+  filter: drop-shadow(0 24px 24px rgba(132, 96, 24, 0.16));
+}
+
+.home-mascot-wrap .giraffe-caption {
+  display: none;
+}
+
 .home-scene::before,
 .home-scene::after {
   content: "";
@@ -169,8 +192,8 @@ button, input, textarea, select {
 
 .speech-bubble {
   position: absolute;
-  right: 0.15rem;
-  top: 1.1rem;
+  right: 0.2rem;
+  top: 0.8rem;
   max-width: 7.2rem;
   border: 1px solid rgba(138, 109, 241, 0.1);
   border-radius: 1.4rem;
@@ -205,6 +228,23 @@ button, input, textarea, select {
   line-height: 1.15;
 }
 
+.reorder-task-card {
+  border-radius: 1.45rem;
+  touch-action: none;
+  user-select: none;
+  transition: transform .16s ease, opacity .16s ease, box-shadow .16s ease;
+}
+
+.reorder-task-card.is-dragging {
+  opacity: .72;
+  transform: scale(.985);
+}
+
+.reorder-task-card.is-drag-over {
+  transform: translateY(.18rem);
+  box-shadow: 0 0 0 0.22rem rgba(138, 109, 241, .14);
+}
+
 .avatar-stage {
   filter: drop-shadow(0 22px 22px rgba(132, 96, 24, 0.13));
 }
@@ -224,7 +264,7 @@ button, input, textarea, select {
   flex: 0 0 auto;
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 1.25rem;
-  background-image: url("/assets/flowi-task-sheet.png");
+  background-image: url("/assets/flowi-task-core-sheet.png");
   background-size: 400% 300%;
   box-shadow:
     0 12px 24px rgba(72, 63, 137, 0.12),
@@ -249,6 +289,88 @@ button, input, textarea, select {
 .task-art-shower { background-position: 33.333% 100%; }
 .task-art-pajamas { background-position: 66.666% 100%; }
 .task-art-sleep { background-position: 100% 100%; }
+
+.task-art-makeBed,
+.task-art-curtains,
+.task-art-hair,
+.task-art-faceWash,
+.task-art-medicine,
+.task-art-lunchbox,
+.task-art-drinkBottle,
+.task-art-shoesOn,
+.task-art-coatOn,
+.task-art-coatHang,
+.task-art-shoesOff,
+.task-art-unpackBag {
+  background-image: url("/assets/flowi-task-sheet.png");
+}
+
+.task-art-drinkWater,
+.task-art-snack,
+.task-art-outsidePlay,
+.task-art-moveBreak,
+.task-art-homework,
+.task-art-reading,
+.task-art-creative,
+.task-art-toysClean,
+.task-art-roomClean,
+.task-art-laundry,
+.task-art-setTable,
+.task-art-clearTable {
+  background-image: url("/assets/flowi-action-sheet-1.png");
+}
+
+.task-art-dishwasher,
+.task-art-waterPlants,
+.task-art-petFood,
+.task-art-sportsBag,
+.task-art-agenda,
+.task-art-weekPlan,
+.task-art-screenOff,
+.task-art-calmCard,
+.task-art-breatheBed,
+.task-art-dimLight,
+.task-art-askHelp,
+.task-art-wallPush {
+  background-image: url("/assets/flowi-action-sheet-2.png");
+}
+
+.task-art-makeBed,
+.task-art-drinkWater,
+.task-art-dishwasher { background-position: 0% 0%; }
+.task-art-curtains,
+.task-art-snack,
+.task-art-waterPlants { background-position: 33.333% 0%; }
+.task-art-hair,
+.task-art-outsidePlay,
+.task-art-petFood { background-position: 66.666% 0%; }
+.task-art-faceWash,
+.task-art-moveBreak,
+.task-art-sportsBag { background-position: 100% 0%; }
+.task-art-medicine,
+.task-art-homework,
+.task-art-agenda { background-position: 0% 50%; }
+.task-art-lunchbox,
+.task-art-reading,
+.task-art-weekPlan { background-position: 33.333% 50%; }
+.task-art-drinkBottle,
+.task-art-creative,
+.task-art-screenOff { background-position: 66.666% 50%; }
+.task-art-shoesOn,
+.task-art-toysClean,
+.task-art-calmCard { background-position: 100% 50%; }
+.task-art-coatOn,
+.task-art-roomClean,
+.task-art-breatheBed { background-position: 0% 100%; }
+.task-art-coatHang,
+.task-art-laundry,
+.task-art-dimLight { background-position: 33.333% 100%; }
+.task-art-shoesOff,
+.task-art-setTable,
+.task-art-askHelp { background-position: 66.666% 100%; }
+.task-art-unpackBag,
+.task-art-clearTable,
+.task-art-wallPush { background-position: 100% 100%; }
 
 .flowi-mascot-image {
   border-radius: 2rem;
