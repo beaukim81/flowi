@@ -7,7 +7,7 @@ import { getTaskVisualKey, type TaskVisualKey } from "../utils/taskVisuals";
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flowi-bg min-h-dvh text-navy">
-      <main className="mx-auto min-h-dvh w-full max-w-lg px-3 pb-32 pt-3 sm:max-w-4xl sm:px-6 sm:pt-7">{children}</main>
+      <main className="mx-auto min-h-dvh w-full px-0 pb-32 pt-0 sm:max-w-5xl sm:px-6 sm:pt-6 lg:max-w-6xl">{children}</main>
       <BottomNav />
     </div>
   );

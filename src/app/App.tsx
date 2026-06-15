@@ -233,6 +233,7 @@ function ActionPage() {
   const { selectedEmotion, selectedNeed } = useCurrentFlow();
   const action = calmStrategies.find((strategy) => strategy.id === actionId) ?? chooseStrategy(selectedEmotion, selectedNeed);
   const suggestedDuration = action.durationSeconds ?? 120;
+  const [duration, setDuration] = useState(suggestedDuration);
   const [timerOpen, setTimerOpen] = useState(false);
   const [running, setRunning] = useState(false);
   const [remaining, setRemaining] = useState(suggestedDuration);
@@ -241,6 +242,7 @@ function ActionPage() {
   useEffect(() => {
     setTimerOpen(false);
     setRunning(false);
+    setDuration(suggestedDuration);
     setRemaining(suggestedDuration);
     setHelpOpen(false);
   }, [action.id, suggestedDuration]);
@@ -260,6 +262,13 @@ function ActionPage() {
     const rest = (seconds % 60).toString().padStart(2, "0");
     return `${minutes}:${rest}`;
   };
+  const durationOptions = [30, 60, 120, 180, 300];
+  const setActionDuration = (seconds: number) => {
+    const next = Math.min(600, Math.max(20, seconds));
+    setDuration(next);
+    setRemaining(next);
+    setRunning(false);
+  };
   return (
     <section className="phone-screen action-scene p-5 text-center">
       <PageHeader title={action.title} back />
@@ -267,16 +276,25 @@ function ActionPage() {
       <p className="mx-auto mt-5 max-w-sm text-sm font-bold leading-6 text-navy/65">{action.childText}</p>
       {timerOpen ? (
         <section className="mt-5 rounded-[1.55rem] bg-white/92 p-4 shadow-card">
-          <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-lavender/10 text-3xl font-black text-lavender ring-8 ring-lavender/8">{formatTime(remaining)}</div>
+          <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-lavender/10 text-4xl font-black text-lavender ring-8 ring-lavender/8">{formatTime(remaining)}</div>
+          <div className="mt-4 grid grid-cols-5 gap-2">
+            {durationOptions.map((seconds) => (
+              <button key={seconds} type="button" onClick={() => setActionDuration(seconds)} className={`timer-preset ${duration === seconds ? "active" : ""}`}>{seconds < 60 ? `${seconds}s` : `${seconds / 60}m`}</button>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <button aria-label="Korter" className="grid h-11 w-11 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setActionDuration(duration - 30)}><Minus size={18} /></button>
+            <span className="min-w-20 text-center font-black text-navy">{duration < 60 ? `${duration} sec` : `${Math.round(duration / 60)} min`}</span>
+            <button aria-label="Langer" className="grid h-11 w-11 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setActionDuration(duration + 30)}><Plus size={18} /></button>
+          </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <SecondaryButton onClick={() => { setRemaining(suggestedDuration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
+            <SecondaryButton onClick={() => { setRemaining(duration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
             <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start</>}</PrimaryButton>
           </div>
         </section>
       ) : (
         <button type="button" onClick={() => setTimerOpen(true)} className="mt-5 min-h-12 w-full rounded-[1.35rem] bg-white px-5 font-extrabold text-lavender shadow-card">Timer gebruiken</button>
       )}
-      {action.durationSeconds ? <div className="mx-auto mt-3 inline-flex rounded-full bg-lavender/10 px-4 py-2 text-xs font-black text-lavender">⏱ {Math.round(action.durationSeconds / 60)} minuten</div> : null}
       {helpOpen ? (
         <section className="mt-4 rounded-[1.55rem] bg-white/94 p-4 text-left shadow-card">
           <div className="flex items-center gap-3">
@@ -897,6 +915,7 @@ function PracticePage() {
   const [rounds, setRounds] = useState(3);
   const [remaining, setRemaining] = useState(90);
   const [running, setRunning] = useState(false);
+  const [timerEnabled, setTimerEnabled] = useState(false);
   const categories = ["Alles", ...Array.from(new Set(exercises.map((exercise) => exercise.category))).sort()];
   const visibleExercises = exercises
     .filter((exercise) => category === "Alles" || exercise.category === category)
@@ -909,6 +928,7 @@ function PracticePage() {
     setRemaining(nextDuration);
     setRounds(activeExercise.defaultRounds ?? 3);
     setRunning(false);
+    setTimerEnabled(false);
   }, [activeExercise]);
 
   useEffect(() => {
@@ -932,6 +952,7 @@ function PracticePage() {
     setRemaining(next);
     setRunning(false);
   };
+  const durationOptions = [30, 60, 120, 180, 300];
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60).toString();
@@ -947,17 +968,32 @@ function PracticePage() {
         <section className="rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/12 p-5 text-center shadow-soft">
           <ExerciseArt title={activeExercise.title} />
           <p className="mx-auto mt-4 max-w-xs text-sm font-bold leading-6 text-navy/60">{activeExercise.description}</p>
-          <div className="mx-auto mt-5 grid h-28 w-28 place-items-center rounded-full bg-white text-3xl font-black text-lavender shadow-card ring-8 ring-lavender/10">{formatTime(remaining)}</div>
-          <div className="mt-4 h-3 rounded-full bg-lilac/18"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
+          {timerEnabled ? (
+            <>
+              <div className="mx-auto mt-5 grid h-32 w-32 place-items-center rounded-full bg-white text-4xl font-black text-lavender shadow-card ring-8 ring-lavender/10">{formatTime(remaining)}</div>
+              <div className="mt-4 h-3 rounded-full bg-lilac/18"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
+            </>
+          ) : (
+            <button type="button" onClick={() => setTimerEnabled(true)} className="mt-5 min-h-16 w-full rounded-[1.45rem] bg-white px-6 text-xl font-black text-lavender shadow-card">Timer instellen</button>
+          )}
         </section>
         <section className="mt-4 grid gap-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-lg font-black">Timer</span>
+            <button type="button" onClick={() => { setTimerEnabled((value) => !value); setRunning(false); }} className={`min-h-12 rounded-2xl px-5 text-base font-black ${timerEnabled ? "bg-lavender text-white" : "bg-lavender/10 text-lavender"}`}>{timerEnabled ? "Aan" : "Uit"}</button>
+          </div>
           <div className="flex items-center justify-between">
             <span className="font-black">Tijd</span>
             <div className="flex items-center gap-2">
               <button aria-label="Korter" className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setExerciseDuration(duration - 30)}><Minus size={18} /></button>
-              <span className="min-w-16 text-center font-black">{Math.round(duration / 60)} min</span>
+              <span className="min-w-20 text-center font-black">{duration < 60 ? `${duration} sec` : `${Math.round(duration / 60)} min`}</span>
               <button aria-label="Langer" className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setExerciseDuration(duration + 30)}><Plus size={18} /></button>
             </div>
+          </div>
+          <div className="grid grid-cols-5 gap-2">
+            {durationOptions.map((seconds) => (
+              <button key={seconds} type="button" onClick={() => { setTimerEnabled(true); setExerciseDuration(seconds); }} className={`timer-preset ${duration === seconds ? "active" : ""}`}>{seconds < 60 ? `${seconds}s` : `${seconds / 60}m`}</button>
+            ))}
           </div>
           <div className="flex items-center justify-between">
             <span className="font-black">Keer</span>
@@ -974,10 +1010,17 @@ function PracticePage() {
             {activeExercise.steps.map((step, index) => <li key={step} className="flex gap-3 rounded-2xl bg-lavender/8 p-3 text-sm font-bold text-navy/68"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-lavender shadow-card">{index + 1}</span>{step}</li>)}
           </ol>
         </section>
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <SecondaryButton onClick={() => { setRemaining(duration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
-          <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start</>}</PrimaryButton>
-        </div>
+        {timerEnabled ? (
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <SecondaryButton onClick={() => { setRemaining(duration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
+            <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start</>}</PrimaryButton>
+          </div>
+        ) : (
+          <PrimaryButton className="mt-4 w-full" onClick={async () => {
+            await db.rewards.add({ id: id(), childProfileId: "default-child", label: activeExercise.rewardLabel ?? "Ik oefende", icon: "â­", reason: activeExercise.title, earnedAt: now() });
+            setActiveExercise(null);
+          }}>Klaar</PrimaryButton>
+        )}
         <button className="mt-4 w-full text-center text-sm font-black text-lavender" onClick={() => setActiveExercise(null)}>Terug naar oefeningen</button>
       </div>
     );
