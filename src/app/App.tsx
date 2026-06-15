@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
-import { BookOpen, CalendarDays, Database, HeartHandshake, Moon, Palette, ShieldCheck, SlidersHorizontal, Sparkles, Trash2 } from "lucide-react";
+import { BookOpen, CalendarDays, Database, HeartHandshake, Minus, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, SlidersHorizontal, Sparkles, Trash2 } from "lucide-react";
 import { avatarAssets } from "../data/avatars";
 import { calmStrategies } from "../data/calmStrategies";
 import { emotions } from "../data/emotions";
@@ -13,8 +13,8 @@ import { seedDatabase } from "../db/seed";
 import { useLiveData } from "../hooks/useLiveData";
 import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
-import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, Task, TaskTemplate } from "../types/schema";
-import { AppShell, AvatarMascot, DayPartCard, EmotionCard, icons, NeedCard, PageHeader, ParentCard, PrimaryButton, RewardSticker, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
+import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Task, TaskTemplate } from "../types/schema";
+import { AppShell, AvatarMascot, DayPartCard, EmotionCard, icons, NeedCard, PageHeader, ParentCard, PracticeArt, PrimaryButton, RewardSticker, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
 
 const dayParts: Record<DayPart, { title: string; icon: string }> = {
   ochtend: { title: "Ochtend", icon: "☀️" },
@@ -323,7 +323,12 @@ function TaskFormPage() {
 
 function TaskLibraryPage() {
   const [age, setAge] = useState("4-5");
+  const [category, setCategory] = useState("Alles");
   const { data: templates } = useLiveData(() => db.taskTemplates.where("ageGroup").equals(age).toArray(), [], [age]);
+  const categories = ["Alles", ...Array.from(new Set(templates.map((template) => template.category))).sort()];
+  const visibleTemplates = templates
+    .filter((template) => category === "Alles" || template.category === category)
+    .sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
   const add = async (template: TaskTemplate) => {
     const currentTasks = await db.tasks.where("dayPart").equals(template.defaultDayPart).toArray();
     await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, category: template.category, ageGroup: template.ageGroup, dayPart: template.defaultDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: "elkeDag", estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
@@ -333,7 +338,12 @@ function TaskLibraryPage() {
       <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Takenbibliotheek" subtitle="Voeg rustig iets toe." />
       <div className="mb-4 grid grid-cols-4 gap-2">{["4-5", "6-7", "8-9", "10-12"].map((tab) => <button key={tab} onClick={() => setAge(tab)} className={`min-h-11 rounded-2xl font-black ${tab === age ? "bg-lavender text-white" : "bg-white text-navy"}`}>{tab}</button>)}</div>
-      <div className="grid grid-cols-2 gap-3">{templates.map((template) => <button key={template.id} onClick={() => add(template)} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card"><TaskArt title={template.title} /><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p></button>)}</div>
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {categories.map((item) => (
+          <button key={item} onClick={() => setCategory(item)} className={`min-h-10 shrink-0 rounded-2xl px-4 text-sm font-black ${item === category ? "bg-mint text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => <button key={template.id} onClick={() => add(template)} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card"><TaskArt title={template.title} /><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p></button>)}</div>
       </div>
     </>
   );
@@ -356,11 +366,120 @@ function RewardsPage() {
 
 function PracticePage() {
   const { data: exercises } = useLiveData(() => db.practiceExercises.toArray(), [], []);
+  const [category, setCategory] = useState("Alles");
+  const [activeExercise, setActiveExercise] = useState<PracticeExercise | null>(null);
+  const [duration, setDuration] = useState(90);
+  const [rounds, setRounds] = useState(3);
+  const [remaining, setRemaining] = useState(90);
+  const [running, setRunning] = useState(false);
+  const categories = ["Alles", ...Array.from(new Set(exercises.map((exercise) => exercise.category))).sort()];
+  const visibleExercises = exercises
+    .filter((exercise) => category === "Alles" || exercise.category === category)
+    .sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
+
+  useEffect(() => {
+    if (!activeExercise) return;
+    const nextDuration = activeExercise.durationSeconds ?? 90;
+    setDuration(nextDuration);
+    setRemaining(nextDuration);
+    setRounds(activeExercise.defaultRounds ?? 3);
+    setRunning(false);
+  }, [activeExercise]);
+
+  useEffect(() => {
+    if (!running) return;
+    if (remaining <= 0) {
+      setRunning(false);
+      if (activeExercise) {
+        db.rewards.add({ id: id(), childProfileId: "default-child", label: activeExercise.rewardLabel ?? "Ik oefende", icon: "⭐", reason: activeExercise.title, earnedAt: now() });
+      }
+      return;
+    }
+    const timer = window.setTimeout(() => setRemaining((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [running, remaining, activeExercise]);
+
+  const setExerciseDuration = (value: number) => {
+    const min = activeExercise?.minSeconds ?? 20;
+    const max = activeExercise?.maxSeconds ?? 600;
+    const next = Math.min(max, Math.max(min, value));
+    setDuration(next);
+    setRemaining(next);
+    setRunning(false);
+  };
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60).toString();
+    const rest = (seconds % 60).toString().padStart(2, "0");
+    return `${minutes}:${rest}`;
+  };
+
+  if (activeExercise) {
+    const progress = duration ? ((duration - remaining) / duration) * 100 : 0;
+    return (
+      <div className="phone-screen px-4 pb-5 pt-4">
+        <PageHeader title={activeExercise.title} subtitle={activeExercise.category} />
+        <section className="rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/12 p-5 text-center shadow-soft">
+          <PracticeArt category={activeExercise.category} title={activeExercise.title} />
+          <p className="mx-auto mt-4 max-w-xs text-sm font-bold leading-6 text-navy/60">{activeExercise.description}</p>
+          <div className="mx-auto mt-5 grid h-28 w-28 place-items-center rounded-full bg-white text-3xl font-black text-lavender shadow-card ring-8 ring-lavender/10">{formatTime(remaining)}</div>
+          <div className="mt-4 h-3 rounded-full bg-lilac/18"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
+        </section>
+        <section className="mt-4 grid gap-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
+          <div className="flex items-center justify-between">
+            <span className="font-black">Tijd</span>
+            <div className="flex items-center gap-2">
+              <button aria-label="Korter" className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setExerciseDuration(duration - 30)}><Minus size={18} /></button>
+              <span className="min-w-16 text-center font-black">{Math.round(duration / 60)} min</span>
+              <button aria-label="Langer" className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 text-lavender" onClick={() => setExerciseDuration(duration + 30)}><Plus size={18} /></button>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-black">Keer</span>
+            <div className="flex items-center gap-2">
+              <button aria-label="Minder vaak" className="grid h-10 w-10 place-items-center rounded-2xl bg-mint/10 text-mint" onClick={() => setRounds((value) => Math.max(1, value - 1))}><Minus size={18} /></button>
+              <span className="min-w-16 text-center font-black">{rounds}x</span>
+              <button aria-label="Vaker" className="grid h-10 w-10 place-items-center rounded-2xl bg-mint/10 text-mint" onClick={() => setRounds((value) => Math.min(20, value + 1))}><Plus size={18} /></button>
+            </div>
+          </div>
+        </section>
+        <section className="mt-4 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
+          <h2 className="font-black">Stapjes</h2>
+          <ol className="mt-3 grid gap-2">
+            {activeExercise.steps.map((step, index) => <li key={step} className="flex gap-3 rounded-2xl bg-lavender/8 p-3 text-sm font-bold text-navy/68"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-lavender shadow-card">{index + 1}</span>{step}</li>)}
+          </ol>
+        </section>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <SecondaryButton onClick={() => { setRemaining(duration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
+          <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start</>}</PrimaryButton>
+        </div>
+        <button className="mt-4 w-full text-center text-sm font-black text-lavender" onClick={() => setActiveExercise(null)}>Terug naar oefeningen</button>
+      </div>
+    );
+  }
+
   return (
-    <>
-      <PageHeader title="Ontdek" subtitle="Rustkracht oefenen." back={false} />
-      <div className="grid gap-3">{exercises.map((exercise) => <article key={exercise.id} className="rounded-[1.4rem] bg-white p-4 shadow-card"><h2 className="font-black">{exercise.title}</h2><p className="text-sm font-semibold text-navy/55">{exercise.description}</p><PrimaryButton className="mt-3 w-full" onClick={async () => db.rewards.add({ id: id(), childProfileId: "default-child", label: exercise.rewardLabel ?? "Ik oefende", icon: "⭐", reason: exercise.title, earnedAt: now() })}>Oefen</PrimaryButton></article>)}</div>
-    </>
+    <div className="phone-screen px-4 pb-5 pt-4">
+      <PageHeader title="Oefeningen" subtitle="Rustkracht oefenen met Flowi." back={false} />
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {categories.map((item) => (
+          <button key={item} onClick={() => setCategory(item)} className={`min-h-10 shrink-0 rounded-2xl px-4 text-sm font-black ${item === category ? "bg-lavender text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
+        ))}
+      </div>
+      <div className="grid gap-3">
+        {visibleExercises.map((exercise) => (
+          <button key={exercise.id} onClick={() => setActiveExercise(exercise)} className="flex items-center gap-3 rounded-[1.5rem] bg-white/94 p-3 text-left shadow-card">
+            <PracticeArt category={exercise.category} title={exercise.title} compact />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-black text-lavender">{exercise.category}</div>
+              <h2 className="font-black">{exercise.title}</h2>
+              <p className="line-clamp-2 text-xs font-bold leading-5 text-navy/52">{exercise.description}</p>
+              <div className="mt-2 flex gap-2 text-[0.68rem] font-black text-navy/48"><span>{Math.round((exercise.durationSeconds ?? 90) / 60)} min</span><span>{exercise.defaultRounds ?? 3}x</span></div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -13,7 +13,15 @@ const now = () => new Date().toISOString();
 
 export async function seedDatabase() {
   const settingsCount = await db.settings.count();
-  if (settingsCount > 0) return;
+  if (settingsCount > 0) {
+    await db.transaction("rw", [db.taskTemplates, db.practiceExercises], async () => {
+      await db.taskTemplates.clear();
+      await db.taskTemplates.bulkPut(taskTemplates);
+      await db.practiceExercises.clear();
+      await db.practiceExercises.bulkPut(practiceExercises);
+    });
+    return;
+  }
 
   const profile: ChildProfile = {
     id: "default-child",

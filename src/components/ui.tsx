@@ -16,7 +16,7 @@ function BottomNav() {
   const items = [
     { to: "/", label: "Home", icon: Home },
     { to: "/rewards", label: "Groei", icon: Heart },
-    { to: "/practice", label: "Ontdek", icon: Sparkles },
+    { to: "/practice", label: "Oefeningen", icon: Sparkles },
     { to: "/parents", label: "Meer", icon: MoreHorizontal }
   ];
   return (
@@ -155,6 +155,12 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
 export function TaskArt({ title, visualKey, compact = false }: { title: string; visualKey?: TaskVisualKey; compact?: boolean }) {
   const key = visualKey ?? getTaskVisualKey(title);
   return <span className={`task-art task-art-${key} ${compact ? "compact" : ""}`} aria-hidden />;
+}
+
+export function PracticeArt({ category, title, compact = false }: { category: string; title: string; compact?: boolean }) {
+  const text = `${category} ${title}`.toLowerCase();
+  const emotion = text.includes("bewegen") || text.includes("spring") || text.includes("schud") || text.includes("dieren") ? "superDruk" : text.includes("samen") || text.includes("hulp") || text.includes("stop") ? "weetIkNiet" : text.includes("creatief") || text.includes("teken") || text.includes("kleur") ? "rustig" : text.includes("prikkel") || text.includes("kijk") || text.includes("5 dingen") ? "teVeel" : text.includes("start") || text.includes("keuze") ? "inDeWar" : "rustig";
+  return <AvatarMascot emotion={emotion as EmotionType} size={compact ? "small" : "medium"} />;
 }
 
 export function DayPartCard({ title, icon, progress, to }: { title: string; icon: string; progress: number; to: string }) {

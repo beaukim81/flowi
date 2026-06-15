@@ -150,6 +150,9 @@ export interface PracticeExercise {
   steps: string[];
   category: string;
   durationSeconds?: number;
+  defaultRounds?: number;
+  minSeconds?: number;
+  maxSeconds?: number;
   rewardLabel?: string;
 }
 
