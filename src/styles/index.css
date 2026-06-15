@@ -259,6 +259,40 @@ button, input, textarea, select {
   background-size: 400% 200%;
 }
 
+.exercise-art {
+  display: block;
+  width: 7rem;
+  height: 6rem;
+  margin-inline: auto;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 1.35rem;
+  background-image: url("/assets/flowi-exercise-sheet.png");
+  background-repeat: no-repeat;
+  background-size: 400% 300%;
+  box-shadow:
+    0 12px 24px rgba(72, 63, 137, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.exercise-art.compact {
+  width: 5.35rem;
+  height: 4.7rem;
+  border-radius: 1.1rem;
+}
+
+.exercise-art-quietCorner { background-position: 0% 0%; }
+.exercise-art-softBreath { background-position: 33.333% 0%; }
+.exercise-art-askHelp { background-position: 66.666% 0%; }
+.exercise-art-plush { background-position: 100% 0%; }
+.exercise-art-wallPush { background-position: 0% 50%; }
+.exercise-art-dragonBreath { background-position: 33.333% 50%; }
+.exercise-art-pillowSqueeze { background-position: 66.666% 50%; }
+.exercise-art-stomping { background-position: 100% 50%; }
+.exercise-art-headphones { background-position: 0% 100%; }
+.exercise-art-blanket { background-position: 33.333% 100%; }
+.exercise-art-focusObject { background-position: 66.666% 100%; }
+.exercise-art-handHeart { background-position: 100% 100%; }
+
 .task-art {
   display: block;
   width: 5.3rem;

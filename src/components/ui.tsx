@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, ChevronRight, Download, GripVertical, Heart, Home, Leaf, MoreHorizontal, Pencil, Plus, Settings, Sparkles, Upload, UserRound } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Download, GripVertical, Heart, HelpCircle, Home, Leaf, MoreHorizontal, Pencil, Plus, Settings, Sparkles, Upload, UserRound } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import type { Avatar, Emotion, EmotionType, Need, Task } from "../types/schema";
@@ -59,7 +59,7 @@ export function SecondaryButton(props: ButtonHTMLAttributes<HTMLButtonElement> &
   return <button {...props} className={`min-h-12 rounded-[1.35rem] border border-lavender/14 bg-white/92 px-5 font-extrabold text-navy shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/20 ${props.className ?? ""}`} />;
 }
 
-export function AvatarMascot({ avatar, emotion, size = "large" }: { avatar?: Avatar; emotion?: EmotionType; size?: "small" | "medium" | "large" }) {
+export function AvatarMascot({ avatar, emotion, size = "large", showCaption = true }: { avatar?: Avatar; emotion?: EmotionType; size?: "small" | "medium" | "large"; showCaption?: boolean }) {
   const isGiraffe = !avatar || avatar.id === "giraffe";
   const dimensions = size === "large" ? "h-56 w-56" : size === "medium" ? "h-36 w-36" : "h-24 w-24";
   if (!isGiraffe) {
@@ -87,7 +87,7 @@ export function AvatarMascot({ avatar, emotion, size = "large" }: { avatar?: Ava
       style={{ backgroundPosition: positions[emotion ?? "happy"] }}
       aria-label="Flowi giraffe"
     >
-      <div className="giraffe-caption">{emotion ? emotionLabel(emotion) : "Flowi"}</div>
+      {showCaption ? <div className="giraffe-caption">{emotion ? emotionLabel(emotion) : "Flowi"}</div> : null}
     </div>
   );
 }
@@ -145,6 +145,29 @@ export function PracticeArt({ category, title, compact = false }: { category: st
   return <AvatarMascot emotion={emotion as EmotionType} size={compact ? "small" : "medium"} />;
 }
 
+function exerciseVisualKey(title: string) {
+  const text = title.toLowerCase();
+  if (text.includes("rustige plek")) return "quietCorner";
+  if (text.includes("schildpad") || text.includes("rustdoos")) return "quietCorner";
+  if (text.includes("adem zacht") || text.includes("slaapadem") || text.includes("regenboog") || text.includes("blaadjes") || text.includes("ballon") || text.includes("bloem")) return "softBreath";
+  if (text.includes("hulp nodig") || text.includes("vraag hulp") || text.includes("praat") || text.includes("samen plan") || text.includes("duim")) return "askHelp";
+  if (text.includes("zachts") || text.includes("knuffel") || text.includes("waterpauze")) return "plush";
+  if (text.includes("duw tegen de muur")) return "wallPush";
+  if (text.includes("handen tegen elkaar") || text.includes("veilig boos")) return "wallPush";
+  if (text.includes("draak")) return "dragonBreath";
+  if (text.includes("kussen") || text.includes("robot")) return "pillowSqueeze";
+  if (text.includes("stamp") || text.includes("spring") || text.includes("slakkenstap") || text.includes("wiebel")) return "stomping";
+  if (text.includes("koptelefoon") || text.includes("geluid")) return "headphones";
+  if (text.includes("deken") || text.includes("lijf zwaar")) return "blanket";
+  if (text.includes("kijk naar") || text.includes("5 dingen") || text.includes("voeten") || text.includes("licht")) return "focusObject";
+  if (text.includes("hart") || text.includes("gezicht") || text.includes("wachthand")) return "handHeart";
+  return "softBreath";
+}
+
+export function ExerciseArt({ title, compact = false }: { title: string; compact?: boolean }) {
+  return <span className={`exercise-art exercise-art-${exerciseVisualKey(title)} ${compact ? "compact" : ""}`} aria-hidden />;
+}
+
 export function DayPartCard({ title, progress, to }: { title: string; icon: string; progress: number; to: string }) {
   const dayPartVisual = title === "Ochtend" ? "wake" : title === "Na school" ? "school" : title === "Avond" ? "pajamas" : title === "Bedtijd" ? "sleep" : "rest";
   return (
@@ -168,17 +191,19 @@ export function TaskCard({ task, done, onDone, onHelp, onEdit, editable = false,
         </span> : null}
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
         <div className="flex-1">
-          <h3 className="font-black">{task.title}</h3>
+          <h3 className="text-lg font-black leading-tight">{task.title}</h3>
           {showDetails ? (task.optionalTime ? <span className="text-xs font-bold text-lavender">{task.optionalTime}</span> : <span className="text-xs font-bold text-navy/45">Tijd optioneel</span>) : null}
         </div>
+        {onHelp ? <button aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="grid h-12 w-12 place-items-center rounded-2xl border-2 border-lilac/40 bg-white text-lavender">
+          <HelpCircle size={23} />
+        </button> : null}
         <button aria-label={`${task.title} afvinken`} onClick={onDone} className={`grid h-12 w-12 place-items-center rounded-2xl border-2 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
           <Check size={24} />
         </button>
       </div>
-      <div className="mt-3 flex gap-4">
-        {onHelp ? <button onClick={onHelp} className="rounded-2xl bg-lavender/10 px-3 py-2 text-sm font-extrabold text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.75)]">Lukt het niet?</button> : null}
-        {onEdit ? <button onClick={onEdit} className="inline-flex items-center gap-1 text-sm font-extrabold text-navy/55"><Pencil size={14} /> Aanpassen</button> : null}
-      </div>
+      {onEdit ? <div className="mt-3 flex gap-4">
+        <button onClick={onEdit} className="inline-flex items-center gap-1 text-sm font-extrabold text-navy/55"><Pencil size={14} /> Aanpassen</button>
+      </div> : null}
     </article>
   );
 }

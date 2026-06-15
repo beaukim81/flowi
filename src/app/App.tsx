@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { BookOpen, CalendarDays, Database, HeartHandshake, Minus, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, SlidersHorizontal, Sparkles, Trash2 } from "lucide-react";
 import { avatarAssets } from "../data/avatars";
 import { calmStrategies } from "../data/calmStrategies";
@@ -14,7 +14,7 @@ import { useLiveData } from "../hooks/useLiveData";
 import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
 import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Task, TaskTemplate } from "../types/schema";
-import { AppShell, AvatarMascot, DayPartCard, EmotionCard, icons, NeedCard, PageHeader, ParentCard, PracticeArt, PrimaryButton, RewardSticker, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
+import { AppShell, AvatarMascot, DayPartCard, EmotionCard, ExerciseArt, icons, PageHeader, ParentCard, PracticeArt, PrimaryButton, RewardSticker, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
 import type { TaskVisualKey } from "../utils/taskVisuals";
 
 const dayParts: Record<DayPart, { title: string; icon: string }> = {
@@ -24,6 +24,9 @@ const dayParts: Record<DayPart, { title: string; icon: string }> = {
   bedtijd: { title: "Bedtijd", icon: "🛌" },
   vrij: { title: "Vrij", icon: "⭐" }
 };
+
+const isDayPart = (value: string | null): value is DayPart => Boolean(value && value in dayParts);
+const safeReturnPath = (value: string | null) => value?.startsWith("/") ? value : null;
 
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
@@ -82,7 +85,7 @@ const helpReasons: { id: HelpReason; label: string; need: NeedType; tips: string
   { id: "teVeel", label: "Te veel", need: "rustigePlek", tips: ["Maak de taak kleiner.", "Kies minder prikkels: zachter licht, minder geluid.", "Doe eerst 5 rustige ademhalingen."] },
   { id: "boos", label: "Boos", need: "bewegen", tips: ["Stop even met de taak.", "Geef je lijf stevig werk.", "Vraag daarna samen wat de eerste kleine stap is."] },
   { id: "moe", label: "Moe", need: "rustigePlek", tips: ["Neem een korte pauze.", "Maak de taak lichter of doe alleen de eerste stap.", "Vraag of iemand even naast je blijft."] },
-  { id: "inDeWar", label: "In de war", need: "praatMetOuder", tips: ["Vraag om een keuze uit twee opties.", "Laat iemand de taak voordoen.", "Doe samen alleen de eerste stap."] }
+  { id: "inDeWar", label: "In de war", need: "praatMetOuder", tips: ["Vraag je ouder: geef mij twee keuzes.", "Laat iemand de taak voordoen.", "Doe samen alleen de eerste stap."] }
 ];
 
 function fallbackStrategyForTask(task: Task, reason: HelpReason) {
@@ -107,6 +110,20 @@ function useAvatar(profileAvatarId?: string): Avatar {
 
 function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
   return calmStrategies.find((strategy) => (!emotion || strategy.linkedEmotionTypes.includes(emotion)) && (!need || strategy.linkedNeedTypes.includes(need))) ?? calmStrategies[0];
+}
+
+function emotionForNeed(need: NeedType): EmotionType {
+  const map: Record<NeedType, EmotionType> = {
+    knuffel: "verdrietig",
+    rustigePlek: "teVeel",
+    bewegen: "superDruk",
+    evenAlleen: "moe",
+    praatMetOuder: "inDeWar",
+    ademen: "rustig",
+    koptelefoon: "teVeel",
+    creatief: "rustig"
+  };
+  return map[need];
 }
 
 function HomePage() {
@@ -163,22 +180,28 @@ function NeedPage() {
   const { data: profile } = useProfile();
   const filteredNeeds = selectedEmotion === "weetIkNiet" ? needs.filter((need) => ["praatMetOuder", "creatief", "ademen", "rustigePlek"].includes(need.id)) : needs;
   const caregiver = profile?.caregiverName || profile?.caregiverLabel || "ouder";
+  const shownEmotion = selectedEmotion ?? "weetIkNiet";
   return (
-    <>
-      <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Wat heb ik nu nodig?" subtitle="Kies wat je nu kan helpen." />
+    <div className="phone-screen px-4 pb-5 pt-4">
+      <PageHeader title="Wat helpt nu?" subtitle="Kies een rustig stapje." />
+      <section className="mb-4 overflow-hidden rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/10 p-4 text-center shadow-soft">
+        <AvatarMascot emotion={shownEmotion} size="medium" />
+        <p className="mx-auto mt-3 max-w-xs text-sm font-bold leading-6 text-navy/58">Flowi kiest daarna een oefening die bij jouw keuze past.</p>
+      </section>
       <div className="grid grid-cols-2 gap-3">
         {filteredNeeds.map((need) => (
-          <NeedCard key={need.id} need={need} label={need.id === "praatMetOuder" ? `Praat met ${caregiver}` : undefined} onClick={() => {
+          <button key={need.id} onClick={() => {
             const strategy = chooseStrategy(selectedEmotion, need.id);
             setNeed(need.id);
             setAction(strategy.id);
             navigate(`/action/${strategy.id}`);
-          }} />
+          }} className="min-h-40 rounded-[1.55rem] border border-white/90 bg-white/92 p-3 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
+            <AvatarMascot emotion={emotionForNeed(need.id)} size="small" />
+            <span className="mt-2 block text-sm font-black text-navy">{need.id === "praatMetOuder" ? `Praat met ${caregiver}` : need.label}</span>
+          </button>
         ))}
       </div>
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -186,13 +209,11 @@ function ActionPage() {
   const navigate = useNavigate();
   const { actionId } = useParams();
   const { selectedEmotion, selectedNeed } = useCurrentFlow();
-  const { data: profile } = useProfile();
-  const avatar = useAvatar(profile?.selectedAvatarId);
   const action = calmStrategies.find((strategy) => strategy.id === actionId) ?? chooseStrategy(selectedEmotion, selectedNeed);
   return (
     <section className="phone-screen action-scene p-5 text-center">
       <PageHeader title={action.title} back />
-      <AvatarMascot avatar={avatar} emotion={selectedEmotion} size="large" />
+      <ExerciseArt title={action.title} />
       <p className="mx-auto mt-5 max-w-sm text-sm font-bold leading-6 text-navy/65">{action.childText}</p>
       <PrimaryButton className="mt-5 w-full" onClick={() => navigate("/reflection")}>Start nu</PrimaryButton>
       {action.durationSeconds ? <div className="mx-auto mt-3 inline-flex rounded-full bg-lavender/10 px-4 py-2 text-xs font-black text-lavender">⏱ {Math.round(action.durationSeconds / 60)} minuten</div> : null}
@@ -208,12 +229,29 @@ function HelpNowPage() {
   const navigate = useNavigate();
   const fast = ["Ga naar je rustige plek", "Adem zacht", "Zeg: stop, ik heb hulp nodig", "Pak iets zachts"].map((title) => calmStrategies.find((strategy) => strategy.title === title)).filter(Boolean) as CalmStrategy[];
   return (
-    <>
-      <PageHeader title="Help mij nu" subtitle="Eén rustig stapje." />
-      <div className="grid gap-3">
-        {fast.map((strategy) => <button key={strategy.id} onClick={() => navigate(`/action/${strategy.id}`)} className="rounded-[1.4rem] bg-white p-4 text-left shadow-card"><span className="text-3xl">{strategy.icon}</span><h2 className="mt-2 font-black">{strategy.title}</h2><p className="text-sm font-semibold text-navy/55">{strategy.childText}</p></button>)}
+    <div className="phone-screen px-4 pb-5 pt-4">
+      <PageHeader title="Help mij nu" subtitle="Kies één rustig stapje." />
+      <section className="relative mb-4 overflow-hidden rounded-[1.9rem] bg-gradient-to-b from-sky/18 via-white to-mint/14 p-5 shadow-soft">
+        <div className="cloud cloud-a" />
+        <div className="relative z-10 grid grid-cols-[1fr_auto] items-end gap-2">
+          <div>
+            <h2 className="text-2xl font-black text-navy">Flowi blijft bij je</h2>
+            <p className="mt-2 text-sm font-bold leading-6 text-navy/58">Je hoeft niet alles tegelijk. Kies wat nu kan.</p>
+          </div>
+          <AvatarMascot emotion="rustig" size="medium" />
+        </div>
+      </section>
+      <div className="grid grid-cols-2 gap-3">
+        {fast.map((strategy) => (
+          <button key={strategy.id} onClick={() => navigate(`/action/${strategy.id}`)} className="min-h-48 rounded-[1.55rem] border border-white/90 bg-white/94 p-3 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
+            <ExerciseArt title={strategy.title} compact />
+            <h2 className="mt-2 text-sm font-black text-navy">{strategy.title}</h2>
+            <p className="mt-1 line-clamp-2 text-xs font-bold leading-5 text-navy/52">{strategy.childText}</p>
+          </button>
+        ))}
       </div>
-    </>
+      <button onClick={() => navigate("/need")} className="mt-4 min-h-12 w-full rounded-[1.35rem] bg-gradient-to-b from-[#ffb58b] to-[#ff7f74] px-5 font-extrabold text-white shadow-[0_14px_24px_rgba(255,127,116,.24)]">Iets anders kiezen</button>
+    </div>
   );
 }
 
@@ -268,20 +306,21 @@ function HelpStartOverlay({ task, onClose }: { task: Task; onClose: () => void }
               onClick={() => setReason(item.id)}
               className={`min-h-36 rounded-[1.35rem] p-2 text-center transition ${reason === item.id ? "bg-lavender text-white shadow-card" : "bg-gradient-to-b from-sky/12 via-white to-lavender/8 text-navy shadow-card"}`}
             >
-              <AvatarMascot emotion={item.id} size="small" />
+              <AvatarMascot emotion={item.id} size="small" showCaption={false} />
               <span className="mt-1 block text-sm font-black">{item.label}</span>
             </button>
           ))}
         </div>
         {selectedHelp && strategy ? (
-          <div className="mt-4 rounded-[1.35rem] bg-lavender/8 p-3">
-            <p className="text-sm font-black text-navy">Flowi-tip bij {selectedHelp.label.toLowerCase()}</p>
-            <ul className="mt-2 grid gap-1.5">
-              {selectedHelp.tips.map((tip) => <li key={tip} className="text-sm font-bold leading-5 text-navy/60">• {tip}</li>)}
-            </ul>
+          <div className="mt-4 rounded-[1.35rem] bg-lavender/8 p-3 text-center">
+            <p className="text-sm font-black text-navy">Flowi stelt dit voor</p>
+            <ExerciseArt title={strategy.title} compact />
             <button type="button" onClick={() => navigate(`/action/${strategy.id}`)} className="mt-3 min-h-11 w-full rounded-2xl bg-gradient-to-b from-[#8fd8e8] to-[#4eb1c9] px-4 text-sm font-black text-white shadow-[0_12px_22px_rgba(78,177,201,.24)]">
               Doe: {strategy.title}
             </button>
+            <ul className="mt-3 grid gap-1.5 text-left">
+              {selectedHelp.tips.map((tip) => <li key={tip} className="text-sm font-bold leading-5 text-navy/60">• {tip}</li>)}
+            </ul>
           </div>
         ) : (
           <p className="mt-3 text-center text-xs font-bold text-navy/45">Kies wat lastig voelt. Dan helpt Flowi verder.</p>
@@ -359,7 +398,7 @@ function DaySettingsPage() {
           return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library?returnTo=%2Fday-settings")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new?returnTo=%2Fday-settings")}>Taak toevoegen</PrimaryButton></div>
       </div>
     </>
   );
@@ -453,7 +492,7 @@ function DaySettingsPartPage() {
           </div>
         ))}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings`)}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings`)}>Taak toevoegen</PrimaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       {helpTask ? <HelpStartOverlay task={helpTask} onClose={() => setHelpTask(null)} /> : null}
       </div>
@@ -463,14 +502,17 @@ function DaySettingsPartPage() {
 
 function TaskFormPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { taskId } = useParams();
+  const requestedDayPart = searchParams.get("dayPart");
+  const returnTo = safeReturnPath(searchParams.get("returnTo"));
   const editing = Boolean(taskId);
   const { data: existing } = useLiveData(() => taskId ? db.tasks.get(taskId) : Promise.resolve(undefined), undefined as Task | undefined, [taskId]);
   const [title, setTitle] = useState("");
   const [icon, setIcon] = useState("⭐");
   const [visualKey, setVisualKey] = useState<TaskVisualKey | "">("");
   const [showVisualBank, setShowVisualBank] = useState(false);
-  const [dayPart, setDayPart] = useState<DayPart>("ochtend");
+  const [dayPart, setDayPart] = useState<DayPart>(isDayPart(requestedDayPart) ? requestedDayPart : "ochtend");
   const [optionalTime, setOptionalTime] = useState("");
   const [steps, setSteps] = useState("Begin klein.\nKlaar.");
   const [fallbackStrategyId, setFallbackStrategyId] = useState("");
@@ -480,10 +522,10 @@ function TaskFormPage() {
     const currentTasks = await db.tasks.where("dayPart").equals(dayPart).toArray();
     const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, fallbackStrategyId: fallbackStrategyId || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: steps.split("\n").filter(Boolean), repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
     await db.tasks.put(task);
-    navigate(`/day-settings/${dayPart}`);
+    navigate(returnTo ?? `/day-settings/${dayPart}`);
   };
   const remove = async () => {
-    if (!existing || !confirm("Wil je deze taak verwijderen?")) return;
+    if (!existing) return;
     await db.tasks.delete(existing.id);
     navigate(`/day-settings/${existing.dayPart}`);
   };
@@ -542,6 +584,11 @@ function TaskFormPage() {
 }
 
 function TaskLibraryPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedDayPart = searchParams.get("dayPart");
+  const forcedDayPart = isDayPart(requestedDayPart) ? requestedDayPart : null;
+  const returnTo = safeReturnPath(searchParams.get("returnTo"));
   const [age, setAge] = useState("4-5");
   const [category, setCategory] = useState("Alles");
   const { data: templates } = useLiveData(() => db.taskTemplates.where("ageGroup").equals(age).toArray(), [], [age]);
@@ -550,8 +597,10 @@ function TaskLibraryPage() {
     .filter((template) => category === "Alles" || template.category === category)
     .sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
   const add = async (template: TaskTemplate) => {
-    const currentTasks = await db.tasks.where("dayPart").equals(template.defaultDayPart).toArray();
-    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: template.defaultDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: "elkeDag", estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
+    const targetDayPart = forcedDayPart ?? template.defaultDayPart;
+    const currentTasks = await db.tasks.where("dayPart").equals(targetDayPart).toArray();
+    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: "elkeDag", estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
+    if (returnTo) navigate(returnTo);
   };
   return (
     <>
@@ -699,7 +748,7 @@ function PracticePage() {
       <div className="phone-screen px-4 pb-5 pt-4">
         <PageHeader title={activeExercise.title} subtitle={activeExercise.category} />
         <section className="rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/12 p-5 text-center shadow-soft">
-          <PracticeArt category={activeExercise.category} title={activeExercise.title} />
+          <ExerciseArt title={activeExercise.title} />
           <p className="mx-auto mt-4 max-w-xs text-sm font-bold leading-6 text-navy/60">{activeExercise.description}</p>
           <div className="mx-auto mt-5 grid h-28 w-28 place-items-center rounded-full bg-white text-3xl font-black text-lavender shadow-card ring-8 ring-lavender/10">{formatTime(remaining)}</div>
           <div className="mt-4 h-3 rounded-full bg-lilac/18"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
@@ -748,7 +797,7 @@ function PracticePage() {
       <div className="grid gap-3">
         {visibleExercises.map((exercise) => (
           <button key={exercise.id} onClick={() => setActiveExercise(exercise)} className="flex items-center gap-3 rounded-[1.5rem] bg-white/94 p-3 text-left shadow-card">
-            <PracticeArt category={exercise.category} title={exercise.title} compact />
+            <ExerciseArt title={exercise.title} compact />
             <div className="min-w-0 flex-1">
               <div className="text-xs font-black text-lavender">{exercise.category}</div>
               <h2 className="font-black">{exercise.title}</h2>
