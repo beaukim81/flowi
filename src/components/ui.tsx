@@ -236,6 +236,23 @@ export function DayPartCard({ title, progress, to }: { title: string; icon: stri
   );
 }
 
+export function ChildTaskCard({ task, done, needsHelp = false, onDone, onHelp }: { task: Task; done: boolean; needsHelp?: boolean; onDone: () => void; onHelp?: () => void }) {
+  return (
+    <article className={`child-task-card ${done ? "is-done" : needsHelp ? "needs-help" : ""}`}>
+      <button type="button" aria-label={done ? `${task.title} weer open zetten` : `${task.title} afvinken`} aria-pressed={done} onClick={onDone} className="child-task-main">
+        <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} />
+        <h3>{task.title}</h3>
+        {done ? <span className="child-task-status">Gelukt</span> : needsHelp ? <span className="child-task-status help">Geprobeerd</span> : null}
+      </button>
+      {onHelp ? (
+        <button type="button" aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="child-task-help">
+          <HelpCircle size={28} />
+        </button>
+      ) : null}
+    </article>
+  );
+}
+
 export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit, onDelete, editable = false, showDetails = true }: { task: Task; done: boolean; needsHelp?: boolean; onDone?: () => void; onHelp?: () => void; onEdit?: () => void; onDelete?: () => void; editable?: boolean; showDetails?: boolean }) {
   return (
     <article className={`rounded-[1.6rem] border p-4 shadow-card ring-1 ${done ? "border-mint/35 bg-gradient-to-b from-white to-mint/10 ring-mint/12" : needsHelp ? "border-lavender/30 bg-gradient-to-b from-white to-lavender/8 ring-lavender/12" : "border-white/85 bg-white/94 ring-lavender/8"}`}>
@@ -255,7 +272,7 @@ export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit
         {editable && onDelete ? <button aria-label={`${task.title} verwijderen`} onClick={onDelete} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-coral/25 bg-coral/10 text-coral sm:h-14 sm:w-14">
           <Trash2 size={25} />
         </button> : null}
-        {!editable && onDone ? <button aria-label={`${task.title} afvinken`} onClick={onDone} className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 sm:h-14 sm:w-14 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
+        {!editable && onDone ? <button aria-label={done ? `${task.title} weer open zetten` : `${task.title} afvinken`} aria-pressed={done} onClick={onDone} className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 sm:h-14 sm:w-14 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
           <Check size={28} />
         </button> : null}
       </div>

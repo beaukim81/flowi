@@ -12,6 +12,7 @@
 
 * {
   box-sizing: border-box;
+  min-width: 0;
 }
 
 html,
@@ -20,7 +21,7 @@ body,
   min-height: 100%;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
@@ -28,12 +29,24 @@ body,
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
   background: #fbf9ff;
   font-size: 1rem;
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
   overscroll-behavior: none;
+}
+
+@supports not (overflow: clip) {
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
 }
 
 button, input, textarea, select {
@@ -88,7 +101,7 @@ input, textarea, select {
 .flowi-bg {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   background:
     radial-gradient(circle at 78% 4%, rgba(255, 255, 255, 0.96) 0 90px, transparent 92px),
     radial-gradient(circle at 14% 12%, rgba(232, 243, 255, 0.9), transparent 210px),
@@ -99,6 +112,8 @@ input, textarea, select {
 .fixed-shell {
   position: fixed;
   inset: 0;
+  width: 100%;
+  max-width: 100%;
   height: 100dvh;
   overflow: hidden;
   overscroll-behavior: none;
@@ -107,6 +122,8 @@ input, textarea, select {
 .scroll-shell {
   position: fixed;
   inset: 0;
+  width: 100%;
+  max-width: 100%;
   height: 100dvh;
   overflow: hidden;
   overscroll-behavior: none;
@@ -115,6 +132,8 @@ input, textarea, select {
 .fixed-main {
   position: fixed;
   inset: 0;
+  width: 100%;
+  max-width: 100%;
   height: 100dvh;
   overflow: hidden;
 }
@@ -122,8 +141,10 @@ input, textarea, select {
 .scroll-main {
   position: fixed;
   inset: 0;
+  width: 100%;
+  max-width: 100%;
   height: 100dvh;
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -165,7 +186,7 @@ input, textarea, select {
   width: 100%;
   max-width: 100%;
   min-height: calc(100dvh - 7.8rem);
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: visible;
   touch-action: pan-y;
   background:
@@ -284,13 +305,28 @@ input, textarea, select {
 .home-mascot-wrap {
   width: 100%;
   max-width: 100%;
-  margin: -0.4rem 0 -0.3rem auto;
+  margin: -0.4rem 0 -1.05rem auto;
   min-height: 0;
   flex: 1 1 auto;
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
   overflow: visible;
+}
+
+.home-mascot-wrap::after {
+  content: "";
+  position: absolute;
+  right: clamp(.8rem, 8vw, 4.2rem);
+  bottom: .1rem;
+  z-index: 1;
+  width: min(14.5rem, 56vw);
+  height: 2.25rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at center, rgba(112, 158, 72, .32) 0 42%, rgba(112, 158, 72, .12) 58%, transparent 72%),
+    linear-gradient(90deg, transparent, rgba(188, 222, 142, .5), transparent);
+  filter: blur(.12rem);
 }
 
 .home-mascot-free {
@@ -305,6 +341,7 @@ input, textarea, select {
   object-position: right bottom;
   filter: drop-shadow(0 1.4rem 1.1rem rgba(132, 96, 24, 0.18));
   pointer-events: none;
+  transform: translateY(.55rem);
 }
 
 .home-actions {
@@ -321,13 +358,13 @@ input, textarea, select {
 
 .home-visual-card {
   position: relative;
-  min-height: 6.2rem;
+  min-height: 7.15rem;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .84);
   border-radius: 1.55rem;
-  background:
-    radial-gradient(circle at 34% 20%, rgba(255,255,255,.95), transparent 42%),
-    linear-gradient(180deg, rgba(246,243,255,.94), rgba(255,255,255,.82));
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
   box-shadow: 0 10px 22px rgba(72, 63, 137, .1);
   transition: transform .16s ease, box-shadow .16s ease;
 }
@@ -337,157 +374,16 @@ input, textarea, select {
   box-shadow: 0 6px 14px rgba(72, 63, 137, .12);
 }
 
-.home-visual-giraffe {
-  position: absolute;
-  left: 50%;
-  bottom: .48rem;
-  width: 3.9rem;
-  height: 4.8rem;
-  transform: translateX(-50%);
-}
-
-.home-visual-giraffe::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: .35rem;
-  width: 2.35rem;
-  height: 2.45rem;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #ffd46e, #f0a12d);
-  box-shadow:
-    -.52rem -.44rem 0 -.32rem #f3ac37,
-    .52rem -.44rem 0 -.32rem #f3ac37,
-    -.48rem .18rem 0 -.34rem rgba(255, 141, 134, .75),
-    .48rem .18rem 0 -.34rem rgba(255, 141, 134, .75);
-  transform: translateX(-50%);
-}
-
-.home-visual-giraffe::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 1.76rem;
-  width: .92rem;
-  height: .42rem;
-  border-bottom: .12rem solid #8b4f17;
-  border-radius: 0 0 999px 999px;
-  transform: translateX(-50%);
-}
-
-.home-visual-giraffe {
-  background:
-    radial-gradient(circle at 38% 68%, #b46816 0 .22rem, transparent .23rem),
-    radial-gradient(circle at 62% 78%, #b46816 0 .24rem, transparent .25rem),
-    linear-gradient(180deg, transparent 0 2.2rem, #e79b28 2.22rem 100%);
-  border-radius: 999px 999px 1.2rem 1.2rem;
-}
-
 .home-visual-feel {
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 42%),
-    linear-gradient(180deg, rgba(239,232,255,.96), rgba(255,255,255,.84));
+  background-image: url("/assets/flowi-home-feeling.jpg");
 }
 
 .home-visual-day {
-  background:
-    radial-gradient(circle at 72% 22%, rgba(255,241,170,.86), transparent 32%),
-    linear-gradient(180deg, rgba(228,247,214,.98), rgba(255,255,255,.84));
+  background-image: url("/assets/flowi-home-day.jpg");
 }
 
 .home-visual-help {
-  background:
-    radial-gradient(circle at 30% 18%, rgba(255,255,255,.95), transparent 42%),
-    linear-gradient(180deg, rgba(255,230,215,.98), rgba(255,255,255,.84));
-}
-
-.home-feeling-bubbles {
-  position: absolute;
-  inset: .55rem .45rem auto;
-  display: flex;
-  justify-content: space-between;
-}
-
-.home-feeling-bubbles i {
-  display: block;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 50%;
-  background: #8a6df1;
-  box-shadow: inset 0 .18rem 0 rgba(255,255,255,.52), 0 .3rem .8rem rgba(72,63,137,.12);
-}
-
-.home-feeling-bubbles i:nth-child(2) { background: #65bf7d; transform: translateY(.35rem); }
-.home-feeling-bubbles i:nth-child(3) { background: #ff8d86; }
-
-.home-calendar {
-  position: absolute;
-  right: .55rem;
-  top: .55rem;
-  width: 2.35rem;
-  height: 2.65rem;
-  border-radius: .48rem;
-  background: #fff;
-  box-shadow: 0 .45rem .9rem rgba(72,63,137,.12);
-}
-
-.home-calendar::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: .68rem;
-  border-radius: .48rem .48rem 0 0;
-  background: #8a6df1;
-}
-
-.home-calendar i {
-  position: absolute;
-  top: 1.05rem;
-  width: .42rem;
-  height: .42rem;
-  border-radius: .14rem;
-  background: #9bd886;
-}
-
-.home-calendar i:nth-child(1) { left: .45rem; }
-.home-calendar i:nth-child(2) { left: .98rem; background: #ffc65b; }
-.home-calendar i:nth-child(3) { left: 1.5rem; background: #ff8d86; }
-
-.home-help-button {
-  position: absolute;
-  right: .62rem;
-  top: .9rem;
-  width: 2.65rem;
-  height: 2.65rem;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #ff9b8e, #f15c67);
-  box-shadow:
-    inset 0 .28rem 0 rgba(255,255,255,.35),
-    0 .62rem 1rem rgba(241,92,103,.24);
-}
-
-.home-help-button::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 1.15rem;
-  height: .24rem;
-  border-radius: 999px;
-  background: #fff;
-  transform: translate(-50%, -50%);
-}
-
-.home-help-button::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: .24rem;
-  height: 1.15rem;
-  border-radius: 999px;
-  background: #fff;
-  transform: translate(-50%, -50%);
+  background-image: url("/assets/flowi-home-help.jpg");
 }
 
 @media (max-height: 700px) {
@@ -508,6 +404,7 @@ input, textarea, select {
 
   .home-mascot-free {
     width: min(16rem, 72vw, 36dvh);
+    transform: translateY(.35rem);
   }
 
   .speech-bubble {
@@ -525,12 +422,7 @@ input, textarea, select {
   }
 
   .home-visual-card {
-    min-height: 5.15rem;
-  }
-
-  .home-visual-giraffe {
-    width: 3.25rem;
-    height: 4.05rem;
+    min-height: 5.85rem;
   }
 }
 
@@ -721,6 +613,110 @@ input, textarea, select {
   transform-origin: center;
   filter: drop-shadow(0 1.4rem 1.8rem rgba(44, 37, 105, .22));
   touch-action: none;
+}
+
+.child-task-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .88);
+  border-radius: 1.8rem;
+  background:
+    radial-gradient(circle at 20% 6%, rgba(255, 255, 255, .96), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(244, 249, 255, .88));
+  box-shadow: 0 18px 44px rgba(71, 63, 137, .12);
+}
+
+.child-task-card.is-done {
+  background:
+    radial-gradient(circle at 22% 10%, rgba(255, 255, 255, .96), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(221, 245, 225, .92));
+}
+
+.child-task-card.needs-help {
+  background:
+    radial-gradient(circle at 22% 10%, rgba(255, 255, 255, .96), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(238, 232, 255, .9));
+}
+
+.child-task-main {
+  display: grid;
+  width: 100%;
+  min-height: 14.5rem;
+  place-items: center;
+  padding: 1rem 4.5rem 1.15rem 1rem;
+  text-align: center;
+}
+
+.child-task-card .task-art {
+  width: min(100%, 12.4rem);
+  max-width: 12.4rem;
+  border-radius: 1.45rem;
+}
+
+.child-task-main h3 {
+  margin-top: .75rem;
+  max-width: 16rem;
+  color: #151e55;
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1.12;
+}
+
+.child-task-status {
+  margin-top: .6rem;
+  border-radius: 999px;
+  background: rgba(101, 191, 125, .14);
+  padding: .45rem 1rem;
+  color: #4ea765;
+  font-size: .95rem;
+  font-weight: 900;
+}
+
+.child-task-status.help {
+  background: rgba(138, 109, 241, .12);
+  color: #7a5be0;
+}
+
+.child-task-help {
+  position: absolute;
+  right: .85rem;
+  top: .85rem;
+  display: grid;
+  width: 3.35rem;
+  height: 3.35rem;
+  min-height: 3.35rem;
+  place-items: center;
+  border: 2px solid rgba(138, 109, 241, .2);
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, .9);
+  color: #8a6df1;
+  box-shadow: 0 10px 22px rgba(71, 63, 137, .12);
+}
+
+@media (min-width: 640px) {
+  .child-task-main {
+    min-height: 17rem;
+  }
+
+  .child-task-card .task-art {
+    width: min(100%, 14rem);
+    max-width: 14rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .child-task-main {
+    min-height: 13.25rem;
+    padding-right: 4rem;
+  }
+
+  .child-task-card .task-art {
+    width: min(100%, 10.6rem);
+  }
+
+  .child-task-main h3 {
+    font-size: 1.18rem;
+  }
 }
 
 .avatar-stage {
@@ -1475,7 +1471,7 @@ input, textarea, select {
 }
 
 .growth-care-stage {
-  min-height: 18rem;
+  min-height: 19.5rem;
   border-radius: 0;
   background:
     radial-gradient(circle at 72% 12%, rgba(255,255,255,.78), transparent 5rem),
@@ -1486,13 +1482,26 @@ input, textarea, select {
 
 .growth-care-flowi {
   position: absolute;
-  left: -.65rem;
-  bottom: -1rem;
+  left: -.2rem;
+  bottom: -.8rem;
   z-index: 4;
-  width: min(13.5rem, 54vw);
-  transform: rotate(0deg) translateY(0);
+  width: min(12.6rem, 50vw);
+  transform: translate3d(0, 0, 0) rotate(0deg);
   transform-origin: bottom left;
-  animation: flowi-water-body 3.4s ease-in-out infinite;
+  animation: flowi-water-body 4.2s ease-in-out infinite;
+}
+
+.growth-care-flowi::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 10%;
+  bottom: .35rem;
+  z-index: -1;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: rgba(85, 129, 55, .22);
+  filter: blur(.22rem);
 }
 
 .growth-flowi-character {
@@ -1501,12 +1510,29 @@ input, textarea, select {
   height: auto;
   filter: drop-shadow(0 1.1rem 1rem rgba(132, 96, 24, .18));
   pointer-events: none;
+  transform: scaleX(-1);
+  transform-origin: center bottom;
+}
+
+.growth-flowi-arm {
+  position: absolute;
+  right: 18%;
+  top: 47%;
+  z-index: 7;
+  width: 3.1rem;
+  height: .72rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d98a22, #8b4f17);
+  box-shadow: inset .18rem .16rem 0 rgba(255,255,255,.28);
+  transform: rotate(-20deg);
+  transform-origin: left center;
+  animation: flowi-helping-arm 4.2s ease-in-out infinite;
 }
 
 .growth-watering-can {
   position: absolute;
-  right: -1rem;
-  top: 45%;
+  right: -1.15rem;
+  top: 44%;
   z-index: 6;
   width: 3.3rem;
   height: 2rem;
@@ -1517,7 +1543,7 @@ input, textarea, select {
     0 .55rem 1rem rgba(72, 63, 137, .12);
   transform: rotate(-18deg);
   transform-origin: 20% 80%;
-  animation: flowi-water-can 3.4s ease-in-out infinite;
+  animation: flowi-water-can 4.2s ease-in-out infinite;
 }
 
 .growth-watering-can::before {
@@ -1547,7 +1573,7 @@ input, textarea, select {
 
 .growth-care-tree {
   position: absolute;
-  right: 1.9rem;
+  right: 1.45rem;
   bottom: 1.1rem;
   z-index: 3;
   transform: scale(1.75);
@@ -1556,7 +1582,7 @@ input, textarea, select {
 
 .growth-care-sun {
   position: absolute;
-  right: 2rem;
+  right: 1.45rem;
   top: .6rem;
   width: 4rem;
   height: 4rem;
@@ -1575,7 +1601,7 @@ input, textarea, select {
 
 .growth-sun-string {
   position: absolute;
-  right: 3.85rem;
+  right: 3.3rem;
   top: 4.35rem;
   z-index: 2;
   width: .16rem;
@@ -1604,8 +1630,8 @@ input, textarea, select {
 
 .growth-care-drops {
   position: absolute;
-  left: min(12.2rem, 49vw);
-  top: 10rem;
+  left: min(13.4rem, 51vw);
+  top: 10.4rem;
   z-index: 5;
   display: flex;
   gap: .55rem;
@@ -1633,34 +1659,68 @@ input, textarea, select {
 .growth-focus-water .growth-care-drops,
 .growth-focus-sun .growth-care-drops {
   opacity: 1;
-  animation: water-drops-fall 1.8s ease-in-out infinite;
+  animation: water-drops-fall 2.1s ease-in-out infinite;
+}
+
+.growth-focus-sun .growth-care-flowi {
+  animation: flowi-walk-to-lamp 5.2s ease-in-out infinite;
+}
+
+.growth-focus-sun .growth-flowi-character {
+  animation: flowi-little-steps 5.2s ease-in-out infinite;
+}
+
+.growth-focus-sun .growth-flowi-arm {
+  right: 8%;
+  top: 34%;
+  animation: flowi-pull-arm 5.2s ease-in-out infinite;
+}
+
+.growth-focus-sun .growth-watering-can,
+.growth-focus-rest .growth-watering-can {
+  opacity: 0;
+  animation: none;
+}
+
+.growth-focus-sun .growth-care-drops,
+.growth-focus-rest .growth-care-drops {
+  opacity: 0;
+  animation: none;
 }
 
 .growth-focus-rest .growth-care-flowi {
   animation: tiny-bounce 3.4s ease-in-out infinite;
 }
 
-.growth-focus-rest .growth-watering-can {
-  opacity: .55;
+.growth-focus-rest .growth-flowi-arm {
+  opacity: 0;
   animation: none;
 }
 
 @keyframes flowi-water-body {
-  0%, 100% { transform: rotate(0deg) translateY(0); }
-  38% { transform: rotate(-1.2deg) translateY(-.12rem); }
-  55% { transform: rotate(1.4deg) translateY(.08rem); }
-  72% { transform: rotate(-.8deg) translateY(0); }
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  24% { transform: translate3d(.18rem, 0, 0) rotate(-.8deg); }
+  48%, 68% { transform: translate3d(.55rem, .08rem, 0) rotate(4deg); }
+  82% { transform: translate3d(.22rem, -.04rem, 0) rotate(-.6deg); }
 }
 
 @keyframes flowi-water-can {
-  0%, 100% { transform: rotate(-14deg); }
-  40%, 66% { transform: rotate(-34deg) translate(.18rem, .05rem); }
+  0%, 100% { transform: rotate(-12deg) translate(0, 0); }
+  28% { transform: rotate(-18deg) translate(.05rem, 0); }
+  48%, 68% { transform: rotate(-44deg) translate(.35rem, .18rem); }
+  82% { transform: rotate(-18deg) translate(.05rem, 0); }
+}
+
+@keyframes flowi-helping-arm {
+  0%, 100% { transform: rotate(-18deg); }
+  45%, 68% { transform: rotate(-34deg) translate(.2rem, .1rem); }
 }
 
 @keyframes water-drops-fall {
-  0% { transform: translate(-.25rem, -.55rem) rotate(-18deg); opacity: 0; }
-  22% { opacity: 1; }
-  100% { transform: translate(.7rem, 1.55rem) rotate(-18deg); opacity: 0; }
+  0%, 26% { transform: translate(-.35rem, -.65rem) rotate(-18deg); opacity: 0; }
+  34% { opacity: 1; }
+  76% { opacity: 1; }
+  100% { transform: translate(1.1rem, 2.15rem) rotate(-18deg); opacity: 0; }
 }
 
 @keyframes growth-sunshine {
@@ -1682,6 +1742,27 @@ input, textarea, select {
   0%, 100% { transform: rotate(0deg) translateY(0); }
   36% { transform: rotate(-4deg) translateY(.65rem); }
   58% { transform: rotate(3deg) translateY(.25rem); }
+}
+
+@keyframes flowi-walk-to-lamp {
+  0%, 100% { transform: translate3d(-.25rem, 0, 0) rotate(0deg); }
+  18% { transform: translate3d(1.2rem, -.08rem, 0) rotate(-1deg); }
+  36% { transform: translate3d(2.6rem, 0, 0) rotate(1deg); }
+  54%, 70% { transform: translate3d(3.4rem, 0, 0) rotate(-2deg); }
+  86% { transform: translate3d(1.35rem, -.04rem, 0) rotate(.6deg); }
+}
+
+@keyframes flowi-little-steps {
+  0%, 100% { transform: scaleX(-1) rotate(0deg); }
+  18% { transform: scaleX(-1) rotate(-1.6deg); }
+  36% { transform: scaleX(-1) rotate(1.4deg); }
+  54%, 70% { transform: scaleX(-1) rotate(-.6deg); }
+}
+
+@keyframes flowi-pull-arm {
+  0%, 38%, 100% { transform: rotate(-12deg) translate(0, 0); }
+  52% { transform: rotate(-58deg) translate(.35rem, .2rem); }
+  66% { transform: rotate(-42deg) translate(.2rem, .75rem); }
 }
 
 .week-seed {

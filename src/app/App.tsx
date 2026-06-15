@@ -13,7 +13,7 @@ import { useLiveData } from "../hooks/useLiveData";
 import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
 import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Task, TaskTemplate } from "../types/schema";
-import { AppShell, AvatarMascot, DayPartCard, EmotionCard, ExerciseArt, icons, NeedCard, PageHeader, ParentCard, PrimaryButton, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
+import { AppShell, AvatarMascot, ChildTaskCard, DayPartCard, EmotionCard, ExerciseArt, icons, NeedCard, PageHeader, ParentCard, PrimaryButton, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
 import type { TaskVisualKey } from "../utils/taskVisuals";
 
 const dayParts: Record<DayPart, { title: string; icon: string }> = {
@@ -189,18 +189,9 @@ function HomePage() {
           <div className="speech-bubble">Ik help jou.<br /><span>♥</span></div>
         </div>
         <div className="home-visual-actions" aria-label="Kies wat je wilt doen">
-          <button type="button" onClick={() => navigate("/check-in")} className="home-visual-card home-visual-feel" aria-label="Hoe voel ik me?">
-            <span className="home-visual-giraffe" aria-hidden />
-            <span className="home-feeling-bubbles" aria-hidden><i /><i /><i /></span>
-          </button>
-          <button type="button" onClick={() => navigate("/day")} className="home-visual-card home-visual-day" aria-label="Mijn dag">
-            <span className="home-visual-giraffe" aria-hidden />
-            <span className="home-calendar" aria-hidden><i /><i /><i /></span>
-          </button>
-          <button type="button" onClick={() => navigate("/help-now")} className="home-visual-card home-visual-help" aria-label="Help mij nu">
-            <span className="home-visual-giraffe" aria-hidden />
-            <span className="home-help-button" aria-hidden />
-          </button>
+          <button type="button" onClick={() => navigate("/check-in")} className="home-visual-card home-visual-feel" aria-label="Hoe voel ik me?" />
+          <button type="button" onClick={() => navigate("/day")} className="home-visual-card home-visual-day" aria-label="Mijn dag" />
+          <button type="button" onClick={() => navigate("/help-now")} className="home-visual-card home-visual-help" aria-label="Help mij nu" />
         </div>
       </div>
     </section>
@@ -488,7 +479,7 @@ function DayPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={childName ? `${childName}'s dag` : "Mijn dag"} subtitle="Vink af wat klaar is." back={false} />
+      <PageHeader title={childName ? `${childName}'s dag` : "Mijn dag"} subtitle="Kies wat gelukt is. Flowi helpt als iets lastig is." back={false} />
       <div className="grid gap-3">
         {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
           const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled);
@@ -510,8 +501,13 @@ function DayPartPage() {
   const [helpTask, setHelpTask] = useState<Task | null>(null);
   const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
   const childName = profile?.name?.trim();
-  const complete = async (task: Task) => {
-    await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "done", completedAt: now() });
+  const toggleComplete = async (task: Task) => {
+    const existing = completions.find((completion) => completion.taskId === task.id);
+    if (existing?.status === "done") {
+      await db.taskCompletions.delete(existing.id);
+    } else {
+      await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "done", completedAt: now() });
+    }
     await reloadCompletions();
     await reload();
   };
@@ -523,11 +519,14 @@ function DayPartPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle={childName ? `Voor ${childName}: alleen afvinken wat klaar is.` : "Alleen afvinken wat klaar is."} />
+      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle={childName ? `Voor ${childName}: kies wat gelukt is.` : "Kies wat gelukt is. Lukt iets niet? Flowi helpt."} />
       <div className="grid gap-3">
-        {visibleTasks.length ? visibleTasks.map((task) => (
-          <TaskCard key={task.id} task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} needsHelp={completions.some((completion) => completion.taskId === task.id && completion.status === "needsHelp")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} showDetails={false} />
-        )) : (
+        {visibleTasks.length ? visibleTasks.map((task) => {
+          const completion = completions.find((item) => item.taskId === task.id);
+          return (
+            <ChildTaskCard key={task.id} task={task} done={completion?.status === "done"} needsHelp={completion?.status === "needsHelp"} onDone={() => toggleComplete(task)} onHelp={() => setHelpTask(task)} />
+          );
+        }) : (
           <div className="rounded-[1.5rem] bg-white/90 p-5 text-center shadow-card">
             <TaskArt title={dayParts[part]?.title ?? "Rust"} />
             <p className="mt-3 font-black text-navy">Er staat hier nog niets klaar.</p>
@@ -947,6 +946,7 @@ function RewardsPage() {
           <div className="growth-care-drops" aria-hidden><span /><span /><span /></div>
           <div className="growth-care-flowi" aria-hidden>
             <img src="/assets/flowi-home-mascot.png" alt="" className="growth-flowi-character" />
+            <span className="growth-flowi-arm" />
             <span className="growth-watering-can" />
           </div>
           <div className="growth-care-tree">
