@@ -3,7 +3,8 @@ export type TaskVisualKey =
   | "makeBed" | "curtains" | "hair" | "faceWash" | "medicine" | "lunchbox" | "drinkBottle" | "shoesOn" | "coatOn" | "coatHang" | "shoesOff" | "unpackBag"
   | "drinkWater" | "snack" | "outsidePlay" | "moveBreak" | "homework" | "reading" | "creative" | "toysClean" | "roomClean" | "laundry" | "setTable" | "clearTable"
   | "dishwasher" | "waterPlants" | "petFood" | "sportsBag" | "agenda" | "weekPlan" | "screenOff" | "calmCard" | "breatheBed" | "dimLight" | "askHelp" | "wallPush"
-  | "outsidePlayGiraffe" | "craftGiraffe" | "drinkCupKitchen" | "headphonesRest";
+  | "outsidePlayGiraffe" | "craftGiraffe" | "drinkCupKitchen" | "headphonesRest"
+  | "dinner" | "sports" | "swimming" | "musicLesson" | "playdate" | "toilet" | "bsoCare" | "sunscreen" | "bike" | "fruit" | "lunchPrep";
 
 const has = (text: string, words: string[]) => words.some((word) => text.includes(word));
 
@@ -26,6 +27,17 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["tandenpoetsen", "tanden poetsen", "poetsen"])) return "teeth";
   if (has(text, ["handen wassen"])) return "hands";
   if (has(text, ["koptelefoon"])) return "headphonesRest";
+  if (has(text, ["avond eten", "avondeten", "warm eten", "diner"])) return "dinner";
+  if (has(text, ["sporten", "training", "voetbal", "hockey", "gymles", "turnen", "dansen"])) return "sports";
+  if (has(text, ["zwemles", "zwemmen"])) return "swimming";
+  if (has(text, ["muziekles", "pianoles", "gitaarles", "drumles", "muziek oefenen"])) return "musicLesson";
+  if (has(text, ["speelafspraak", "spelen bij", "vriendje", "vriendinnetje"])) return "playdate";
+  if (has(text, ["wc", "toilet", "plassen", "poepen"])) return "toilet";
+  if (has(text, ["bso", "opvang", "naschoolse opvang"])) return "bsoCare";
+  if (has(text, ["zonnebrand", "insmeren"])) return "sunscreen";
+  if (has(text, ["fietsen", "fiets", "helm op"])) return "bike";
+  if (has(text, ["fruit eten", "fruit"])) return "fruit";
+  if (has(text, ["lunch maken", "brood smeren", "sandwich", "lunch klaarmaken"])) return "lunchPrep";
   if (has(text, ["drink water", "iets drinken", "water drinken"])) return "drinkWater";
   if (has(text, ["snack"])) return "snack";
   if (has(text, ["buiten spelen"])) return "outsidePlayGiraffe";

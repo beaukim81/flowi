@@ -17,7 +17,9 @@ const templates: TemplateSeed[] = [
   { title: "Aankleden", category: "Zelfzorg", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "ochtend", steps: ["Pak je kleren.", "Trek je broek aan.", "Trek je shirt aan.", "Sokken aan.", "Klaar."] },
   { title: "Kleding klaarleggen", category: "Voorbereiden", ageGroups: ["8-9", "10-12"], dayPart: "avond", steps: ["Kies kleding.", "Leg alles klaar.", "Check sokken en ondergoed."] },
   { title: "Ontbijten", category: "Eten & drinken", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "ochtend", steps: ["Ga aan tafel.", "Eet rustig.", "Neem een slok.", "Klaar."] },
+  { title: "Fruit eten", category: "Eten & drinken", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "ochtend", steps: ["Ga zitten.", "Kies fruit.", "Eet rustig.", "Klaar."] },
   { title: "Bord naar de keuken", category: "Helpen", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "ochtend", steps: ["Pak je bord.", "Loop naar de keuken.", "Zet het op het aanrecht."] },
+  { title: "Naar de wc voor vertrek", category: "Zelfzorg", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "ochtend", steps: ["Ga naar de wc.", "Was je handen.", "Kom terug."] },
   { title: "Tandenpoetsen ochtend", category: "Zelfzorg", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "ochtend", steps: ["Pak je tandenborstel.", "Tandpasta erop.", "Poets boven.", "Poets onder.", "Spoel."] },
   { title: "Haren kammen", category: "Zelfzorg", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "ochtend", steps: ["Pak je kam.", "Kam rustig.", "Vraag hulp bij klitten."] },
   { title: "Gezicht wassen", category: "Zelfzorg", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "ochtend", steps: ["Maak washand nat.", "Was je gezicht.", "Droog af."] },
@@ -28,6 +30,8 @@ const templates: TemplateSeed[] = [
   { title: "Drinkbeker pakken", category: "School", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "ochtend", steps: ["Pak je beker.", "Doe hem in je tas.", "Klaar."] },
   { title: "Schoenen aan", category: "Ochtend", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "ochtend", steps: ["Pak je schoenen.", "Trek ze aan.", "Sluit ze of vraag hulp."] },
   { title: "Jas aan", category: "Ochtend", ageGroups: ["4-5", "6-7"], dayPart: "ochtend", steps: ["Pak je jas.", "Trek hem aan.", "Rits dicht."] },
+  { title: "Zonnebrand smeren", category: "Zelfzorg", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "ochtend", steps: ["Vraag je ouder.", "Smeer armen en gezicht.", "Laat het even intrekken."], minutes: 3 },
+  { title: "Fietsen naar school", category: "School", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "ochtend", steps: ["Zet je helm op.", "Pak je fiets.", "Fiets rustig mee."] },
   { title: "Naar school gaan", category: "School", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "ochtend", steps: ["Pak je tas.", "Zeg dag.", "Ga rustig mee."] },
 
   { title: "Jas ophangen", category: "Na school", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "naSchool", steps: ["Doe je jas uit.", "Hang hem op.", "Klaar."] },
@@ -40,8 +44,13 @@ const templates: TemplateSeed[] = [
   { title: "Snack eten", category: "Eten & drinken", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "naSchool", steps: ["Ga zitten.", "Eet rustig.", "Ruim op."] },
   { title: "Even landen", category: "Rust", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Zit op een rustige plek.", "Adem zacht.", "Je hoeft even niets."] },
   { title: "Koptelefoon rust", category: "Rust", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak je koptelefoon.", "Zet hem op.", "Rust 5 minuten."] },
+  { title: "Naar de BSO", category: "Na school", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak je tas.", "Ga mee naar de opvang.", "Kies rustig een plek."] },
+  { title: "Speelafspraak", category: "Sociaal", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Zeg hallo.", "Kies samen iets om te doen.", "Vraag hulp als het lastig is."] },
   { title: "Buiten spelen", category: "Bewegen", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "naSchool", steps: ["Doe jas of schoenen aan.", "Speel buiten.", "Kom terug als het tijd is."] },
   { title: "Beweegpauze", category: "Bewegen", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Spring 10 keer.", "Schud je armen.", "Adem uit."] },
+  { title: "Sporten", category: "Bewegen", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Trek sportspullen aan.", "Doe mee met de training.", "Drink daarna wat water."], minutes: 45 },
+  { title: "Zwemles", category: "Bewegen", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "naSchool", steps: ["Pak je zwemspullen.", "Luister naar de juf of meester.", "Droog je af na het zwemmen."], minutes: 45 },
+  { title: "Muziekles", category: "Creatief", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak je instrument.", "Oefen rustig mee.", "Ruim je spullen op."], minutes: 30 },
   { title: "Huiswerk starten", category: "School", ageGroups: ["8-9", "10-12"], dayPart: "naSchool", steps: ["Leg spullen klaar.", "Doe één opdracht.", "Vraag hulp als nodig."] },
   { title: "Lezen", category: "School", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak een boek.", "Lees een stukje.", "Leg je boek terug."] },
   { title: "Knutselen", category: "Creatief", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak papier.", "Pak lijm of kleurtjes.", "Maak iets.", "Ruim op."] },
@@ -50,11 +59,13 @@ const templates: TemplateSeed[] = [
   { title: "Kamer 5 minuten opruimen", category: "Opruimen", ageGroups: ["8-9", "10-12"], dayPart: "avond", steps: ["Zet timer.", "Ruim 5 minuten op.", "Stop als de timer gaat."] },
   { title: "Was in wasmand", category: "Opruimen", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "avond", steps: ["Pak vieze was.", "Doe het in de mand.", "Klaar."] },
   { title: "Tafel dekken", category: "Helpen", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "avond", steps: ["Pak borden.", "Pak bestek.", "Leg alles op tafel."] },
+  { title: "Avond eten", category: "Eten & drinken", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "avond", steps: ["Ga aan tafel.", "Neem een hap.", "Neem een slok.", "Blijf zitten tot je klaar bent."] },
   { title: "Tafel afruimen", category: "Helpen", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "avond", steps: ["Pak je bord.", "Breng het weg.", "Help met nog één ding."] },
   { title: "Vaatwasser helpen", category: "Helpen", ageGroups: ["8-9", "10-12"], dayPart: "avond", steps: ["Vraag wat mag.", "Zet spullen erin.", "Klaar."] },
   { title: "Planten water geven", category: "Helpen", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "avond", steps: ["Pak water.", "Geef een beetje.", "Zet terug."] },
   { title: "Huisdier eten geven met hulp", category: "Helpen", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "avond", steps: ["Vraag je ouder.", "Pak voer.", "Geef het samen."] },
   { title: "Sportspullen klaarleggen", category: "Voorbereiden", ageGroups: ["8-9", "10-12"], dayPart: "avond", steps: ["Pak tas.", "Leg kleding klaar.", "Check schoenen."] },
+  { title: "Lunch klaarmaken", category: "Voorbereiden", ageGroups: ["8-9", "10-12"], dayPart: "avond", steps: ["Pak brood of bakje.", "Maak je lunch met hulp.", "Zet het klaar voor morgen."] },
   { title: "Agenda checken", category: "Voorbereiden", ageGroups: ["10-12"], dayPart: "avond", steps: ["Open agenda.", "Kijk naar morgen.", "Vraag hulp als iets onduidelijk is."] },
   { title: "Weekplanning bekijken", category: "Voorbereiden", ageGroups: ["10-12"], dayPart: "avond", steps: ["Kijk naar de planning.", "Noem één ding voor morgen.", "Klaar."] },
   { title: "Douchen", category: "Zelfzorg", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "avond", steps: ["Leg spullen klaar.", "Douche rustig.", "Droog je af."] },
@@ -77,6 +88,17 @@ const templates: TemplateSeed[] = [
 ];
 
 const iconFor = (title: string) => {
+  const text = title.toLowerCase();
+  if (text.includes("zwem")) return "🏊";
+  if (text.includes("sport") || text.includes("training")) return "⚽";
+  if (text.includes("fiets")) return "🚲";
+  if (text.includes("muziek")) return "🎵";
+  if (text.includes("speelafspraak")) return "🤝";
+  if (text.includes("bso") || text.includes("opvang")) return "🏫";
+  if (text.includes("wc") || text.includes("toilet")) return "🚽";
+  if (text.includes("zonnebrand")) return "☀️";
+  if (text.includes("fruit")) return "🍎";
+  if (text.includes("lunch")) return "🥪";
   if (title.includes("tanden")) return "🪥";
   if (title.includes("tas") || title.includes("school")) return "🎒";
   if (title.includes("handen") || title.includes("wassen")) return "🧼";

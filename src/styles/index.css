@@ -650,6 +650,36 @@ input, textarea, select {
 .task-art-drinkCupKitchen { background-position: 0% 100%; }
 .task-art-headphonesRest { background-position: 100% 100%; }
 
+.task-art-dinner,
+.task-art-sports,
+.task-art-swimming,
+.task-art-musicLesson,
+.task-art-playdate,
+.task-art-toilet,
+.task-art-bsoCare,
+.task-art-sunscreen,
+.task-art-bike,
+.task-art-fruit,
+.task-art-lunchPrep,
+.task-art-sportsBag {
+  background-image: url("/assets/flowi-routine-sheet-1.png");
+  background-size: 400% 300%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-dinner { background-position: 0% 0%; }
+.task-art-sports { background-position: 33.333% 0%; }
+.task-art-swimming { background-position: 66.666% 0%; }
+.task-art-musicLesson { background-position: 100% 0%; }
+.task-art-playdate { background-position: 0% 50%; }
+.task-art-toilet { background-position: 33.333% 50%; }
+.task-art-bsoCare { background-position: 66.666% 50%; }
+.task-art-sunscreen { background-position: 100% 50%; }
+.task-art-bike { background-position: 0% 100%; }
+.task-art-fruit { background-position: 33.333% 100%; }
+.task-art-lunchPrep { background-position: 66.666% 100%; }
+.task-art-sportsBag { background-position: 100% 100%; }
+
 .task-art-makeBed,
 .task-art-drinkWater,
 .task-art-dishwasher { background-position: 0% 0%; }
@@ -686,6 +716,8 @@ input, textarea, select {
 .task-art-unpackBag,
 .task-art-clearTable,
 .task-art-wallPush { background-position: 100% 100%; }
+
+.task-art-sportsBag { background-position: 100% 100%; }
 
 .flowi-mascot-image {
   display: block;
