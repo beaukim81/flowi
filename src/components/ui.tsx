@@ -68,7 +68,7 @@ export function SecondaryButton(props: ButtonHTMLAttributes<HTMLButtonElement> &
 
 export function AvatarMascot({ avatar, emotion, size = "large", showCaption = true }: { avatar?: Avatar; emotion?: EmotionType; size?: "small" | "medium" | "large"; showCaption?: boolean }) {
   const isGiraffe = !avatar || avatar.id === "giraffe";
-  const dimensions = size === "large" ? "h-64 w-64" : size === "medium" ? "h-44 w-44" : "h-28 w-28";
+  const dimensions = size === "large" ? "avatar-size-large" : size === "medium" ? "avatar-size-medium" : "avatar-size-small";
   if (!isGiraffe) {
     const textSize = size === "large" ? "text-8xl" : size === "medium" ? "text-6xl" : "text-4xl";
     return (

@@ -34,6 +34,17 @@ button, input, textarea, select {
   font: inherit;
 }
 
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
 button {
   min-height: 3.25rem;
   touch-action: manipulation;
@@ -175,6 +186,8 @@ input, textarea, select {
   z-index: 2;
   display: block;
   width: min(21rem, 92vw);
+  aspect-ratio: 1122 / 1402;
+  height: auto;
   max-height: 21rem;
   object-fit: contain;
   object-position: right bottom;
@@ -350,6 +363,8 @@ input, textarea, select {
   background-image: url("/assets/flowi-emotion-sheet.png");
   background-repeat: no-repeat;
   background-size: 400% 200%;
+  background-origin: content-box;
+  background-clip: content-box;
 }
 
 .need-art {
@@ -361,7 +376,8 @@ input, textarea, select {
 .exercise-art {
   display: block;
   width: 8.4rem;
-  height: 7.2rem;
+  height: auto;
+  aspect-ratio: 1 / 1;
   margin-inline: auto;
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 1.35rem;
@@ -374,15 +390,15 @@ input, textarea, select {
 }
 
 .exercise-choice-card .exercise-art {
-  width: 100%;
-  height: 9.2rem;
+  width: min(100%, 10rem);
+  height: auto;
   max-width: 10rem;
   border-radius: 1.45rem;
 }
 
 .exercise-art.compact {
   width: 6.2rem;
-  height: 5.45rem;
+  height: auto;
   border-radius: 1.1rem;
 }
 
@@ -412,6 +428,7 @@ input, textarea, select {
 .exercise-art-thumbChoice,
 .exercise-art-stopSentence {
   background-image: url("/assets/flowi-exercise-specific-1.jpg");
+  aspect-ratio: 3 / 4;
 }
 
 .exercise-art-firstStep,
@@ -427,6 +444,7 @@ input, textarea, select {
 .exercise-art-softSound,
 .exercise-art-softLight {
   background-image: url("/assets/flowi-exercise-specific-2.jpg");
+  aspect-ratio: 3 / 4;
 }
 
 .exercise-art-leafBreath,
@@ -442,6 +460,7 @@ input, textarea, select {
 .exercise-art-pillowSqueezeSpecific,
 .exercise-art-dragonBreathSpecific {
   background-image: url("/assets/flowi-exercise-specific-3.jpg");
+  aspect-ratio: 3 / 4;
 }
 
 .exercise-art-handsPress,
@@ -484,7 +503,8 @@ input, textarea, select {
 .task-art {
   display: block;
   width: 6.1rem;
-  height: 5.35rem;
+  height: auto;
+  aspect-ratio: 9 / 8;
   flex: 0 0 auto;
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 1.25rem;
@@ -497,7 +517,7 @@ input, textarea, select {
 
 .task-art.compact {
   width: 5.1rem;
-  height: 4.5rem;
+  height: auto;
   border-radius: 1rem;
 }
 
@@ -557,6 +577,7 @@ input, textarea, select {
 .task-art-askHelp,
 .task-art-wallPush {
   background-image: url("/assets/flowi-action-sheet-2.png");
+  aspect-ratio: 15 / 16;
 }
 
 .task-art-makeBed,
@@ -597,10 +618,25 @@ input, textarea, select {
 .task-art-wallPush { background-position: 100% 100%; }
 
 .flowi-mascot-image {
+  display: block;
+  aspect-ratio: 3 / 4;
+  height: auto;
   border-radius: 2rem;
   box-shadow:
     0 18px 35px rgba(71, 63, 137, 0.13),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.avatar-size-large {
+  width: 13rem;
+}
+
+.avatar-size-medium {
+  width: 8.8rem;
+}
+
+.avatar-size-small {
+  width: 5.6rem;
 }
 
 .flowi-mascot-image.small {
@@ -879,8 +915,14 @@ input, textarea, select {
 
 .emotion-card-art {
   position: absolute;
-  inset: 0;
-  transform: scale(1.08);
+  left: 50%;
+  top: 0.45rem;
+  width: auto;
+  height: calc(100% - 3.65rem);
+  max-width: calc(100% - 0.9rem);
+  aspect-ratio: 3 / 4;
+  transform: translateX(-50%);
+  border-radius: 1.35rem;
 }
 
 .need-art {
@@ -890,6 +932,7 @@ input, textarea, select {
   width: min(10.2rem, calc(100% - 0.9rem));
   height: auto;
   aspect-ratio: 1 / 1;
+  background-size: 400% 200%;
   border-radius: 1.45rem;
   transform: translateX(-50%);
   box-shadow:

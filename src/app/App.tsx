@@ -716,16 +716,25 @@ function TaskLibraryPage() {
   const returnTo = safeReturnPath(searchParams.get("returnTo"));
   const [age, setAge] = useState("4-5");
   const [category, setCategory] = useState("Alles");
+  const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
   const { data: templates } = useLiveData(() => db.taskTemplates.where("ageGroup").equals(age).toArray(), [], [age]);
   const categories = ["Alles", ...Array.from(new Set(templates.map((template) => template.category))).sort()];
   const visibleTemplates = templates
     .filter((template) => category === "Alles" || template.category === category)
     .sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
-  const add = async (template: TaskTemplate) => {
-    const targetDayPart = forcedDayPart ?? template.defaultDayPart;
+  const add = async (template: TaskTemplate, dayPart?: DayPart) => {
+    const targetDayPart = dayPart ?? forcedDayPart ?? template.defaultDayPart;
     const currentTasks = await db.tasks.where("dayPart").equals(targetDayPart).toArray();
     await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: "elkeDag", estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
-    if (returnTo) navigate(returnTo);
+    setSelectedTemplate(null);
+    navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}` : returnTo ?? `/day-settings/${targetDayPart}`);
+  };
+  const choose = (template: TaskTemplate) => {
+    if (forcedDayPart) {
+      void add(template, forcedDayPart);
+      return;
+    }
+    setSelectedTemplate(template);
   };
   return (
     <>
@@ -737,7 +746,30 @@ function TaskLibraryPage() {
           <button key={item} onClick={() => setCategory(item)} className={`min-h-10 shrink-0 rounded-2xl px-4 text-sm font-black ${item === category ? "bg-mint text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => <button key={template.id} onClick={() => add(template)} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card"><TaskArt title={template.title} visualKey={template.visualKey as TaskVisualKey | undefined} /><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p></button>)}</div>
+      <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => <button key={template.id} onClick={() => choose(template)} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card"><TaskArt title={template.title} visualKey={template.visualKey as TaskVisualKey | undefined} /><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p><p className="mt-2 rounded-2xl bg-lavender/8 px-3 py-2 text-center text-xs font-black text-lavender">Toevoegen</p></button>)}</div>
+      {selectedTemplate ? (
+        <div className="fixed inset-0 z-40 grid place-items-end bg-navy/28 p-3 backdrop-blur-sm sm:place-items-center">
+          <section className="w-full max-w-xl rounded-[1.9rem] bg-white p-4 shadow-soft">
+            <div className="grid grid-cols-[auto_1fr] items-center gap-3">
+              <TaskArt title={selectedTemplate.title} visualKey={selectedTemplate.visualKey as TaskVisualKey | undefined} compact />
+              <div>
+                <h2 className="text-2xl font-black text-navy">{selectedTemplate.title}</h2>
+                <p className="text-sm font-bold text-navy/52">Kies waar deze taak in het dagritme hoort.</p>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => (
+                <button key={part} type="button" onClick={() => add(selectedTemplate, part)} className={`rounded-[1.45rem] p-3 text-center shadow-card ring-2 ${part === selectedTemplate.defaultDayPart ? "bg-lavender text-white ring-lavender" : "bg-lavender/8 text-navy ring-transparent"}`}>
+                  <TaskArt title={dayParts[part].title} compact />
+                  <span className="mt-2 block text-lg font-black">{dayParts[part].title}</span>
+                  {part === selectedTemplate.defaultDayPart ? <span className="mt-1 block text-xs font-black text-white/80">Past vaak hier</span> : null}
+                </button>
+              ))}
+            </div>
+            <button type="button" onClick={() => setSelectedTemplate(null)} className="mt-4 min-h-12 w-full rounded-2xl bg-lavender/10 px-5 font-black text-lavender">Annuleren</button>
+          </section>
+        </div>
+      ) : null}
       </div>
     </>
   );
