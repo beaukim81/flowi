@@ -6,7 +6,6 @@ import { avatarAssets } from "../data/avatars";
 import { calmStrategies } from "../data/calmStrategies";
 import { emotions } from "../data/emotions";
 import { needs } from "../data/needs";
-import { rewardStickers } from "../data/rewards";
 import { exportBackup, importBackup } from "../db/backup";
 import { db } from "../db/db";
 import { seedDatabase } from "../db/seed";
@@ -14,7 +13,7 @@ import { useLiveData } from "../hooks/useLiveData";
 import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
 import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Task, TaskTemplate } from "../types/schema";
-import { AppShell, AvatarMascot, DayPartCard, EmotionCard, ExerciseArt, icons, PageHeader, ParentCard, PracticeArt, PrimaryButton, RewardSticker, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
+import { AppShell, AvatarMascot, DayPartCard, EmotionCard, ExerciseArt, icons, PageHeader, ParentCard, PrimaryButton, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
 import type { TaskVisualKey } from "../utils/taskVisuals";
 
 const dayParts: Record<DayPart, { title: string; icon: string }> = {
@@ -31,6 +30,13 @@ const safeReturnPath = (value: string | null) => value?.startsWith("/") ? value 
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
+const startOfWeek = () => {
+  const date = new Date();
+  const day = date.getDay() || 7;
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - day + 1);
+  return date.toISOString().slice(0, 10);
+};
 type HelpReason = Extract<EmotionType, "teVeel" | "boos" | "moe" | "inDeWar">;
 const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] = [
   { key: "wake", label: "Opstaan", hint: "ochtend, wakker worden" },
@@ -621,26 +627,38 @@ function TaskLibraryPage() {
 function RewardsPage() {
   const { data: rewards } = useLiveData(() => db.rewards.orderBy("earnedAt").reverse().toArray(), [], []);
   const todaysRewards = rewards.filter((reward) => reward.earnedAt.slice(0, 10) === today());
-  const treeStages = ["Zaadje", "Sprietje", "Plantje", "Struikje", "Rustboom"];
-  const stageIndex = Math.min(treeStages.length - 1, Math.floor(rewards.length / 3));
-  const flowiPhrases = ["Proberen telt.", "Je hoeft het niet perfect te doen.", "Elke keer oefenen helpt.", "Jij mag er zijn.", "Kleine stapjes groeien ook."];
-  const phrase = flowiPhrases[rewards.length % flowiPhrases.length];
-  const gardenStickers = rewards.length ? rewards : rewardStickers;
-  const progress = Math.min(100, ((rewards.length % 12) / 12) * 100 + (rewards.length ? 12 : 0));
+  const weekStart = startOfWeek();
+  const weekRewards = rewards.filter((reward) => reward.earnedAt.slice(0, 10) >= weekStart);
+  const treeStages = ["Zaadje", "Sprietje", "Plantje", "Boompje", "Rustboom"];
+  const stageIndex = Math.min(treeStages.length - 1, Math.floor(weekRewards.length / 2));
+  const weeklyGoal = 8;
+  const progress = Math.min(100, (weekRewards.length / weeklyGoal) * 100);
+  const weekMoments = Array.from({ length: weeklyGoal }, (_, index) => index < weekRewards.length);
+  const flowiPhrases = [
+    "Kleine stapjes laten je rustboom groeien.",
+    "Proberen telt. Ook als het nog lastig voelt.",
+    "Vandaag hoef je niet alles te kunnen.",
+    "Elke rustige keuze is een beetje groei.",
+    "Flowi ziet dat je oefent."
+  ];
+  const phrase = flowiPhrases[weekRewards.length % flowiPhrases.length];
+  const recentRewards = weekRewards.slice(0, 4);
   return (
     <div className="phone-screen growth-garden px-4 pb-5 pt-4">
-      <PageHeader title="Mijn groei" subtitle="Flowi's groeituin." back={false} />
+      <PageHeader title="Mijn groei" subtitle="Deze week met Flowi." back={false} />
       <section className="growth-hero relative overflow-hidden rounded-[1.9rem] p-5 shadow-soft">
         <div className="cloud cloud-a" />
-        <div className="relative z-10 grid grid-cols-[1fr_auto] items-end gap-2">
+        <div className="leaf-float leaf-b" />
+        <div className="relative z-10 grid grid-cols-[1fr_auto] items-end gap-3">
           <div>
-            <div className="text-xs font-black uppercase tracking-[0.16em] text-lavender">Rustkracht</div>
-            <h2 className="mt-1 text-2xl font-black text-navy">{treeStages[stageIndex]}</h2>
-            <p className="mt-2 max-w-[12rem] text-sm font-bold leading-6 text-navy/58">Kleine stapjes laten jouw boom groeien.</p>
+            <div className="text-xs font-black uppercase tracking-[0.16em] text-lavender">Flowi's rustboom</div>
+            <h2 className="mt-1 text-3xl font-black text-navy">{treeStages[stageIndex]}</h2>
+            <p className="mt-2 max-w-[12rem] text-sm font-bold leading-6 text-navy/58">{phrase}</p>
           </div>
           <AvatarMascot size="medium" emotion="rustig" />
         </div>
-        <div className="relative z-10 mt-5 flex items-end justify-between rounded-[1.5rem] bg-white/72 p-4 shadow-card">
+
+        <div className="growth-tree-scene relative z-10 mt-5 flex items-end justify-between rounded-[1.5rem] bg-white/76 p-4 shadow-card">
           {treeStages.map((stage, index) => (
             <div key={stage} className="grid justify-items-center gap-1">
               <span className={`growth-plant plant-${index} ${index <= stageIndex ? "active" : ""}`} />
@@ -649,43 +667,64 @@ function RewardsPage() {
           ))}
         </div>
         <div className="relative z-10 mt-4 h-3 rounded-full bg-white/70"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
+        <p className="relative z-10 mt-2 text-center text-xs font-black text-navy/48">{weekRewards.length} van {weeklyGoal} groeimomenten deze week</p>
       </section>
 
       <section className="mt-4 rounded-[1.6rem] bg-white/92 p-4 shadow-card">
-        <div className="flex items-start gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-lavender/10 text-2xl">💬</span>
-          <div>
-            <h3 className="font-black text-navy">Flowi zegt</h3>
-            <p className="mt-1 text-lg font-black text-lavender">{phrase}</p>
-          </div>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-black text-navy">Deze week</h3>
+          <span className="rounded-full bg-lavender/10 px-3 py-1 text-xs font-black text-lavender">reset maandag</span>
         </div>
+        <div className="grid grid-cols-4 gap-2">
+          {weekMoments.map((grown, index) => (
+            <div key={index} className={`week-seed grid min-h-16 place-items-center rounded-[1.15rem] text-center text-xs font-black ${grown ? "grown" : ""}`}>
+              <span>{grown ? "Groei" : "Rust"}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs font-bold leading-5 text-navy/50">De boom begint elke week opnieuw klein. Wat eerder is gelukt, blijft wel bewaard in de app.</p>
       </section>
 
       <section className="mt-4">
         <div className="mb-3 flex items-end justify-between">
           <div>
-            <h3 className="font-black text-navy">Vandaag gegroeid</h3>
-            <p className="text-xs font-bold text-navy/48">Alles wat je probeert telt.</p>
+            <h3 className="font-black text-navy">Vandaag</h3>
+            <p className="text-xs font-bold text-navy/48">Kleine momenten van proberen.</p>
           </div>
           <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-lavender shadow-card">{todaysRewards.length}</span>
         </div>
         {todaysRewards.length ? (
-          <div className="grid grid-cols-2 gap-3">
-            {todaysRewards.slice(0, 4).map((reward) => <RewardSticker key={reward.id} icon={reward.icon} label={reward.label} />)}
+          <div className="grid gap-2">
+            {todaysRewards.slice(0, 3).map((reward) => (
+              <div key={reward.id} className="flex items-center gap-3 rounded-[1.35rem] bg-white/92 p-3 shadow-card">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-honey/18 text-xl">{reward.icon}</span>
+                <div>
+                  <h4 className="text-sm font-black text-navy">{reward.label}</h4>
+                  <p className="text-xs font-bold text-navy/48">{reward.reason}</p>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="rounded-[1.5rem] bg-white/88 p-4 text-center shadow-card">
-            <PracticeArt category="Rust" title="rustig" />
-            <p className="mt-3 font-black text-navy">Vandaag mag rustig zijn.</p>
+            <AvatarMascot size="small" emotion="rustig" />
+            <p className="mt-3 font-black text-navy">Vandaag mag klein beginnen.</p>
             <p className="text-sm font-bold text-navy/52">Je kunt altijd opnieuw beginnen.</p>
           </div>
         )}
       </section>
 
       <section className="mt-5">
-        <h3 className="mb-3 font-black text-navy">Mijn stickers</h3>
-        <div className="grid grid-cols-3 gap-3">
-          {gardenStickers.slice(0, 12).map((reward, index) => <RewardSticker key={`${reward.label}-${index}`} icon={reward.icon} label={reward.label} />)}
+        <h3 className="mb-3 font-black text-navy">Laatste groeimomenten</h3>
+        <div className="grid gap-2">
+          {recentRewards.length ? recentRewards.map((reward) => (
+            <div key={reward.id} className="flex items-center justify-between rounded-[1.25rem] bg-white/86 px-4 py-3 text-sm font-black text-navy shadow-card">
+              <span>{reward.label}</span>
+              <span className="text-xl">{reward.icon}</span>
+            </div>
+          )) : (
+            <div className="rounded-[1.25rem] bg-white/86 px-4 py-3 text-sm font-bold text-navy/52 shadow-card">Doe een oefening of rond een taak af. Dan groeit hier iets mee.</div>
+          )}
         </div>
       </section>
     </div>
