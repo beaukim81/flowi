@@ -448,7 +448,6 @@ function DayPartPage() {
   const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
   const complete = async (task: Task) => {
     await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "done", completedAt: now() });
-    await db.rewards.add({ id: id(), childProfileId: "default-child", label: "Ik maakte het af", icon: "✅", reason: task.title, earnedAt: now() });
     await reloadCompletions();
     await reload();
   };
@@ -508,7 +507,6 @@ function DaySettingsPartPage() {
   const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
   const complete = async (task: Task) => {
     await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "done", completedAt: now() });
-    await db.rewards.add({ id: id(), childProfileId: "default-child", label: "Ik maakte het af", icon: "✅", reason: task.title, earnedAt: now() });
     await reloadCompletions();
     await reload();
   };
@@ -708,14 +706,23 @@ function TaskLibraryPage() {
 
 function RewardsPage() {
   const { data: rewards } = useLiveData(() => db.rewards.orderBy("earnedAt").reverse().toArray(), [], []);
-  const todaysRewards = rewards.filter((reward) => reward.earnedAt.slice(0, 10) === today());
+  const growthRewards = rewards.filter((reward) => reward.label !== "Ik maakte het af");
+  const todaysRewards = growthRewards.filter((reward) => reward.earnedAt.slice(0, 10) === today());
   const weekStart = startOfWeek();
-  const weekRewards = rewards.filter((reward) => reward.earnedAt.slice(0, 10) >= weekStart);
+  const weekRewards = growthRewards.filter((reward) => reward.earnedAt.slice(0, 10) >= weekStart);
+  const dailyWaterLimit = 2;
+  const waterDrops = Object.values(weekRewards.reduce<Record<string, number>>((days, reward) => {
+    const date = reward.earnedAt.slice(0, 10);
+    days[date] = Math.min(dailyWaterLimit, (days[date] ?? 0) + 1);
+    return days;
+  }, {})).reduce((total, count) => total + count, 0);
+  const todaysWaterDrops = Math.min(dailyWaterLimit, todaysRewards.length);
+  const sunshineMoments = Math.max(0, weekRewards.length - waterDrops);
   const treeStages = ["Zaadje", "Sprietje", "Plantje", "Boompje", "Rustboom"];
-  const stageIndex = Math.min(treeStages.length - 1, Math.floor(weekRewards.length / 2));
+  const stageIndex = Math.min(treeStages.length - 1, Math.floor(waterDrops / 2));
   const weeklyGoal = 8;
-  const progress = Math.min(100, (weekRewards.length / weeklyGoal) * 100);
-  const weekMoments = Array.from({ length: weeklyGoal }, (_, index) => index < weekRewards.length);
+  const progress = Math.min(100, (waterDrops / weeklyGoal) * 100);
+  const weekMoments = Array.from({ length: weeklyGoal }, (_, index) => index < waterDrops);
   const flowiPhrases = [
     "Elke week kan Flowi's boom groeien.",
     "Proberen telt. Ook als het nog lastig voelt.",
@@ -723,7 +730,7 @@ function RewardsPage() {
     "Alles wat je probeert telt mee.",
     "Flowi ziet dat je oefent."
   ];
-  const phrase = flowiPhrases[weekRewards.length % flowiPhrases.length];
+  const phrase = flowiPhrases[waterDrops % flowiPhrases.length];
   const recentRewards = weekRewards.slice(0, 4);
   return (
     <div className="phone-screen growth-garden px-4 pb-5 pt-4">
@@ -749,7 +756,7 @@ function RewardsPage() {
           ))}
         </div>
         <div className="relative z-10 mt-4 h-3 rounded-full bg-white/70"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
-        <p className="relative z-10 mt-2 text-center text-xs font-black text-navy/48">{weekRewards.length} zachte groeimomenten deze week</p>
+        <p className="relative z-10 mt-2 text-center text-xs font-black text-navy/48">{waterDrops} waterdruppels voor de boom deze week</p>
       </section>
 
       <section className="mt-4 rounded-[1.6rem] bg-white/92 p-4 shadow-card">
@@ -764,7 +771,20 @@ function RewardsPage() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs font-bold leading-5 text-navy/50">De boom begint elke week opnieuw klein. Het hoeft niet vol: elk geprobeerd stapje telt.</p>
+        <p className="mt-3 text-xs font-bold leading-5 text-navy/50">Flowi geeft de boom per dag maximaal 2 waterdruppels. Extra stapjes worden zonnestraaltjes.</p>
+      </section>
+
+      <section className="mt-4 grid grid-cols-2 gap-3">
+        <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
+          <div className="text-3xl">💧</div>
+          <p className="mt-2 text-sm font-black text-navy">{todaysWaterDrops} van {dailyWaterLimit}</p>
+          <p className="text-xs font-bold text-navy/48">water vandaag</p>
+        </div>
+        <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
+          <div className="text-3xl">☀️</div>
+          <p className="mt-2 text-sm font-black text-navy">{sunshineMoments}</p>
+          <p className="text-xs font-bold text-navy/48">zonnestraaltjes</p>
+        </div>
       </section>
 
       <section className="mt-4">
