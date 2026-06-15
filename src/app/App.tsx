@@ -270,6 +270,36 @@ function ReflectionPage() {
     await db.rewards.add({ id: id(), childProfileId: "default-child", label: "Goed geprobeerd", icon: "💜", reason: "reflectie ingevuld", earnedAt: now() });
     navigate("/rewards");
   };
+  const reflectionChoices: { label: string; sublabel: string; emotion: EmotionType }[] = [
+    { label: "Rustiger", sublabel: "Mijn lijf voelt zachter", emotion: "rustig" },
+    { label: "Beetje beter", sublabel: "Het hielp een beetje", emotion: "superDruk" },
+    { label: "Nog niet", sublabel: "Ik heb nog hulp nodig", emotion: "inDeWar" },
+    { label: "Moeilijker", sublabel: "Dit paste nu niet", emotion: "verdrietig" }
+  ];
+  return (
+    <>
+      <div className="phone-screen px-4 pb-5 pt-4">
+        <PageHeader title="Wat hielp jou?" subtitle="Kies wat nu het beste past." />
+        <section className="mb-4 rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-mint/12 p-4 text-center shadow-soft">
+          <AvatarMascot emotion="rustig" size="medium" showCaption={false} />
+          <p className="mx-auto mt-3 max-w-xs text-sm font-bold leading-6 text-navy/58">Flowi wil weten of dit stapje jou hielp.</p>
+        </section>
+        <div className="grid grid-cols-2 gap-3">
+          {reflectionChoices.map((choice) => (
+            <button
+              key={choice.label}
+              onClick={() => save(choice.label)}
+              className="min-h-44 rounded-[1.55rem] border border-white/90 bg-white/94 p-3 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30"
+            >
+              <AvatarMascot emotion={choice.emotion} size="small" showCaption={false} />
+              <span className="mt-2 block text-lg font-black text-navy">{choice.label}</span>
+              <span className="mt-1 block text-xs font-bold leading-5 text-navy/48">{choice.sublabel}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
