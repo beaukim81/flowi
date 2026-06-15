@@ -969,19 +969,14 @@ function PracticePage() {
       <PageHeader title="Oefeningen" subtitle="Rustkracht oefenen met Flowi." back={false} />
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (
-          <button key={item} onClick={() => setCategory(item)} className={`min-h-10 shrink-0 rounded-2xl px-4 text-sm font-black ${item === category ? "bg-lavender text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
+          <button key={item} onClick={() => setCategory(item)} className={`min-h-12 shrink-0 rounded-2xl px-5 text-base font-black ${item === category ? "bg-lavender text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
         ))}
       </div>
-      <div className="grid gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {visibleExercises.map((exercise) => (
-          <button key={exercise.id} onClick={() => setActiveExercise(exercise)} className="flex items-center gap-3 rounded-[1.5rem] bg-white/94 p-3 text-left shadow-card">
-            <ExerciseArt title={exercise.title} compact />
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-black text-lavender">{exercise.category}</div>
-              <h2 className="font-black">{exercise.title}</h2>
-              <p className="line-clamp-2 text-xs font-bold leading-5 text-navy/52">{exercise.description}</p>
-              <div className="mt-2 flex gap-2 text-[0.68rem] font-black text-navy/48"><span>{Math.round((exercise.durationSeconds ?? 90) / 60)} min</span><span>{exercise.defaultRounds ?? 3}x</span></div>
-            </div>
+          <button key={exercise.id} onClick={() => setActiveExercise(exercise)} className="exercise-choice-card min-h-56 rounded-[1.75rem] bg-white/94 p-3 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
+            <ExerciseArt title={exercise.title} />
+            <h2 className="mt-3 text-lg font-black leading-tight text-navy">{exercise.title}</h2>
           </button>
         ))}
       </div>
