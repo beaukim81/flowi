@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Flowi">
+  <rect width="512" height="512" rx="132" fill="#f5f0ff"/>
+  <circle cx="256" cy="262" r="166" fill="#ffc65b"/>
+  <circle cx="196" cy="226" r="22" fill="#18245b"/>
+  <circle cx="316" cy="226" r="22" fill="#18245b"/>
+  <path d="M199 316c32 29 82 29 114 0" fill="none" stroke="#18245b" stroke-width="22" stroke-linecap="round"/>
+  <path d="M165 121c-14-48 24-69 53-32M347 121c14-48-24-69-53-32" fill="none" stroke="#a56018" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="352" cy="324" r="32" fill="#ff8d70" opacity=".65"/>
+  <circle cx="160" cy="324" r="32" fill="#ff8d70" opacity=".65"/>
+</svg>
