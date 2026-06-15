@@ -58,7 +58,7 @@ function HomePage() {
         <p className="mt-3 max-w-[15rem] text-sm font-bold leading-6 text-navy/62">Flowi helpt je voelen, kiezen en kleine stappen zetten die je goed doen.</p>
         <div className="relative mt-1">
           <AvatarMascot avatar={avatar} size="large" />
-          <div className="speech-bubble">Jij kiest je maatje!<br /><span>♥</span></div>
+          <div className="speech-bubble">Ik ben jouw maatje.<br /><span>♥</span></div>
         </div>
         <div className="mt-5 grid gap-3">
           <PrimaryButton onClick={() => navigate("/check-in")} className="flowi-pill">♥ Hoe voel ik me?</PrimaryButton>
@@ -296,7 +296,7 @@ function TaskFormPage() {
                 key={taskIcon}
                 type="button"
                 onClick={() => setIcon(taskIcon)}
-                className={`grid h-11 w-full place-items-center rounded-2xl bg-white text-2xl shadow-card ring-2 ${icon === taskIcon ? "ring-lavender" : "ring-transparent"}`}
+                className={`flowi-icon-token grid h-11 w-full place-items-center rounded-2xl text-2xl ring-2 ${icon === taskIcon ? "ring-lavender" : "ring-transparent"}`}
                 aria-label={`Kies icoon ${taskIcon}`}
               >
                 {taskIcon}
@@ -365,9 +365,15 @@ function AvatarPage() {
   const save = async () => { if (profile) { await db.childProfiles.update(profile.id, { selectedAvatarId: selected, updatedAt: now() }); await reload(); navigate("/"); } };
   return (
     <>
-      <PageHeader title="Kies je maatje" />
-      <div className="grid grid-cols-2 gap-3">{avatarAssets.map((avatar) => <button key={avatar.id} onClick={() => setSelected(avatar.id)} className={`rounded-[1.5rem] bg-white p-4 shadow-card ring-4 ${selected === avatar.id ? "ring-lavender/50" : "ring-transparent"}`}><div className="text-6xl">{avatar.icon}</div><div className="mt-2 font-black">{avatar.label}</div></button>)}</div>
-      <PrimaryButton className="mt-4 w-full" onClick={save}>Kies deze</PrimaryButton>
+      <div className="phone-screen px-4 pb-5 pt-4">
+      <PageHeader title="Mijn maatje" subtitle="Flowi is er voor jou." />
+      <div className="rounded-[1.8rem] bg-gradient-to-b from-sky/18 via-white to-mint/14 p-5 text-center shadow-soft">
+        <AvatarMascot avatar={avatarAssets[0]} size="large" />
+        <h2 className="mt-4 text-2xl font-black text-navy">Flowi</h2>
+        <p className="mx-auto mt-2 max-w-xs text-sm font-bold leading-6 text-navy/58">Je vaste giraffe-maatje helpt met voelen, kiezen en kleine stapjes doen.</p>
+      </div>
+      <PrimaryButton className="mt-4 w-full" onClick={save}>Flowi gebruiken</PrimaryButton>
+      </div>
     </>
   );
 }
@@ -381,7 +387,7 @@ function ParentsPage() {
         <ParentCard icon={<ShieldCheck />} title="Backup mogelijk" text="Exporteer en importeer JSON." to="/backup" />
         <ParentCard icon={<SlidersHorizontal />} title="Profiel & instellingen" text="Naam, leeftijd, helper en voorkeuren." to="/settings" />
         <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day" />
-        <ParentCard icon={<Palette />} title="Avatar kiezen" text="Kies het maatje van je kind." to="/avatar" />
+        <ParentCard icon={<Palette />} title="Mijn Flowi" text="Het vaste giraffe-maatje van de app." to="/avatar" />
         <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken per leeftijd toevoegen." to="/task-library" />
         <ParentCard icon={<HeartHandshake />} title="Privacy" text="Lokale opslag en veiligheid." to="/privacy" />
       </div>

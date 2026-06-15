@@ -60,7 +60,7 @@ export function SecondaryButton(props: ButtonHTMLAttributes<HTMLButtonElement> &
 
 export function AvatarMascot({ avatar, emotion, size = "large" }: { avatar?: Avatar; emotion?: EmotionType; size?: "small" | "medium" | "large" }) {
   const isGiraffe = !avatar || avatar.id === "giraffe";
-  const dimensions = size === "large" ? "h-52 w-52" : size === "medium" ? "h-32 w-32" : "h-20 w-20";
+  const dimensions = size === "large" ? "h-56 w-56" : size === "medium" ? "h-36 w-36" : "h-24 w-24";
   if (!isGiraffe) {
     const textSize = size === "large" ? "text-8xl" : size === "medium" ? "text-6xl" : "text-4xl";
     return (
@@ -69,33 +69,23 @@ export function AvatarMascot({ avatar, emotion, size = "large" }: { avatar?: Ava
       </div>
     );
   }
+  const positions: Record<EmotionType | "happy", string> = {
+    happy: "0% 0%",
+    rustig: "0% 0%",
+    verdrietig: "33.333% 0%",
+    boos: "66.666% 0%",
+    teVeel: "100% 0%",
+    superDruk: "0% 100%",
+    inDeWar: "33.333% 100%",
+    moe: "66.666% 100%",
+    weetIkNiet: "100% 100%"
+  };
   return (
-    <div className={`avatar-stage relative mx-auto ${dimensions}`} data-emotion={emotion ?? "happy"} aria-label="Flowi giraffe">
-      <div className="giraffe-ossicone left" />
-      <div className="giraffe-ossicone right" />
-      <div className="giraffe-ear left" />
-      <div className="giraffe-ear right" />
-      <div className="giraffe-neck" />
-      <div className="giraffe-head">
-        <div className="giraffe-spot s1" />
-        <div className="giraffe-spot s2" />
-        <div className="giraffe-eye left" />
-        <div className="giraffe-eye right" />
-        <div className="giraffe-brow left" />
-        <div className="giraffe-brow right" />
-        <div className="giraffe-cheek left" />
-        <div className="giraffe-cheek right" />
-        <div className="giraffe-muzzle">
-          <div className="giraffe-nose left" />
-          <div className="giraffe-nose right" />
-          <div className="giraffe-mouth" />
-        </div>
-      </div>
-      <div className="giraffe-body">
-        <span className="body-spot one" />
-        <span className="body-spot two" />
-        <span className="body-spot three" />
-      </div>
+    <div
+      className={`flowi-mascot-image relative mx-auto ${dimensions} ${size === "small" ? "small" : ""}`}
+      style={{ backgroundPosition: positions[emotion ?? "happy"] }}
+      aria-label="Flowi giraffe"
+    >
       <div className="giraffe-caption">{emotion ? emotionLabel(emotion) : "Flowi"}</div>
     </div>
   );
@@ -116,14 +106,20 @@ function emotionLabel(emotion: EmotionType) {
 }
 
 export function EmotionCard({ emotion, avatar, onClick }: { emotion: Emotion; avatar?: Avatar; onClick: () => void }) {
+  const positions: Record<EmotionType, string> = {
+    rustig: "0% 0%",
+    verdrietig: "33.333% 0%",
+    boos: "66.666% 0%",
+    teVeel: "100% 0%",
+    superDruk: "0% 100%",
+    inDeWar: "33.333% 100%",
+    moe: "66.666% 100%",
+    weetIkNiet: "100% 100%"
+  };
   return (
     <button onClick={onClick} className={`emotion-card emotion-${emotion.id} min-h-44 rounded-[1.7rem] p-3 text-left transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30`}>
-      <div className="emotion-pattern" aria-hidden />
-      <div className="relative z-10 mb-1 flex justify-end text-2xl">{emotion.marks}</div>
-      <div className="relative z-10">
-        <AvatarMascot avatar={avatar} emotion={emotion.id} size="small" />
-      </div>
-      <div className="relative z-10 mt-3 rounded-[1.1rem] bg-white/88 px-3 py-2 text-center text-sm font-black text-navy shadow-[inset_0_1px_0_rgba(255,255,255,.75)]">{emotion.label}</div>
+      <div className="emotion-card-art" style={{ backgroundPosition: positions[emotion.id] }} aria-hidden />
+      <div className="emotion-label relative z-10 rounded-[1.1rem] bg-white/90 px-3 py-2 text-center text-sm font-black text-navy shadow-[inset_0_1px_0_rgba(255,255,255,.75)]">{emotion.label}</div>
     </button>
   );
 }
@@ -131,7 +127,7 @@ export function EmotionCard({ emotion, avatar, onClick }: { emotion: Emotion; av
 export function NeedCard({ need, label, onClick }: { need: Need; label?: string; onClick: () => void }) {
   return (
     <button onClick={onClick} className="min-h-32 rounded-[1.55rem] border border-white/90 bg-white/92 p-4 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
-      <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-[1.25rem] bg-gradient-to-br from-white to-lavender/14 text-4xl shadow-[inset_0_1px_0_rgba(255,255,255,.9),0_8px_18px_rgba(72,63,137,.08)]">{need.icon}</div>
+      <div className="flowi-icon-token mx-auto mb-3 grid h-16 w-16 place-items-center rounded-[1.25rem] text-4xl">{need.icon}</div>
       <span className="text-sm font-black text-navy">{label ?? need.label}</span>
     </button>
   );
@@ -157,7 +153,7 @@ export function TaskCard({ task, done, onDone, onHelp, onEdit }: { task: Task; d
         <span className="grid h-10 w-8 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Sleep om te verplaatsen">
           <GripVertical size={18} />
         </span>
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-honey/18 text-2xl">{task.icon}</span>
+        <span className="flowi-icon-token grid h-12 w-12 place-items-center rounded-2xl text-2xl">{task.icon}</span>
         <div className="flex-1">
           <h3 className="font-black">{task.title}</h3>
           {task.optionalTime ? <span className="text-xs font-bold text-lavender">{task.optionalTime}</span> : <span className="text-xs font-bold text-navy/45">Tijd optioneel</span>}

@@ -209,6 +209,34 @@ button, input, textarea, select {
   filter: drop-shadow(0 22px 22px rgba(132, 96, 24, 0.13));
 }
 
+.flowi-mascot-image,
+.emotion-card-art {
+  background-image: url("/assets/flowi-emotion-sheet.png");
+  background-repeat: no-repeat;
+  background-size: 400% 200%;
+}
+
+.flowi-mascot-image {
+  border-radius: 2rem;
+  box-shadow:
+    0 18px 35px rgba(71, 63, 137, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.flowi-mascot-image.small {
+  border-radius: 1.35rem;
+}
+
+.flowi-icon-token {
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.96), transparent 45%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(224, 216, 255, 0.42));
+  box-shadow:
+    0 10px 20px rgba(72, 63, 137, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
 .giraffe-head {
   position: absolute;
   left: 21%;
@@ -418,6 +446,9 @@ button, input, textarea, select {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.86);
   box-shadow: 0 14px 30px rgba(61, 58, 130, 0.13), inset 0 1px 0 rgba(255,255,255,.75);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 .emotion-card::before {
@@ -443,6 +474,16 @@ button, input, textarea, select {
   opacity: 0.32;
   background-image: radial-gradient(circle, rgba(24,36,91,.28) 0 0.09rem, transparent 0.1rem);
   background-size: 1.35rem 1.35rem;
+}
+
+.emotion-card-art {
+  position: absolute;
+  inset: 0;
+  transform: scale(1.02);
+}
+
+.emotion-label {
+  margin-top: 8.35rem;
 }
 
 .emotion-verdrietig .emotion-pattern {
