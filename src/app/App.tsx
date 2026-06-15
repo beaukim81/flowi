@@ -542,6 +542,7 @@ function DaySettingsPartPage() {
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
+  const [dragOffsetY, setDragOffsetY] = useState(0);
   const draggedTaskIdRef = useRef<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const dragHoldTimerRef = useRef<number | null>(null);
@@ -577,10 +578,11 @@ function DaySettingsPartPage() {
   };
   const startReorder = (event: React.PointerEvent<HTMLDivElement>, taskId: string) => {
     const target = event.target as HTMLElement;
-    if (target.closest("button, a, input, textarea, select")) return;
+    if (!target.closest("[data-drag-handle]")) return;
     draggedTaskIdRef.current = taskId;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
     dragReadyRef.current = false;
+    setDragOffsetY(0);
     if (dragHoldTimerRef.current) window.clearTimeout(dragHoldTimerRef.current);
     dragHoldTimerRef.current = window.setTimeout(() => {
       dragReadyRef.current = true;
@@ -593,15 +595,18 @@ function DaySettingsPartPage() {
     const sourceTaskId = draggedTaskIdRef.current;
     const start = dragStartRef.current;
     if (!sourceTaskId || !start) return;
-    const movedBeforeHold = Math.abs(event.clientY - start.y) > 10 || Math.abs(event.clientX - start.x) > 10;
+    const movedBeforeHold = Math.abs(event.clientY - start.y) > 28 || Math.abs(event.clientX - start.x) > 28;
     if (!dragReadyRef.current) {
       if (movedBeforeHold) finishReorder();
       return;
     }
+    setDragOffsetY(event.clientY - start.y);
     const movedEnough = Math.abs(event.clientY - start.y) > 18 || Math.abs(event.clientX - start.x) > 18;
     if (!movedEnough) return;
     event.preventDefault();
-    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-reorder-task-id]");
+    const target = document.elementsFromPoint(event.clientX, event.clientY)
+      .map((element) => element.closest<HTMLElement>("[data-reorder-task-id]"))
+      .find((element) => element?.dataset.reorderTaskId && element.dataset.reorderTaskId !== sourceTaskId);
     const targetTaskId = target?.dataset.reorderTaskId;
     if (!targetTaskId || targetTaskId === sourceTaskId || targetTaskId === dragOverTaskId) return;
     setDragOverTaskId(targetTaskId);
@@ -617,6 +622,7 @@ function DaySettingsPartPage() {
     dragStartRef.current = null;
     setDraggedTaskId(null);
     setDragOverTaskId(null);
+    setDragOffsetY(0);
   };
   return (
     <>
@@ -631,6 +637,7 @@ function DaySettingsPartPage() {
             onPointerMove={updateReorder}
             onPointerUp={finishReorder}
             onPointerCancel={finishReorder}
+            style={draggedTaskId === task.id ? { transform: `translateY(${dragOffsetY}px) scale(1.02)` } : undefined}
             className={`reorder-task-card ${draggedTaskId === task.id ? "is-dragging" : ""} ${dragOverTaskId === task.id && draggedTaskId !== task.id ? "is-drag-over" : ""}`}
           >
             <TaskCard task={task} done={false} onEdit={() => navigate(`/tasks/${task.id}/edit`)} onDelete={() => deleteTask(task)} editable />
