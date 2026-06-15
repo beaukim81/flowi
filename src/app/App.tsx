@@ -736,6 +736,72 @@ function RewardsPage() {
     "Flowi ziet dat je oefent."
   ];
   const phrase = flowiPhrases[waterDrops % flowiPhrases.length];
+  const hasWaterToday = todaysWaterDrops > 0;
+  const todaysSunshine = Math.max(0, todaysRewards.length - todaysWaterDrops);
+  const careMode = todaysSunshine > 0 ? "sun" : hasWaterToday ? "water" : "rest";
+  const careTitle = careMode === "sun" ? "Het zonnetje schijnt" : careMode === "water" ? "Flowi gaf water" : "De boom mag rusten";
+  const careText = careMode === "sun" ? "Extra oefenen wordt warmte voor de boom." : careMode === "water" ? "Een groeimoment gaf de boom water." : "Vandaag kan er nog een klein groeimoment komen.";
+  return (
+    <div className="phone-screen growth-garden px-4 pb-5 pt-4">
+      <PageHeader title="Mijn groei" subtitle="Flowi's rustboom." back={false} />
+      <section className={`growth-hero growth-focus-scene growth-focus-${careMode} relative overflow-hidden rounded-[1.9rem] p-5 shadow-soft`}>
+        <div className="cloud cloud-a" />
+        <div className="leaf-float leaf-b" />
+        <div className="relative z-10">
+          <div className="text-xs font-black uppercase tracking-[0.16em] text-lavender">Deze week</div>
+          <h2 className="mt-1 text-3xl font-black text-navy">{treeStages[stageIndex]}</h2>
+          <p className="mt-2 max-w-[15rem] text-sm font-bold leading-6 text-navy/58">{phrase}</p>
+        </div>
+
+        <div className="growth-care-stage relative z-10 mt-5">
+          <div className="growth-care-sun" aria-hidden />
+          <div className="growth-care-drops" aria-hidden><span /><span /><span /></div>
+          <div className="growth-care-flowi">
+            <AvatarMascot size="medium" emotion="rustig" showCaption={false} />
+          </div>
+          <div className="growth-care-tree">
+            <span className={`growth-plant plant-${stageIndex} active`} />
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-4 rounded-[1.35rem] bg-white/76 p-3 text-center shadow-card">
+          <h3 className="font-black text-navy">{careTitle}</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-navy/50">{careText}</p>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-[1.6rem] bg-white/92 p-4 shadow-card">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-black text-navy">Rustboom deze week</h3>
+          <span className="rounded-full bg-lavender/10 px-3 py-1 text-xs font-black text-lavender">maandag opnieuw</span>
+        </div>
+        <div className="h-3 rounded-full bg-lilac/18">
+          <div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} />
+        </div>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {weekMoments.map((grown, index) => (
+            <div key={index} className={`week-seed grid min-h-14 place-items-center rounded-[1.15rem] text-center text-xs font-black ${grown ? "grown" : ""}`}>
+              <span>{grown ? "Water" : "Rust"}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-center text-xs font-bold leading-5 text-navy/50">{waterDrops} waterdruppels deze week. Extra momenten worden zonnestraaltjes.</p>
+      </section>
+
+      <section className="mt-4 grid grid-cols-2 gap-3">
+        <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
+          <span className="mx-auto block h-8 w-6 rounded-full bg-sky/70" />
+          <p className="mt-2 text-sm font-black text-navy">{todaysWaterDrops} van {dailyWaterLimit}</p>
+          <p className="text-xs font-bold text-navy/48">water vandaag</p>
+        </div>
+        <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
+          <span className="mx-auto block h-8 w-8 rounded-full bg-honey/80 shadow-[0_0_0_8px_rgba(255,198,91,.18)]" />
+          <p className="mt-2 text-sm font-black text-navy">{todaysSunshine}</p>
+          <p className="text-xs font-bold text-navy/48">zon vandaag</p>
+        </div>
+      </section>
+    </div>
+  );
   const recentRewards = weekRewards.slice(0, 4);
   return (
     <div className="phone-screen growth-garden px-4 pb-5 pt-4">

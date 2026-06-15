@@ -719,6 +719,88 @@ button, input, textarea, select {
     0 12px 28px rgba(72, 63, 137, 0.12);
 }
 
+.growth-focus-scene {
+  min-height: 30rem;
+}
+
+.growth-care-stage {
+  min-height: 15rem;
+  border-radius: 1.6rem;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, .88), transparent 4.5rem),
+    linear-gradient(180deg, rgba(255,255,255,.7), rgba(218, 238, 200, .58));
+  box-shadow:
+    inset 0 -2rem 0 rgba(158, 204, 116, .26),
+    0 14px 30px rgba(72,63,137,.1);
+  overflow: hidden;
+}
+
+.growth-care-flowi {
+  position: absolute;
+  left: .6rem;
+  bottom: .5rem;
+  transform: scale(1.04);
+  transform-origin: bottom left;
+}
+
+.growth-care-tree {
+  position: absolute;
+  right: 1.4rem;
+  bottom: .9rem;
+  transform: scale(1.45);
+  transform-origin: bottom right;
+}
+
+.growth-care-sun {
+  position: absolute;
+  right: 2.2rem;
+  top: 1.1rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  opacity: 0;
+  background: #ffc65b;
+  box-shadow:
+    0 0 0 .75rem rgba(255,198,91,.18),
+    0 0 2.4rem rgba(255,198,91,.5);
+}
+
+.growth-focus-sun .growth-care-sun {
+  opacity: 1;
+}
+
+.growth-care-drops {
+  position: absolute;
+  left: 8.5rem;
+  top: 5.8rem;
+  display: flex;
+  gap: .55rem;
+  opacity: 0;
+  transform: rotate(-18deg);
+}
+
+.growth-care-drops span {
+  display: block;
+  width: .55rem;
+  height: .9rem;
+  border-radius: 999px 999px 999px 0;
+  background: linear-gradient(180deg, #9be3f2, #5ebfd5);
+  box-shadow: 0 .45rem .8rem rgba(94,191,213,.2);
+}
+
+.growth-care-drops span:nth-child(2) {
+  margin-top: .8rem;
+}
+
+.growth-care-drops span:nth-child(3) {
+  margin-top: 1.55rem;
+}
+
+.growth-focus-water .growth-care-drops,
+.growth-focus-sun .growth-care-drops {
+  opacity: 1;
+}
+
 .week-seed {
   background:
     radial-gradient(circle at 50% 64%, rgba(183, 124, 47, 0.24), transparent 26%),
