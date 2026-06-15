@@ -184,14 +184,22 @@ function HomePage() {
         <div className="home-copy">
           <p className="text-[1.35rem] font-black text-lavender">{childName ? `Hoi ${childName}` : "Hoe is het in je lijf?"}</p>
         </div>
+        <div className="home-main-stage">
         <div className="home-mascot-wrap relative" aria-label={`Flowi helpt ${profile?.name ?? "jou"}`}>
           <img src="/assets/flowi-home-mascot.png" alt="" className="home-mascot-free" />
           <div className="speech-bubble">Ik help jou.<br /><span>♥</span></div>
         </div>
         <div className="home-visual-actions" aria-label="Kies wat je wilt doen">
-          <button type="button" onClick={() => navigate("/check-in")} className="home-visual-card home-visual-feel" aria-label="Hoe voel ik me?" />
-          <button type="button" onClick={() => navigate("/day")} className="home-visual-card home-visual-day" aria-label="Mijn dag" />
-          <button type="button" onClick={() => navigate("/help-now")} className="home-visual-card home-visual-help" aria-label="Help mij nu" />
+          <button type="button" onClick={() => navigate("/check-in")} className="home-visual-card home-visual-feel" aria-label="Wat voel je?">
+            <span className="home-visual-label">Wat voel je?</span>
+          </button>
+          <button type="button" onClick={() => navigate("/day")} className="home-visual-card home-visual-day" aria-label="Taken doen">
+            <span className="home-visual-label">Taken doen</span>
+          </button>
+          <button type="button" onClick={() => navigate("/help-now")} className="home-visual-card home-visual-help" aria-label="Help mij">
+            <span className="home-visual-label">Help mij</span>
+          </button>
+        </div>
         </div>
       </div>
     </section>
@@ -429,8 +437,8 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
   const selectedHelp = reason ? helpReasons.find((item) => item.id === reason) : null;
   const strategy = reason ? fallbackStrategyForTask(task, reason) : null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-end bg-navy/24 px-3 pb-4 pt-10 backdrop-blur-sm sm:place-items-center">
-      <section className="w-full max-w-md rounded-[1.9rem] bg-white p-4 shadow-[0_24px_70px_rgba(31,33,91,.24)]">
+    <div className="help-start-overlay fixed inset-0 z-50 grid place-items-end bg-navy/24 px-3 pt-10 backdrop-blur-sm sm:place-items-center">
+      <section className="help-start-panel w-full max-w-md rounded-[1.9rem] bg-white p-4 shadow-[0_24px_70px_rgba(31,33,91,.24)]">
         <div className="flex items-start gap-3">
           <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
           <div className="min-w-0 flex-1">
@@ -946,7 +954,6 @@ function RewardsPage() {
           <div className="growth-care-drops" aria-hidden><span /><span /><span /></div>
           <div className="growth-care-flowi" aria-hidden>
             <img src="/assets/flowi-home-mascot.png" alt="" className="growth-flowi-character" />
-            <span className="growth-flowi-arm" />
             <span className="growth-watering-can" />
           </div>
           <div className="growth-care-tree">
