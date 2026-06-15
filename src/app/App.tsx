@@ -718,10 +718,10 @@ function RewardsPage() {
   const progress = Math.min(100, (weekRewards.length / weeklyGoal) * 100);
   const weekMoments = Array.from({ length: weeklyGoal }, (_, index) => index < weekRewards.length);
   const flowiPhrases = [
-    "Kleine stapjes laten je rustboom groeien.",
+    "Elke week kan Flowi's boom groeien.",
     "Proberen telt. Ook als het nog lastig voelt.",
     "Vandaag hoef je niet alles te kunnen.",
-    "Elke rustige keuze is een beetje groei.",
+    "Alles wat je probeert telt mee.",
     "Flowi ziet dat je oefent."
   ];
   const phrase = flowiPhrases[weekRewards.length % flowiPhrases.length];
@@ -750,7 +750,7 @@ function RewardsPage() {
           ))}
         </div>
         <div className="relative z-10 mt-4 h-3 rounded-full bg-white/70"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
-        <p className="relative z-10 mt-2 text-center text-xs font-black text-navy/48">{weekRewards.length} van {weeklyGoal} groeimomenten deze week</p>
+        <p className="relative z-10 mt-2 text-center text-xs font-black text-navy/48">{weekRewards.length} zachte groeimomenten deze week</p>
       </section>
 
       <section className="mt-4 rounded-[1.6rem] bg-white/92 p-4 shadow-card">
@@ -765,7 +765,7 @@ function RewardsPage() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs font-bold leading-5 text-navy/50">De boom begint elke week opnieuw klein. Wat eerder is gelukt, blijft wel bewaard in de app.</p>
+        <p className="mt-3 text-xs font-bold leading-5 text-navy/50">De boom begint elke week opnieuw klein. Het hoeft niet vol: elk geprobeerd stapje telt.</p>
       </section>
 
       <section className="mt-4">
