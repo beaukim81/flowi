@@ -28,6 +28,7 @@ const dayParts: Record<DayPart, { title: string; icon: string }> = {
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
+type HelpReason = Extract<EmotionType, "teVeel" | "boos" | "moe" | "inDeWar">;
 const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] = [
   { key: "wake", label: "Opstaan", hint: "ochtend, wakker worden" },
   { key: "dress", label: "Aankleden", hint: "kleren, jas, schoenen" },
@@ -77,6 +78,24 @@ const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] =
   { key: "wallPush", label: "Duw tegen muur", hint: "stevig duwen" }
 ];
 const sortTasks = (tasks: Task[]) => [...tasks].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.createdAt.localeCompare(b.createdAt));
+const helpReasons: { id: HelpReason; label: string; need: NeedType; tips: string[] }[] = [
+  { id: "teVeel", label: "Te veel", need: "rustigePlek", tips: ["Maak de taak kleiner.", "Kies minder prikkels: zachter licht, minder geluid.", "Doe eerst 5 rustige ademhalingen."] },
+  { id: "boos", label: "Boos", need: "bewegen", tips: ["Stop even met de taak.", "Geef je lijf stevig werk.", "Vraag daarna samen wat de eerste kleine stap is."] },
+  { id: "moe", label: "Moe", need: "rustigePlek", tips: ["Neem een korte pauze.", "Maak de taak lichter of doe alleen de eerste stap.", "Vraag of iemand even naast je blijft."] },
+  { id: "inDeWar", label: "In de war", need: "praatMetOuder", tips: ["Vraag om een keuze uit twee opties.", "Laat iemand de taak voordoen.", "Doe samen alleen de eerste stap."] }
+];
+
+function fallbackStrategyForTask(task: Task, reason: HelpReason) {
+  const parentChoice = task.fallbackStrategyId ? calmStrategies.find((strategy) => strategy.id === task.fallbackStrategyId) : undefined;
+  if (parentChoice) return parentChoice;
+  const title = task.title.toLowerCase();
+  if (title.includes("tablet") || title.includes("scherm")) {
+    if (reason === "boos") return calmStrategies.find((strategy) => strategy.title === "Zeg: stop, ik heb hulp nodig") ?? chooseStrategy(reason, "praatMetOuder");
+    return calmStrategies.find((strategy) => strategy.title === "Maak het licht zachter") ?? chooseStrategy(reason, "rustigePlek");
+  }
+  const helpReason = helpReasons.find((item) => item.id === reason) ?? helpReasons[0];
+  return chooseStrategy(reason, helpReason.need);
+}
 
 function useProfile() {
   return useLiveData(async () => (await db.childProfiles.get("default-child")) ?? null, null, []);
@@ -93,7 +112,6 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
 function HomePage() {
   const navigate = useNavigate();
   const { data: profile } = useProfile();
-  const avatar = useAvatar(profile?.selectedAvatarId);
   return (
     <section className="phone-screen home-scene relative overflow-hidden px-5 pb-5 pt-6">
       <div className="cloud cloud-a" />
@@ -106,14 +124,14 @@ function HomePage() {
           <p className="text-[1.35rem] font-black text-lavender">Hoe is het in je lijf?</p>
           <p className="mt-3 text-sm font-bold leading-6 text-navy/62">Flowi helpt je voelen, kiezen en kleine stappen zetten die je goed doen.</p>
         </div>
-        <div className="home-mascot-wrap relative">
-          <AvatarMascot avatar={avatar} size="large" />
+        <div className="home-mascot-wrap relative" aria-label={`Flowi helpt ${profile?.name ?? "jou"}`}>
+          <img src="/assets/flowi-home-mascot.png" alt="" className="home-mascot-free" />
           <div className="speech-bubble">Ik help jou.<br /><span>♥</span></div>
         </div>
         <div className="mt-1 grid gap-3">
           <PrimaryButton onClick={() => navigate("/check-in")} className="flowi-pill">♥ Hoe voel ik me?</PrimaryButton>
           <button onClick={() => navigate("/day")} className="flowi-pill min-h-12 rounded-[1.35rem] bg-gradient-to-b from-[#9bd886] to-[#59b477] px-5 font-extrabold text-white shadow-[0_14px_24px_rgba(89,180,119,.24)]">🍃 Mijn dag</button>
-          <SecondaryButton onClick={() => navigate("/help-now")} className="flowi-pill">Help mij nu</SecondaryButton>
+          <button onClick={() => navigate("/help-now")} className="flowi-pill min-h-12 rounded-[1.35rem] bg-gradient-to-b from-[#ffb58b] to-[#ff7f74] px-5 font-extrabold text-white shadow-[0_14px_24px_rgba(255,127,116,.24)]">Help mij nu</button>
         </div>
       </div>
     </section>
@@ -226,6 +244,53 @@ function ReflectionPage() {
   );
 }
 
+function HelpStartOverlay({ task, onClose }: { task: Task; onClose: () => void }) {
+  const navigate = useNavigate();
+  const [reason, setReason] = useState<HelpReason | null>(null);
+  const selectedHelp = reason ? helpReasons.find((item) => item.id === reason) : null;
+  const strategy = reason ? fallbackStrategyForTask(task, reason) : null;
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end bg-navy/24 px-3 pb-4 pt-10 backdrop-blur-sm sm:place-items-center">
+      <section className="w-full max-w-md rounded-[1.9rem] bg-white p-4 shadow-[0_24px_70px_rgba(31,33,91,.24)]">
+        <div className="flex items-start gap-3">
+          <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
+          <div className="min-w-0 flex-1">
+            <h2 className="font-black text-navy">Wat lukt er niet?</h2>
+            <p className="text-sm font-bold text-navy/55">Eerste mini-stap: {task.steps[0] ?? "Begin klein."}</p>
+          </div>
+          <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 font-black text-lavender" aria-label="Sluiten">×</button>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {helpReasons.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setReason(item.id)}
+              className={`min-h-36 rounded-[1.35rem] p-2 text-center transition ${reason === item.id ? "bg-lavender text-white shadow-card" : "bg-gradient-to-b from-sky/12 via-white to-lavender/8 text-navy shadow-card"}`}
+            >
+              <AvatarMascot emotion={item.id} size="small" />
+              <span className="mt-1 block text-sm font-black">{item.label}</span>
+            </button>
+          ))}
+        </div>
+        {selectedHelp && strategy ? (
+          <div className="mt-4 rounded-[1.35rem] bg-lavender/8 p-3">
+            <p className="text-sm font-black text-navy">Flowi-tip bij {selectedHelp.label.toLowerCase()}</p>
+            <ul className="mt-2 grid gap-1.5">
+              {selectedHelp.tips.map((tip) => <li key={tip} className="text-sm font-bold leading-5 text-navy/60">• {tip}</li>)}
+            </ul>
+            <button type="button" onClick={() => navigate(`/action/${strategy.id}`)} className="mt-3 min-h-11 w-full rounded-2xl bg-gradient-to-b from-[#8fd8e8] to-[#4eb1c9] px-4 text-sm font-black text-white shadow-[0_12px_22px_rgba(78,177,201,.24)]">
+              Doe: {strategy.title}
+            </button>
+          </div>
+        ) : (
+          <p className="mt-3 text-center text-xs font-bold text-navy/45">Kies wat lastig voelt. Dan helpt Flowi verder.</p>
+        )}
+      </section>
+    </div>
+  );
+}
+
 function DayPage() {
   const { data: tasks } = useLiveData(() => db.tasks.where("childProfileId").equals("default-child").toArray(), [] as Task[], []);
   const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
@@ -264,7 +329,7 @@ function DayPartPage() {
       <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle="Alleen afvinken wat klaar is." />
       <div className="grid gap-3">
         {visibleTasks.length ? visibleTasks.map((task) => (
-          <TaskCard key={task.id} task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} />
+          <TaskCard key={task.id} task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} showDetails={false} />
         )) : (
           <div className="rounded-[1.5rem] bg-white/90 p-5 text-center shadow-card">
             <TaskArt title={dayParts[part]?.title ?? "Rust"} />
@@ -273,7 +338,7 @@ function DayPartPage() {
           </div>
         )}
       </div>
-      {helpTask ? <div className="mt-4 rounded-[1.5rem] bg-white p-4 shadow-soft"><h2 className="font-black">Help mij starten</h2><p className="text-sm font-bold text-navy/55">Eerste mini-stap: {helpTask.steps[0] ?? "Begin klein."}</p><div className="mt-3 grid grid-cols-2 gap-2">{["Te veel", "Boos", "Moe", "In de war"].map((label) => <span key={label} className="rounded-2xl bg-lavender/10 px-3 py-2 text-center text-xs font-black text-lavender">{label}</span>)}</div></div> : null}
+      {helpTask ? <HelpStartOverlay task={helpTask} onClose={() => setHelpTask(null)} /> : null}
       </div>
     </>
   );
@@ -390,7 +455,7 @@ function DaySettingsPartPage() {
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
-      {helpTask ? <div className="mt-4 rounded-[1.5rem] bg-white p-4 shadow-soft"><h2 className="font-black">Help mij starten</h2><p className="text-sm font-bold text-navy/55">Eerste mini-stap: {helpTask.steps[0] ?? "Begin klein."}</p><div className="mt-3 grid grid-cols-2 gap-2">{["Te veel", "Boos", "Moe", "In de war"].map((label) => <span key={label} className="rounded-2xl bg-lavender/10 px-3 py-2 text-center text-xs font-black text-lavender">{label}</span>)}</div></div> : null}
+      {helpTask ? <HelpStartOverlay task={helpTask} onClose={() => setHelpTask(null)} /> : null}
       </div>
     </>
   );
@@ -408,11 +473,12 @@ function TaskFormPage() {
   const [dayPart, setDayPart] = useState<DayPart>("ochtend");
   const [optionalTime, setOptionalTime] = useState("");
   const [steps, setSteps] = useState("Begin klein.\nKlaar.");
+  const [fallbackStrategyId, setFallbackStrategyId] = useState("");
   const [isEnabled, setIsEnabled] = useState(true);
-  useEffect(() => { if (existing) { setTitle(existing.title); setIcon(existing.icon); setVisualKey((existing.visualKey as TaskVisualKey | undefined) ?? ""); setDayPart(existing.dayPart); setOptionalTime(existing.optionalTime ?? ""); setSteps(existing.steps.join("\n")); setIsEnabled(existing.isEnabled); } }, [existing]);
+  useEffect(() => { if (existing) { setTitle(existing.title); setIcon(existing.icon); setVisualKey((existing.visualKey as TaskVisualKey | undefined) ?? ""); setDayPart(existing.dayPart); setOptionalTime(existing.optionalTime ?? ""); setSteps(existing.steps.join("\n")); setFallbackStrategyId(existing.fallbackStrategyId ?? ""); setIsEnabled(existing.isEnabled); } }, [existing]);
   const save = async () => {
     const currentTasks = await db.tasks.where("dayPart").equals(dayPart).toArray();
-    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: steps.split("\n").filter(Boolean), repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
+    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, fallbackStrategyId: fallbackStrategyId || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: steps.split("\n").filter(Boolean), repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
     await db.tasks.put(task);
     navigate(`/day-settings/${dayPart}`);
   };
@@ -458,6 +524,14 @@ function TaskFormPage() {
         <select value={dayPart} onChange={(event) => setDayPart(event.target.value as DayPart)} className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold"><option value="ochtend">Ochtend</option><option value="naSchool">Na school</option><option value="avond">Avond</option><option value="bedtijd">Bedtijd</option><option value="vrij">Vrij</option></select>
         <input value={optionalTime} onChange={(event) => setOptionalTime(event.target.value)} placeholder="Tijd optioneel, bv. 07:30" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
         <textarea value={steps} onChange={(event) => setSteps(event.target.value)} className="min-h-32 rounded-2xl border border-lavender/20 p-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
+        <label className="grid gap-2 rounded-[1.35rem] bg-lavender/8 p-3">
+          <span className="text-sm font-black text-navy">Als dit niet lukt</span>
+          <select value={fallbackStrategyId} onChange={(event) => setFallbackStrategyId(event.target.value)} className="min-h-12 rounded-2xl border border-lavender/20 bg-white px-4 font-bold">
+            <option value="">Flowi kiest automatisch</option>
+            {calmStrategies.map((strategy) => <option key={strategy.id} value={strategy.id}>{strategy.title}</option>)}
+          </select>
+          <span className="text-xs font-bold leading-5 text-navy/48">Bijvoorbeeld bij tablet kijken: kies vooraf een rust-oefening of laat Flowi kiezen op basis van boos, moe, te veel of in de war.</span>
+        </label>
         <label className="flex items-center justify-between rounded-2xl bg-lavender/8 p-3 font-bold">Actief <input type="checkbox" checked={isEnabled} onChange={(event) => setIsEnabled(event.target.checked)} /></label>
         <PrimaryButton onClick={save}>Opslaan</PrimaryButton>
         {editing ? <button onClick={remove} className="min-h-12 rounded-2xl bg-coral/10 px-5 font-extrabold text-coral">Verwijderen</button> : null}

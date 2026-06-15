@@ -145,14 +145,13 @@ export function PracticeArt({ category, title, compact = false }: { category: st
   return <AvatarMascot emotion={emotion as EmotionType} size={compact ? "small" : "medium"} />;
 }
 
-export function DayPartCard({ title, icon, progress, to }: { title: string; icon: string; progress: number; to: string }) {
+export function DayPartCard({ title, progress, to }: { title: string; icon: string; progress: number; to: string }) {
   const dayPartVisual = title === "Ochtend" ? "wake" : title === "Na school" ? "school" : title === "Avond" ? "pajamas" : title === "Bedtijd" ? "sleep" : "rest";
   return (
     <NavLink to={to} className="flex min-h-24 items-center gap-4 rounded-[1.45rem] border border-white/85 bg-white/92 p-3 shadow-card ring-1 ring-lavender/8">
       <TaskArt title={title} visualKey={dayPartVisual as TaskVisualKey} />
-      <div className="min-w-0 flex-1">
-        <div className="font-black">{title}</div>
-        <div className="mt-0.5 text-xs font-bold text-navy/42">{icon} Kleine stappen</div>
+      <div className="grid min-h-16 min-w-0 flex-1 content-center">
+        <div className="text-center text-lg font-black">{title}</div>
         <div className="mt-2 h-2 rounded-full bg-lilac/18"><div className="h-2 rounded-full bg-gradient-to-r from-mint to-lavender" style={{ width: `${progress}%` }} /></div>
       </div>
       <ChevronRight className="text-lavender" />
@@ -160,7 +159,7 @@ export function DayPartCard({ title, icon, progress, to }: { title: string; icon
   );
 }
 
-export function TaskCard({ task, done, onDone, onHelp, onEdit, editable = false }: { task: Task; done: boolean; onDone: () => void; onHelp?: () => void; onEdit?: () => void; editable?: boolean }) {
+export function TaskCard({ task, done, onDone, onHelp, onEdit, editable = false, showDetails = true }: { task: Task; done: boolean; onDone: () => void; onHelp?: () => void; onEdit?: () => void; editable?: boolean; showDetails?: boolean }) {
   return (
     <article className="rounded-[1.45rem] border border-white/85 bg-white/94 p-4 shadow-card ring-1 ring-lavender/8">
       <div className="flex items-center gap-3">
@@ -170,14 +169,14 @@ export function TaskCard({ task, done, onDone, onHelp, onEdit, editable = false 
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
         <div className="flex-1">
           <h3 className="font-black">{task.title}</h3>
-          {task.optionalTime ? <span className="text-xs font-bold text-lavender">{task.optionalTime}</span> : <span className="text-xs font-bold text-navy/45">Tijd optioneel</span>}
+          {showDetails ? (task.optionalTime ? <span className="text-xs font-bold text-lavender">{task.optionalTime}</span> : <span className="text-xs font-bold text-navy/45">Tijd optioneel</span>) : null}
         </div>
         <button aria-label={`${task.title} afvinken`} onClick={onDone} className={`grid h-12 w-12 place-items-center rounded-2xl border-2 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
           <Check size={24} />
         </button>
       </div>
       <div className="mt-3 flex gap-4">
-        {onHelp ? <button onClick={onHelp} className="text-sm font-extrabold text-lavender">Lukt het niet?</button> : null}
+        {onHelp ? <button onClick={onHelp} className="rounded-2xl bg-lavender/10 px-3 py-2 text-sm font-extrabold text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.75)]">Lukt het niet?</button> : null}
         {onEdit ? <button onClick={onEdit} className="inline-flex items-center gap-1 text-sm font-extrabold text-navy/55"><Pencil size={14} /> Aanpassen</button> : null}
       </div>
     </article>

@@ -88,6 +88,7 @@ export interface Task {
   title: string;
   icon: string;
   visualKey?: string;
+  fallbackStrategyId?: string;
   category: string;
   ageGroup: string;
   dayPart: DayPart;

@@ -70,22 +70,23 @@ button, input, textarea, select {
 }
 
 .home-mascot-wrap {
-  margin: -0.2rem -1.2rem 0 auto;
-  min-height: 15.8rem;
+  margin: -1.1rem -0.7rem -0.8rem auto;
+  min-height: 17.2rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 
-.home-mascot-wrap .flowi-mascot-image {
-  margin-right: 0;
-  width: 15.8rem;
-  height: 15.8rem;
-  border: 0;
-  background-color: transparent;
-  box-shadow: none;
-  filter: drop-shadow(0 24px 24px rgba(132, 96, 24, 0.16));
-}
-
-.home-mascot-wrap .giraffe-caption {
-  display: none;
+.home-mascot-free {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: min(18.8rem, 88vw);
+  max-height: 18.8rem;
+  object-fit: contain;
+  object-position: right bottom;
+  filter: drop-shadow(0 1.4rem 1.1rem rgba(132, 96, 24, 0.18));
+  pointer-events: none;
 }
 
 .home-scene::before,
@@ -192,8 +193,9 @@ button, input, textarea, select {
 
 .speech-bubble {
   position: absolute;
-  right: 0.2rem;
-  top: 0.8rem;
+  right: 0.35rem;
+  top: 1.2rem;
+  z-index: 3;
   max-width: 7.2rem;
   border: 1px solid rgba(138, 109, 241, 0.1);
   border-radius: 1.4rem;
