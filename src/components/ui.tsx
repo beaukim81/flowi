@@ -238,8 +238,9 @@ export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit
   return (
     <article className={`rounded-[1.6rem] border p-4 shadow-card ring-1 ${done ? "border-mint/35 bg-gradient-to-b from-white to-mint/10 ring-mint/12" : needsHelp ? "border-lavender/30 bg-gradient-to-b from-white to-lavender/8 ring-lavender/12" : "border-white/85 bg-white/94 ring-lavender/8"}`}>
       <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-        {editable ? <span data-drag-handle className="drag-handle grid h-12 w-9 shrink-0 place-items-center rounded-xl bg-lavender/8 text-lavender sm:h-14 sm:w-10" aria-label="Vasthouden en slepen om te verplaatsen">
-          <GripVertical size={22} />
+        {editable ? <span data-drag-handle className="drag-handle flex h-16 w-14 shrink-0 flex-col items-center justify-center rounded-[1.15rem] bg-gradient-to-b from-lilac/30 to-lavender/14 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.75)] ring-1 ring-lavender/12" aria-label="Pak hier vast en sleep om te verplaatsen">
+          <GripVertical size={24} strokeWidth={3} />
+          <span className="mt-0.5 text-[0.62rem] font-black leading-none">Sleep</span>
         </span> : null}
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
         <div className="min-w-0 flex-1">

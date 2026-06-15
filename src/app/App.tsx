@@ -615,6 +615,13 @@ function DaySettingsPartPage() {
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title={`${dayParts[part]?.title ?? "Dag"} instellen`} subtitle="Voor ouders: aanpassen en slepen." />
+      <section className="reorder-help-card mb-4 flex items-center gap-3 rounded-[1.45rem] bg-white/92 p-3 shadow-card ring-1 ring-lavender/10">
+        <div className="drag-handle-preview flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[1.1rem] bg-gradient-to-b from-lilac/34 to-lavender/16 text-lavender">
+          <span className="text-2xl leading-none">⋮⋮</span>
+          <span className="text-[0.62rem] font-black leading-none">Sleep</span>
+        </div>
+        <p className="min-w-0 text-base font-black leading-6 text-navy/68">Pak de paarse sleepknop vast en schuif de taak omhoog of omlaag.</p>
+      </section>
       <div className="grid gap-3">
         {orderedTasks.map((task) => (
           <div
