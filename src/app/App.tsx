@@ -216,16 +216,71 @@ function ActionPage() {
   const { actionId } = useParams();
   const { selectedEmotion, selectedNeed } = useCurrentFlow();
   const action = calmStrategies.find((strategy) => strategy.id === actionId) ?? chooseStrategy(selectedEmotion, selectedNeed);
+  const suggestedDuration = action.durationSeconds ?? 120;
+  const [timerOpen, setTimerOpen] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [remaining, setRemaining] = useState(suggestedDuration);
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  useEffect(() => {
+    setTimerOpen(false);
+    setRunning(false);
+    setRemaining(suggestedDuration);
+    setHelpOpen(false);
+  }, [action.id, suggestedDuration]);
+
+  useEffect(() => {
+    if (!running) return;
+    if (remaining <= 0) {
+      setRunning(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setRemaining((value) => Math.max(0, value - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [running, remaining]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60).toString();
+    const rest = (seconds % 60).toString().padStart(2, "0");
+    return `${minutes}:${rest}`;
+  };
   return (
     <section className="phone-screen action-scene p-5 text-center">
       <PageHeader title={action.title} back />
       <ExerciseArt title={action.title} />
       <p className="mx-auto mt-5 max-w-sm text-sm font-bold leading-6 text-navy/65">{action.childText}</p>
-      <PrimaryButton className="mt-5 w-full" onClick={() => navigate("/reflection")}>Start nu</PrimaryButton>
+      {timerOpen ? (
+        <section className="mt-5 rounded-[1.55rem] bg-white/92 p-4 shadow-card">
+          <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-lavender/10 text-3xl font-black text-lavender ring-8 ring-lavender/8">{formatTime(remaining)}</div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <SecondaryButton onClick={() => { setRemaining(suggestedDuration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
+            <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start</>}</PrimaryButton>
+          </div>
+        </section>
+      ) : (
+        <button type="button" onClick={() => setTimerOpen(true)} className="mt-5 min-h-12 w-full rounded-[1.35rem] bg-white px-5 font-extrabold text-lavender shadow-card">Timer gebruiken</button>
+      )}
       {action.durationSeconds ? <div className="mx-auto mt-3 inline-flex rounded-full bg-lavender/10 px-4 py-2 text-xs font-black text-lavender">⏱ {Math.round(action.durationSeconds / 60)} minuten</div> : null}
-      <div className="mt-5 grid gap-2">
+      {helpOpen ? (
+        <section className="mt-4 rounded-[1.55rem] bg-white/94 p-4 text-left shadow-card">
+          <div className="flex items-center gap-3">
+            <AvatarMascot emotion="inDeWar" size="small" showCaption={false} />
+            <div>
+              <h2 className="font-black text-navy">Vraag hulp</h2>
+              <p className="text-sm font-bold leading-5 text-navy/55">Laat dit scherm zien aan je ouder.</p>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-2">
+            {["Kom even bij mij zitten.", "Wil je samen een kleine stap kiezen?", "Wil je het eerst voordoen?"].map((line) => (
+              <div key={line} className="rounded-2xl bg-lavender/8 p-3 text-sm font-black text-navy/68">{line}</div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      <PrimaryButton className="mt-5 w-full" onClick={() => navigate("/reflection")}>Ik ben klaar</PrimaryButton>
+      <div className="mt-4 grid gap-2">
         <SecondaryButton onClick={() => navigate("/need")}>Iets anders kiezen</SecondaryButton>
-        <button className="font-extrabold text-lavender" onClick={() => navigate("/parents")}>Vraag hulp</button>
+        <button className="font-extrabold text-lavender" onClick={() => setHelpOpen((value) => !value)}>{helpOpen ? "Hulpkaart sluiten" : "Vraag hulp"}</button>
       </div>
     </section>
   );
