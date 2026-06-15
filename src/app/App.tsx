@@ -669,13 +669,13 @@ function TaskFormPage() {
   const [showVisualBank, setShowVisualBank] = useState(false);
   const [dayPart, setDayPart] = useState<DayPart>(isDayPart(requestedDayPart) ? requestedDayPart : "ochtend");
   const [optionalTime, setOptionalTime] = useState("");
-  const [steps, setSteps] = useState("Begin klein.\nKlaar.");
+  const [steps, setSteps] = useState("");
   const [fallbackStrategyId, setFallbackStrategyId] = useState("");
-  const [isEnabled, setIsEnabled] = useState(true);
-  useEffect(() => { if (existing) { setTitle(existing.title); setIcon(existing.icon); setVisualKey((existing.visualKey as TaskVisualKey | undefined) ?? ""); setDayPart(existing.dayPart); setOptionalTime(existing.optionalTime ?? ""); setSteps(existing.steps.join("\n")); setFallbackStrategyId(existing.fallbackStrategyId ?? ""); setIsEnabled(existing.isEnabled); } }, [existing]);
+  useEffect(() => { if (existing) { setTitle(existing.title); setIcon(existing.icon); setVisualKey((existing.visualKey as TaskVisualKey | undefined) ?? ""); setDayPart(existing.dayPart); setOptionalTime(existing.optionalTime ?? ""); setSteps(existing.steps.join("\n")); setFallbackStrategyId(existing.fallbackStrategyId ?? ""); } }, [existing]);
   const save = async () => {
     const currentTasks = await db.tasks.where("dayPart").equals(dayPart).toArray();
-    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, fallbackStrategyId: fallbackStrategyId || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: steps.split("\n").filter(Boolean), repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
+    const taskSteps = steps.split("\n").map((step) => step.trim()).filter(Boolean);
+    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, fallbackStrategyId: fallbackStrategyId || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: taskSteps.length ? taskSteps : ["Klaar."], repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
     await db.tasks.put(task);
     navigate(returnTo ?? `/day-settings/${dayPart}`);
   };
@@ -720,16 +720,14 @@ function TaskFormPage() {
         ) : null}
         <select value={dayPart} onChange={(event) => setDayPart(event.target.value as DayPart)} className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold"><option value="ochtend">Ochtend</option><option value="naSchool">Na school</option><option value="avond">Avond</option><option value="bedtijd">Bedtijd</option><option value="vrij">Vrij</option></select>
         <input value={optionalTime} onChange={(event) => setOptionalTime(event.target.value)} placeholder="Tijd optioneel, bv. 07:30" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
-        <textarea value={steps} onChange={(event) => setSteps(event.target.value)} className="min-h-32 rounded-2xl border border-lavender/20 p-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
+        <textarea value={steps} onChange={(event) => setSteps(event.target.value)} placeholder={"Stapjes of notitie voor deze taak.\nJe mag hier zelf typen.\nLaat je dit leeg? Dan maakt Flowi er automatisch een simpele taak van."} className="min-h-32 rounded-2xl border border-lavender/20 p-4 font-bold outline-none placeholder:text-navy/32 focus:ring-4 focus:ring-lavender/20" />
         <label className="grid gap-2 rounded-[1.35rem] bg-lavender/8 p-3">
-          <span className="text-sm font-black text-navy">Als dit niet lukt</span>
+          <span className="text-sm font-black text-navy">Hulp als dit lastig is</span>
           <select value={fallbackStrategyId} onChange={(event) => setFallbackStrategyId(event.target.value)} className="min-h-12 rounded-2xl border border-lavender/20 bg-white px-4 font-bold">
-            <option value="">Flowi kiest automatisch</option>
+            <option value="">Flowi kiest passende hulp</option>
             {calmStrategies.map((strategy) => <option key={strategy.id} value={strategy.id}>{strategy.title}</option>)}
           </select>
-          <span className="text-xs font-bold leading-5 text-navy/48">Bijvoorbeeld bij tablet kijken: kies vooraf een rust-oefening of laat Flowi kiezen op basis van boos, moe, te veel of in de war.</span>
         </label>
-        <label className="flex items-center justify-between rounded-2xl bg-lavender/8 p-3 font-bold">Actief <input type="checkbox" checked={isEnabled} onChange={(event) => setIsEnabled(event.target.checked)} /></label>
         <PrimaryButton onClick={save}>Opslaan</PrimaryButton>
         {editing ? <button onClick={remove} className="min-h-12 rounded-2xl bg-coral/10 px-5 font-extrabold text-coral">Verwijderen</button> : null}
       </div>
@@ -746,11 +744,35 @@ function TaskLibraryPage() {
   const returnTo = safeReturnPath(searchParams.get("returnTo"));
   const [age, setAge] = useState("4-5");
   const [category, setCategory] = useState("Alles");
+  const [search, setSearch] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
   const { data: templates } = useLiveData(() => db.taskTemplates.where("ageGroup").equals(age).toArray(), [], [age]);
-  const categories = ["Alles", ...Array.from(new Set(templates.map((template) => template.category))).sort()];
-  const visibleTemplates = templates
+  const { data: ownTasks } = useLiveData(() => db.tasks.where("category").equals("Eigen").toArray(), [] as Task[], []);
+  const ownTemplates = useMemo(() => {
+    const unique = new Map<string, TaskTemplate>();
+    ownTasks.forEach((task) => {
+      const key = `${task.title.toLowerCase()}-${task.steps.join("|").toLowerCase()}-${task.visualKey ?? ""}`;
+      if (unique.has(key)) return;
+      unique.set(key, {
+        id: `own-${task.id}`,
+        title: task.title,
+        icon: task.icon,
+        visualKey: task.visualKey,
+        category: "Eigen taken",
+        ageGroup: "eigen",
+        defaultDayPart: task.dayPart,
+        suggestedSteps: task.steps,
+        estimatedMinutes: task.estimatedMinutes
+      });
+    });
+    return Array.from(unique.values()).sort((a, b) => a.title.localeCompare(b.title));
+  }, [ownTasks]);
+  const libraryItems = [...ownTemplates, ...templates];
+  const categories = ["Alles", ...Array.from(new Set(libraryItems.map((template) => template.category))).sort()];
+  const normalizedSearch = search.trim().toLowerCase();
+  const visibleTemplates = libraryItems
     .filter((template) => category === "Alles" || template.category === category)
+    .filter((template) => !normalizedSearch || `${template.title} ${template.category} ${template.suggestedSteps.join(" ")}`.toLowerCase().includes(normalizedSearch))
     .sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
   const add = async (template: TaskTemplate, dayPart?: DayPart) => {
     const targetDayPart = dayPart ?? forcedDayPart ?? template.defaultDayPart;
@@ -770,6 +792,16 @@ function TaskLibraryPage() {
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Takenbibliotheek" subtitle="Voeg rustig iets toe." />
+      {ownTemplates.length ? <p className="mb-3 rounded-[1.25rem] bg-lavender/8 px-4 py-3 text-sm font-black text-navy/58">Zelf toegevoegde taken staan bij de categorie Eigen taken.</p> : null}
+      <label className="mb-4 block rounded-[1.45rem] bg-white/94 p-3 shadow-card">
+        <span className="sr-only">Zoek taak</span>
+        <input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Zoek taak, bv. tanden, school, rust..."
+          className="min-h-14 w-full rounded-[1.2rem] border border-lavender/16 bg-lavender/8 px-4 text-lg font-black text-navy outline-none placeholder:text-navy/36 focus:ring-4 focus:ring-lavender/20"
+        />
+      </label>
       <div className="mb-4 grid grid-cols-3 gap-2">{["4-5", "6-7", "8-9"].map((tab) => <button key={tab} onClick={() => setAge(tab)} className={`min-h-11 rounded-2xl font-black ${tab === age ? "bg-lavender text-white" : "bg-white text-navy"}`}>{tab}</button>)}</div>
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (
@@ -777,6 +809,7 @@ function TaskLibraryPage() {
         ))}
       </div>
       <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => <button key={template.id} onClick={() => choose(template)} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card"><TaskArt title={template.title} visualKey={template.visualKey as TaskVisualKey | undefined} /><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p><p className="mt-2 rounded-2xl bg-lavender/8 px-3 py-2 text-center text-xs font-black text-lavender">Toevoegen</p></button>)}</div>
+      {!visibleTemplates.length ? <div className="mt-4 rounded-[1.45rem] bg-white/90 p-5 text-center text-lg font-black text-navy/55 shadow-card">Geen taak gevonden.</div> : null}
       {selectedTemplate ? (
         <div className="fixed inset-0 z-40 grid place-items-end bg-navy/28 p-3 backdrop-blur-sm sm:place-items-center">
           <section className="w-full max-w-xl rounded-[1.9rem] bg-white p-4 shadow-soft">

@@ -27,6 +27,8 @@ body {
   min-width: 320px;
   background: #fbf9ff;
   font-size: 1rem;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: none;
 }
 
@@ -120,6 +122,8 @@ input, textarea, select {
 .phone-screen {
   position: relative;
   min-height: calc(100dvh - 7.8rem);
+  overflow: visible;
+  touch-action: pan-y;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.28)),
     radial-gradient(circle at 24% 0%, rgba(224, 243, 255, 0.82), transparent 160px);
@@ -338,7 +342,7 @@ input, textarea, select {
 
 .reorder-task-card {
   border-radius: 1.45rem;
-  touch-action: pan-y;
+  touch-action: auto;
   user-select: none;
   transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease;
 }
