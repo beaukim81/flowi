@@ -115,7 +115,26 @@ function useAvatar(profileAvatarId?: string): Avatar {
 }
 
 function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
-  return calmStrategies.find((strategy) => (!emotion || strategy.linkedEmotionTypes.includes(emotion)) && (!need || strategy.linkedNeedTypes.includes(need))) ?? calmStrategies[0];
+  const exactMatch = calmStrategies.find((strategy) => (!emotion || strategy.linkedEmotionTypes.includes(emotion)) && (!need || strategy.linkedNeedTypes.includes(need)));
+  if (exactMatch) return exactMatch;
+
+  const preferredByNeed: Record<NeedType, string[]> = {
+    knuffel: ["Pak iets zachts", "Vraag een knuffel", "Kies dichtbij of ruimte"],
+    rustigePlek: ["Ga naar je rustige plek", "Zoek een rustig plekje", "Licht zachter"],
+    bewegen: ["Spring 10 keer", "Schud je armen los", "Draag iets zwaars"],
+    evenAlleen: ["Even niets", "Kruip onder een deken", "Zoek een rustig plekje"],
+    praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet", "Zeg: stop, ik heb hulp nodig"],
+    ademen: ["Adem zacht", "Hand op je hart", "Geef je rustkracht water"],
+    koptelefoon: ["Zet je koptelefoon op", "Maak het licht zachter", "Ga naar je rustige plek"],
+    creatief: ["Teken je wolk", "Bewaar dit gevoel", "Kies iets fijns"]
+  };
+
+  const preferred = need ? preferredByNeed[need].map((title) => calmStrategies.find((strategy) => strategy.title === title)).find(Boolean) : undefined;
+  if (preferred) return preferred;
+
+  return calmStrategies.find((strategy) => need ? strategy.linkedNeedTypes.includes(need) : false)
+    ?? calmStrategies.find((strategy) => emotion ? strategy.linkedEmotionTypes.includes(emotion) : false)
+    ?? calmStrategies[0];
 }
 
 function emotionForNeed(need: NeedType): EmotionType {
