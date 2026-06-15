@@ -46,15 +46,15 @@ function BottomNav() {
 export function PageHeader({ title, subtitle, back = true, backTo }: { title: string; subtitle?: string; back?: boolean; backTo?: string }) {
   const navigate = useNavigate();
   return (
-    <header className="mb-5 flex items-center gap-3">
+    <header className={`mb-5 flex items-center gap-3 ${back ? "" : "justify-center text-center"}`}>
       {back && (
         <button aria-label="Terug" className="grid h-14 w-14 place-items-center rounded-[1.25rem] border border-white bg-white/90 shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/30" onClick={() => backTo ? navigate(backTo) : navigate(-1)}>
           <ArrowLeft size={25} />
         </button>
       )}
-      <div>
-        <h1 className="text-2xl font-black tracking-normal text-navy">{title}</h1>
-        {subtitle ? <p className="text-base font-bold text-navy/55">{subtitle}</p> : null}
+      <div className={back ? "min-w-0 flex-1" : "mx-auto max-w-[18rem]"}>
+        <h1 className="break-words text-2xl font-black tracking-normal text-navy">{title}</h1>
+        {subtitle ? <p className="text-base font-bold leading-6 text-navy/55">{subtitle}</p> : null}
       </div>
     </header>
   );

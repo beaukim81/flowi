@@ -714,7 +714,7 @@ function TaskFormPage() {
                 <button
                   key={option.key}
                   type="button"
-                  onClick={() => setVisualKey(option.key)}
+                  onClick={() => { setVisualKey(option.key); setShowVisualBank(false); }}
                   className={`rounded-[1.2rem] bg-white p-2 text-left shadow-card ring-2 ${visualKey === option.key ? "ring-lavender" : "ring-transparent"}`}
                 >
                   <TaskArt title={option.label} visualKey={option.key} />
@@ -795,6 +795,19 @@ function TaskLibraryPage() {
     setSelectedTemplate(null);
     navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}` : returnTo ?? `/day-settings/${targetDayPart}`);
   };
+  const removeOwnTemplate = async (template: TaskTemplate) => {
+    const matchingTasks = ownTasks.filter((task) =>
+      task.title === template.title &&
+      task.visualKey === template.visualKey &&
+      task.steps.join("|") === template.suggestedSteps.join("|")
+    );
+    await db.transaction("rw", db.tasks, db.taskCompletions, async () => {
+      await Promise.all(matchingTasks.map(async (task) => {
+        await db.taskCompletions.where("taskId").equals(task.id).delete();
+        await db.tasks.delete(task.id);
+      }));
+    });
+  };
   const choose = (template: TaskTemplate) => {
     if (forcedDayPart) {
       void add(template, forcedDayPart);
@@ -821,7 +834,24 @@ function TaskLibraryPage() {
           <button key={item} onClick={() => setCategory(item)} className={`min-h-10 shrink-0 rounded-2xl px-4 text-sm font-black ${item === category ? "bg-mint text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => <button key={template.id} onClick={() => choose(template)} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card"><TaskArt title={template.title} visualKey={template.visualKey as TaskVisualKey | undefined} /><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p><p className="mt-2 rounded-2xl bg-lavender/8 px-3 py-2 text-center text-xs font-black text-lavender">Toevoegen</p></button>)}</div>
+      <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => {
+        const ownTask = template.id.startsWith("own-");
+        return (
+          <article key={template.id} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card">
+            <button type="button" onClick={() => choose(template)} className="block w-full text-left">
+              <TaskArt title={template.title} visualKey={template.visualKey as TaskVisualKey | undefined} />
+              <h3 className="mt-2 font-black">{template.title}</h3>
+              <p className="text-xs font-bold text-navy/50">{template.category}</p>
+              <p className="mt-2 rounded-2xl bg-lavender/8 px-3 py-2 text-center text-xs font-black text-lavender">Toevoegen</p>
+            </button>
+            {ownTask ? (
+              <button type="button" onClick={() => removeOwnTemplate(template)} className="mt-2 min-h-10 w-full rounded-2xl bg-coral/10 px-3 text-xs font-black text-coral">
+                Verwijderen
+              </button>
+            ) : null}
+          </article>
+        );
+      })}</div>
       {!visibleTemplates.length ? <div className="mt-4 rounded-[1.45rem] bg-white/90 p-5 text-center text-lg font-black text-navy/55 shadow-card">Geen taak gevonden.</div> : null}
       {selectedTemplate ? (
         <div className="fixed inset-0 z-40 grid place-items-end bg-navy/28 p-3 backdrop-blur-sm sm:place-items-center">
@@ -1172,7 +1202,7 @@ function ParentsPage() {
     <>
       <PageHeader title="Voor ouders" subtitle="Alles blijft op dit apparaat bewaard." back={false} />
       <div className="grid gap-3">
-        <ParentCard icon={<SlidersHorizontal />} title="Profiel kind" text="Naam en leeftijd aanpassen." to="/settings" />
+        <ParentCard icon={<SlidersHorizontal />} title="Profiel kind" text="Leeftijd aanpassen." to="/settings" />
         <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day-settings" />
         <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken zoeken en toevoegen." to="/task-library" />
         <ParentCard icon={<Database />} title="Over Flowi & backup" text="Uitleg over de app en gegevens bewaren." to="/about" />
@@ -1184,15 +1214,13 @@ function ParentsPage() {
 
 function SettingsPage() {
   const { data: profile } = useProfile();
-  const [name, setName] = useState("");
   const [age, setAge] = useState(7);
-  useEffect(() => { if (profile) { setName(profile.name); setAge(profile.age); } }, [profile]);
-  const save = async () => { if (profile) await db.childProfiles.update(profile.id, { name, age, updatedAt: now() }); };
+  useEffect(() => { if (profile) setAge(profile.age); }, [profile]);
+  const save = async () => { if (profile) await db.childProfiles.update(profile.id, { age, updatedAt: now() }); };
   return (
     <>
       <PageHeader title="Profiel kind" subtitle="Alleen wat nodig is." />
       <div className="grid gap-3 rounded-[1.6rem] bg-white p-4 shadow-soft">
-        <input aria-label="Naam kind" value={name} onChange={(event) => setName(event.target.value)} placeholder="Naam kind" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold placeholder:text-navy/32" />
         <input aria-label="Leeftijd kind" type="number" min={4} max={9} value={age} onChange={(event) => setAge(Number(event.target.value))} placeholder="Leeftijd" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold placeholder:text-navy/32" />
         <PrimaryButton onClick={save}>Opslaan</PrimaryButton>
       </div>
@@ -1261,30 +1289,30 @@ function AboutPage() {
         <div className="grid grid-cols-[1fr_auto] items-end gap-3">
           <div>
             <h2 className="text-3xl font-black text-navy">Waarom Flowi?</h2>
-            <p className="mt-2 text-lg font-black leading-7 text-navy/62">Een rustige hulp voor jonge kinderen die snel vol zitten, vastlopen of extra structuur nodig hebben.</p>
+            <p className="mt-2 text-base leading-6 text-navy/68">Een rustige hulp voor jonge kinderen die snel vol zitten, vastlopen of extra structuur nodig hebben.</p>
           </div>
           <AvatarMascot emotion="rustig" size="small" showCaption={false} />
         </div>
       </section>
 
-      <section className="mt-4 grid gap-3">
+      <section className="mt-4 grid gap-2.5">
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
           <h3 className="text-xl font-black text-navy">Voor wie?</h3>
-          <p className="mt-2 text-lg font-bold leading-8 text-navy/64">Flowi is bedoeld voor kinderen die nog niet altijd kunnen zeggen wat ze voelen of nodig hebben.</p>
+          <p className="mt-1.5 text-base leading-6 text-navy/68">Flowi is bedoeld voor kinderen die nog niet altijd kunnen zeggen wat ze voelen of nodig hebben.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
           <h3 className="text-xl font-black text-navy">Hoe helpt Flowi?</h3>
-          <p className="mt-2 text-lg font-bold leading-8 text-navy/64">Met grote plaatjes, eenvoudige keuzes en korte oefeningen. Zo kan een kind aanwijzen, kiezen en weer een klein stapje verder.</p>
+          <p className="mt-1.5 text-base leading-6 text-navy/68">Met grote plaatjes, eenvoudige keuzes en korte oefeningen. Zo kan een kind aanwijzen, kiezen en weer een klein stapje verder.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
           <h3 className="text-xl font-black text-navy">Wat doet de ouder?</h3>
-          <p className="mt-2 text-lg font-bold leading-8 text-navy/64">De ouder stelt de dagindeling in. Het kind ziet daarna vooral wat er komt en kan taken afvinken of hulp vragen.</p>
+          <p className="mt-1.5 text-base leading-6 text-navy/68">De ouder stelt de dagindeling in. Het kind ziet daarna vooral wat er komt en kan taken afvinken of hulp vragen.</p>
         </div>
       </section>
 
       <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
         <h2 className="text-2xl font-black text-navy">Groeiboom</h2>
-        <div className="mt-3 grid gap-3 text-lg font-bold leading-8 text-navy/64">
+        <div className="mt-2 grid gap-2 text-base leading-6 text-navy/68">
           <p>De groeiboom is een zachte aanmoediging. Het is geen scorebord.</p>
           <p>Na oefenen of reflecteren kan Flowi de boom water geven. Extra momenten kunnen het zonnetje laten schijnen.</p>
           <p>Taken afvinken staat los van de boom. Zo blijft groei gericht op oefenen met rust en gevoel.</p>
@@ -1293,7 +1321,7 @@ function AboutPage() {
 
       <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
         <h2 className="text-2xl font-black text-navy">Gegevens en backup</h2>
-        <p className="mt-2 text-lg font-bold leading-8 text-navy/64">Flowi gebruikt geen account. Gegevens blijven op dit apparaat. Met een backup kun je ze later zelf terugzetten.</p>
+        <p className="mt-2 text-base leading-6 text-navy/68">Flowi gebruikt geen account. Gegevens blijven op dit apparaat. Met een backup kun je ze later zelf terugzetten.</p>
         <div className="mt-4 grid gap-3">
           <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={20} />Backup maken</PrimaryButton>
           <label className="grid min-h-14 cursor-pointer place-items-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={20} />Backup terugzetten<input type="file" accept="application/json" className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
