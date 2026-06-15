@@ -133,12 +133,38 @@ export function NeedCard({ need, label, onClick }: { need: Need; label?: string;
   );
 }
 
+export type TaskVisualKey = "wake" | "dress" | "breakfast" | "teeth" | "school" | "coat" | "hands" | "rest" | "study" | "shower" | "pajamas" | "sleep";
+
+export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"): TaskVisualKey {
+  const text = title.toLowerCase();
+  if (text.includes("ochtend") || text.includes("opstaan") || text.includes("wakker")) return "wake";
+  if (text.includes("aankleden") || text.includes("kleding") || text.includes("shirt") || text.includes("broek")) return "dress";
+  if (text.includes("ontbijt") || text.includes("eten") || text.includes("drinken") || text.includes("beker")) return "breakfast";
+  if (text.includes("tanden") || text.includes("poets")) return "teeth";
+  if (text.includes("school") || text.includes("tas") || text.includes("broodtrommel") || text.includes("sportspullen")) return "school";
+  if (text.includes("jas") || text.includes("schoenen")) return "coat";
+  if (text.includes("handen") || text.includes("wassen")) return "hands";
+  if (text.includes("rust") || text.includes("pauze") || text.includes("koptelefoon") || text.includes("rustige plek")) return "rest";
+  if (text.includes("boek") || text.includes("lezen") || text.includes("agenda") || text.includes("huiswerk") || text.includes("teken")) return "study";
+  if (text.includes("douche") || text.includes("douchen") || text.includes("bad")) return "shower";
+  if (text.includes("pyjama") || text.includes("avond")) return "pajamas";
+  if (text.includes("bed") || text.includes("slapen") || text.includes("scherm uit") || text.includes("bedtijd")) return "sleep";
+  return fallback;
+}
+
+export function TaskArt({ title, visualKey, compact = false }: { title: string; visualKey?: TaskVisualKey; compact?: boolean }) {
+  const key = visualKey ?? getTaskVisualKey(title);
+  return <span className={`task-art task-art-${key} ${compact ? "compact" : ""}`} aria-hidden />;
+}
+
 export function DayPartCard({ title, icon, progress, to }: { title: string; icon: string; progress: number; to: string }) {
+  const dayPartVisual = title === "Ochtend" ? "wake" : title === "Na school" ? "school" : title === "Avond" ? "pajamas" : title === "Bedtijd" ? "sleep" : "rest";
   return (
-    <NavLink to={to} className="flex min-h-20 items-center gap-4 rounded-[1.45rem] border border-white/85 bg-white/92 p-4 shadow-card ring-1 ring-lavender/8">
-      <span className="grid h-13 w-13 min-h-12 min-w-12 place-items-center rounded-[1.1rem] bg-gradient-to-br from-sky/28 to-lilac/18 text-2xl shadow-[inset_0_1px_0_rgba(255,255,255,.8)]">{icon}</span>
+    <NavLink to={to} className="flex min-h-24 items-center gap-4 rounded-[1.45rem] border border-white/85 bg-white/92 p-3 shadow-card ring-1 ring-lavender/8">
+      <TaskArt title={title} visualKey={dayPartVisual as TaskVisualKey} />
       <div className="min-w-0 flex-1">
         <div className="font-black">{title}</div>
+        <div className="mt-0.5 text-xs font-bold text-navy/42">{icon} Kleine stappen</div>
         <div className="mt-2 h-2 rounded-full bg-lilac/18"><div className="h-2 rounded-full bg-gradient-to-r from-mint to-lavender" style={{ width: `${progress}%` }} /></div>
       </div>
       <ChevronRight className="text-lavender" />
@@ -153,7 +179,7 @@ export function TaskCard({ task, done, onDone, onHelp, onEdit }: { task: Task; d
         <span className="grid h-10 w-8 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Sleep om te verplaatsen">
           <GripVertical size={18} />
         </span>
-        <span className="flowi-icon-token grid h-12 w-12 place-items-center rounded-2xl text-2xl">{task.icon}</span>
+        <TaskArt title={task.title} compact />
         <div className="flex-1">
           <h3 className="font-black">{task.title}</h3>
           {task.optionalTime ? <span className="text-xs font-bold text-lavender">{task.optionalTime}</span> : <span className="text-xs font-bold text-navy/45">Tijd optioneel</span>}

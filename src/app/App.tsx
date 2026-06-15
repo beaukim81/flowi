@@ -14,7 +14,7 @@ import { useLiveData } from "../hooks/useLiveData";
 import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
 import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, Task, TaskTemplate } from "../types/schema";
-import { AppShell, AvatarMascot, DayPartCard, EmotionCard, icons, NeedCard, PageHeader, ParentCard, PrimaryButton, RewardSticker, SecondaryButton, TaskCard } from "../components/ui";
+import { AppShell, AvatarMascot, DayPartCard, EmotionCard, icons, NeedCard, PageHeader, ParentCard, PrimaryButton, RewardSticker, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
 
 const dayParts: Record<DayPart, { title: string; icon: string }> = {
   ochtend: { title: "Ochtend", icon: "☀️" },
@@ -285,6 +285,11 @@ function TaskFormPage() {
       <PageHeader title={editing ? "Taak aanpassen" : "Nieuwe taak"} subtitle="Tijd is optioneel." />
       <div className="grid gap-3 rounded-[1.6rem] bg-white/90 p-4 shadow-soft">
         <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Titel" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
+        <section className="rounded-[1.45rem] bg-gradient-to-br from-sky/12 via-white to-lavender/12 p-4 text-center shadow-card">
+          <TaskArt title={title || "Nieuwe taak"} />
+          <p className="mt-3 text-sm font-black text-navy">Flowi-plaatje</p>
+          <p className="text-xs font-bold text-navy/48">Het plaatje past zich aan op de taaknaam.</p>
+        </section>
         <section className="rounded-[1.4rem] bg-lavender/8 p-3">
           <div className="mb-3 flex items-center justify-between">
             <span className="font-black">Kies een icoontje</span>
@@ -325,9 +330,11 @@ function TaskLibraryPage() {
   };
   return (
     <>
+      <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Takenbibliotheek" subtitle="Voeg rustig iets toe." />
       <div className="mb-4 grid grid-cols-4 gap-2">{["4-5", "6-7", "8-9", "10-12"].map((tab) => <button key={tab} onClick={() => setAge(tab)} className={`min-h-11 rounded-2xl font-black ${tab === age ? "bg-lavender text-white" : "bg-white text-navy"}`}>{tab}</button>)}</div>
-      <div className="grid grid-cols-2 gap-3">{templates.map((template) => <button key={template.id} onClick={() => add(template)} className="rounded-[1.4rem] bg-white p-4 text-left shadow-card"><span className="text-3xl">{template.icon}</span><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p></button>)}</div>
+      <div className="grid grid-cols-2 gap-3">{templates.map((template) => <button key={template.id} onClick={() => add(template)} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card"><TaskArt title={template.title} /><h3 className="mt-2 font-black">{template.title}</h3><p className="text-xs font-bold text-navy/50">{template.category}</p></button>)}</div>
+      </div>
     </>
   );
 }

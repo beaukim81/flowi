@@ -210,11 +210,45 @@ button, input, textarea, select {
 }
 
 .flowi-mascot-image,
-.emotion-card-art {
+.emotion-card-art,
+.task-art {
   background-image: url("/assets/flowi-emotion-sheet.png");
   background-repeat: no-repeat;
   background-size: 400% 200%;
 }
+
+.task-art {
+  display: block;
+  width: 5.3rem;
+  height: 4.6rem;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 1.25rem;
+  background-image: url("/assets/flowi-task-sheet.png");
+  background-size: 400% 300%;
+  box-shadow:
+    0 12px 24px rgba(72, 63, 137, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.task-art.compact {
+  width: 4.25rem;
+  height: 3.75rem;
+  border-radius: 1rem;
+}
+
+.task-art-wake { background-position: 0% 0%; }
+.task-art-dress { background-position: 33.333% 0%; }
+.task-art-breakfast { background-position: 66.666% 0%; }
+.task-art-teeth { background-position: 100% 0%; }
+.task-art-school { background-position: 0% 50%; }
+.task-art-coat { background-position: 33.333% 50%; }
+.task-art-hands { background-position: 66.666% 50%; }
+.task-art-rest { background-position: 100% 50%; }
+.task-art-study { background-position: 0% 100%; }
+.task-art-shower { background-position: 33.333% 100%; }
+.task-art-pajamas { background-position: 66.666% 100%; }
+.task-art-sleep { background-position: 100% 100%; }
 
 .flowi-mascot-image {
   border-radius: 2rem;
