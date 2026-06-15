@@ -766,24 +766,6 @@ function RewardsPage() {
           <p className="mt-1 text-xs font-bold leading-5 text-navy/50">{careText}</p>
         </div>
       </section>
-
-      <section className="mt-4 rounded-[1.6rem] bg-white/92 p-4 shadow-card">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-black text-navy">Rustboom deze week</h3>
-          <span className="rounded-full bg-lavender/10 px-3 py-1 text-xs font-black text-lavender">maandag opnieuw</span>
-        </div>
-        <div className="h-3 rounded-full bg-lilac/18">
-          <div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} />
-        </div>
-        <div className="mt-3 grid grid-cols-4 gap-2">
-          {weekMoments.map((grown, index) => (
-            <div key={index} className={`week-seed grid min-h-14 place-items-center rounded-[1.15rem] text-center text-xs font-black ${grown ? "grown" : ""}`}>
-              <span>{grown ? "Water" : "Rust"}</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-center text-xs font-bold leading-5 text-navy/50">{waterDrops} waterdruppels deze week. Extra momenten worden zonnestraaltjes.</p>
-      </section>
     </div>
   );
   const recentRewards = weekRewards.slice(0, 4);
