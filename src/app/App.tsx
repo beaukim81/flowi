@@ -27,6 +27,8 @@ const dayParts: Record<DayPart, { title: string; icon: string }> = {
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
+const taskIcons = ["👕", "🥣", "🪥", "🎒", "👟", "🧥", "🧼", "🍎", "🥤", "🍃", "🚿", "🌙", "🛏️", "📚", "✏️", "🧸", "🎧", "⛺", "⭐", "🌱", "🍽️", "🧺", "🧹", "🐾"];
+const sortTasks = (tasks: Task[]) => [...tasks].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.createdAt.localeCompare(b.createdAt));
 
 function useProfile() {
   return useLiveData(async () => (await db.childProfiles.get("default-child")) ?? null, null, []);
@@ -166,6 +168,7 @@ function ReflectionPage() {
 }
 
 function DayPage() {
+  const navigate = useNavigate();
   const { data: tasks } = useLiveData(() => db.tasks.where("childProfileId").equals("default-child").toArray(), [] as Task[], []);
   const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
   return (
@@ -178,7 +181,7 @@ function DayPage() {
           return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day/${part}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton>Tijd toevoegen</SecondaryButton><PrimaryButton onClick={() => location.assign("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/tasks/new")}>Tijd toevoegen</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
     </>
   );
 }
@@ -190,18 +193,48 @@ function DayPartPage() {
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
   const { data: completions, reload: reloadCompletions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], [part]);
   const [helpTask, setHelpTask] = useState<Task | null>(null);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
   const complete = async (task: Task) => {
     await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "done", completedAt: now() });
     await db.rewards.add({ id: id(), childProfileId: "default-child", label: "Ik maakte het af", icon: "✅", reason: task.title, earnedAt: now() });
     await reloadCompletions();
     await reload();
   };
+  const moveTask = async (targetTaskId: string) => {
+    if (!draggedTaskId || draggedTaskId === targetTaskId) return;
+    const current = sortTasks(tasks.filter((task) => task.isEnabled));
+    const fromIndex = current.findIndex((task) => task.id === draggedTaskId);
+    const toIndex = current.findIndex((task) => task.id === targetTaskId);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const reordered = [...current];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    await db.transaction("rw", db.tasks, async () => {
+      await Promise.all(reordered.map((task, sortOrder) => db.tasks.update(task.id, { sortOrder, updatedAt: now() })));
+    });
+    setDraggedTaskId(null);
+    await reload();
+  };
   return (
     <>
       <PageHeader title={`${dayParts[part]?.title ?? "Dag"}routine`} subtitle="Tijd optioneel" />
       <div className="grid gap-3">
-        {tasks.filter((task) => task.isEnabled).map((task) => <TaskCard key={task.id} task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} onEdit={() => navigate(`/tasks/${task.id}/edit`)} />)}
+        {visibleTasks.map((task) => (
+          <div
+            key={task.id}
+            draggable
+            onDragStart={() => setDraggedTaskId(task.id)}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={() => moveTask(task.id)}
+            className={draggedTaskId === task.id ? "opacity-60" : ""}
+          >
+            <TaskCard task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} onEdit={() => navigate(`/tasks/${task.id}/edit`)} />
+          </div>
+        ))}
       </div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
+      <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       {helpTask ? <div className="mt-4 rounded-[1.5rem] bg-white p-4 shadow-soft"><h2 className="font-black">Help mij starten</h2><p className="text-sm font-bold text-navy/55">Eerste mini-stap: {helpTask.steps[0] ?? "Begin klein."}</p><div className="mt-3 grid grid-cols-2 gap-2">{["Te veel", "Boos", "Moe", "In de war"].map((label) => <span key={label} className="rounded-2xl bg-lavender/10 px-3 py-2 text-center text-xs font-black text-lavender">{label}</span>)}</div></div> : null}
     </>
   );
@@ -220,7 +253,8 @@ function TaskFormPage() {
   const [isEnabled, setIsEnabled] = useState(true);
   useEffect(() => { if (existing) { setTitle(existing.title); setIcon(existing.icon); setDayPart(existing.dayPart); setOptionalTime(existing.optionalTime ?? ""); setSteps(existing.steps.join("\n")); setIsEnabled(existing.isEnabled); } }, [existing]);
   const save = async () => {
-    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, category: "Eigen", ageGroup: "vrij", dayPart, steps: steps.split("\n").filter(Boolean), repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
+    const currentTasks = await db.tasks.where("dayPart").equals(dayPart).toArray();
+    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: steps.split("\n").filter(Boolean), repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
     await db.tasks.put(task);
     navigate(`/day/${dayPart}`);
   };
@@ -234,7 +268,25 @@ function TaskFormPage() {
       <PageHeader title={editing ? "Taak aanpassen" : "Nieuwe taak"} subtitle="Tijd is optioneel." />
       <div className="grid gap-3 rounded-[1.6rem] bg-white p-4 shadow-soft">
         <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Titel" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
-        <input value={icon} onChange={(event) => setIcon(event.target.value)} placeholder="Pictogram" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
+        <section className="rounded-[1.4rem] bg-lavender/8 p-3">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="font-black">Kies een icoontje</span>
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-2xl shadow-card">{icon}</span>
+          </div>
+          <div className="grid grid-cols-6 gap-2">
+            {taskIcons.map((taskIcon) => (
+              <button
+                key={taskIcon}
+                type="button"
+                onClick={() => setIcon(taskIcon)}
+                className={`grid h-11 w-full place-items-center rounded-2xl bg-white text-2xl shadow-card ring-2 ${icon === taskIcon ? "ring-lavender" : "ring-transparent"}`}
+                aria-label={`Kies icoon ${taskIcon}`}
+              >
+                {taskIcon}
+              </button>
+            ))}
+          </div>
+        </section>
         <select value={dayPart} onChange={(event) => setDayPart(event.target.value as DayPart)} className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold"><option value="ochtend">Ochtend</option><option value="naSchool">Na school</option><option value="avond">Avond</option><option value="bedtijd">Bedtijd</option><option value="vrij">Vrij</option></select>
         <input value={optionalTime} onChange={(event) => setOptionalTime(event.target.value)} placeholder="Tijd optioneel, bv. 07:30" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
         <textarea value={steps} onChange={(event) => setSteps(event.target.value)} className="min-h-32 rounded-2xl border border-lavender/20 p-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
@@ -250,7 +302,8 @@ function TaskLibraryPage() {
   const [age, setAge] = useState("4-5");
   const { data: templates } = useLiveData(() => db.taskTemplates.where("ageGroup").equals(age).toArray(), [], [age]);
   const add = async (template: TaskTemplate) => {
-    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, category: template.category, ageGroup: template.ageGroup, dayPart: template.defaultDayPart, steps: template.suggestedSteps, repeatPattern: "elkeDag", estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
+    const currentTasks = await db.tasks.where("dayPart").equals(template.defaultDayPart).toArray();
+    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, category: template.category, ageGroup: template.ageGroup, dayPart: template.defaultDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: "elkeDag", estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
   };
   return (
     <>

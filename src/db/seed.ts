@@ -49,7 +49,7 @@ export async function seedDatabase() {
     ["Even rust", "🍃", "naSchool", ["Kies een rustige plek.", "Adem zacht.", "Doe even niets."]],
     ["Douchen", "🚿", "avond", ["Leg je spullen klaar.", "Douche rustig.", "Droog je af."]],
     ["Scherm uit", "🌙", "bedtijd", ["Zet je scherm uit.", "Leg hem weg.", "Kies iets rustigs."]]
-  ].map(([title, icon, dayPart, steps]) => ({
+  ].map(([title, icon, dayPart, steps], sortOrder) => ({
     id: id(),
     childProfileId: profile.id,
     title: title as string,
@@ -57,6 +57,7 @@ export async function seedDatabase() {
     category: "Dag",
     ageGroup: "6-7",
     dayPart: dayPart as Task["dayPart"],
+    sortOrder,
     steps: steps as string[],
     repeatPattern: "elkeDag",
     rewardEnabled: true,

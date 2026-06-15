@@ -30,7 +30,7 @@ export class FlowiDatabase extends Dexie {
       calmStrategies: "id, *linkedEmotionTypes, *linkedNeedTypes",
       parentPhrases: "id",
       emotionHistory: "id, childProfileId, createdAt",
-      tasks: "id, childProfileId, dayPart, isEnabled",
+      tasks: "id, childProfileId, dayPart, isEnabled, sortOrder",
       taskTemplates: "id, ageGroup, category",
       dailyPlans: "id, childProfileId, date",
       taskCompletions: "id, childProfileId, taskId, date",

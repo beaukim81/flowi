@@ -90,6 +90,7 @@ export interface Task {
   category: string;
   ageGroup: string;
   dayPart: DayPart;
+  sortOrder: number;
   steps: string[];
   repeatPattern: RepeatPattern;
   optionalTime?: string;

@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, ChevronRight, Download, Heart, Home, Leaf, MoreHorizontal, Plus, Settings, Sparkles, Upload, UserRound } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Download, GripVertical, Heart, Home, Leaf, MoreHorizontal, Pencil, Plus, Settings, Sparkles, Upload, UserRound } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import type { Avatar, Emotion, EmotionType, Need, Task } from "../types/schema";
@@ -115,6 +115,9 @@ export function TaskCard({ task, done, onDone, onHelp, onEdit }: { task: Task; d
   return (
     <article className="rounded-[1.4rem] bg-white p-4 shadow-card ring-1 ring-lavender/8">
       <div className="flex items-center gap-3">
+        <span className="grid h-10 w-8 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Sleep om te verplaatsen">
+          <GripVertical size={18} />
+        </span>
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-honey/18 text-2xl">{task.icon}</span>
         <div className="flex-1">
           <h3 className="font-black">{task.title}</h3>
@@ -126,7 +129,7 @@ export function TaskCard({ task, done, onDone, onHelp, onEdit }: { task: Task; d
       </div>
       <div className="mt-3 flex gap-4">
         {onHelp ? <button onClick={onHelp} className="text-sm font-extrabold text-lavender">Lukt het niet?</button> : null}
-        {onEdit ? <button onClick={onEdit} className="text-sm font-extrabold text-navy/55">Aanpassen</button> : null}
+        {onEdit ? <button onClick={onEdit} className="inline-flex items-center gap-1 text-sm font-extrabold text-navy/55"><Pencil size={14} /> Aanpassen</button> : null}
       </div>
     </article>
   );
