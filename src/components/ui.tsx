@@ -1,13 +1,13 @@
 import { ArrowLeft, Check, ChevronRight, Download, GripVertical, Heart, HelpCircle, Home, Leaf, MoreHorizontal, Pencil, Plus, Settings, Sparkles, Upload, UserRound } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import type { Avatar, Emotion, EmotionType, Need, Task } from "../types/schema";
+import type { Avatar, Emotion, EmotionType, Need, NeedType, Task } from "../types/schema";
 import { getTaskVisualKey, type TaskVisualKey } from "../utils/taskVisuals";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flowi-bg min-h-dvh text-navy">
-      <main className="mx-auto min-h-dvh w-full max-w-md px-4 pb-28 pt-4 sm:max-w-3xl sm:pt-8">{children}</main>
+      <main className="mx-auto min-h-dvh w-full max-w-lg px-3 pb-32 pt-3 sm:max-w-4xl sm:px-6 sm:pt-7">{children}</main>
       <BottomNav />
     </div>
   );
@@ -21,11 +21,11 @@ function BottomNav() {
     { to: "/parents", label: "Meer", icon: MoreHorizontal }
   ];
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/80 bg-white/88 px-3 py-2 shadow-[0_-14px_40px_rgba(62,59,130,.12)] backdrop-blur-2xl">
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1 sm:max-w-3xl">
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/80 bg-white/90 px-3 py-2.5 shadow-[0_-14px_40px_rgba(62,59,130,.12)] backdrop-blur-2xl">
+      <div className="mx-auto grid max-w-lg grid-cols-4 gap-1.5 sm:max-w-4xl">
         {items.map((item) => (
-          <NavLink key={item.to} to={item.to} className={({ isActive }) => `flex min-h-14 flex-col items-center justify-center rounded-[1.35rem] text-xs font-bold transition ${isActive ? "bg-gradient-to-b from-lilac/28 to-lavender/12 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.8)]" : "text-navy/55"}`}>
-            <item.icon aria-hidden size={21} strokeWidth={2.4} />
+          <NavLink key={item.to} to={item.to} className={({ isActive }) => `flex min-h-16 flex-col items-center justify-center rounded-[1.45rem] text-sm font-black transition ${isActive ? "bg-gradient-to-b from-lilac/28 to-lavender/12 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.8)]" : "text-navy/55"}`}>
+            <item.icon aria-hidden size={24} strokeWidth={2.5} />
             {item.label}
           </NavLink>
         ))}
@@ -37,31 +37,31 @@ function BottomNav() {
 export function PageHeader({ title, subtitle, back = true }: { title: string; subtitle?: string; back?: boolean }) {
   const navigate = useNavigate();
   return (
-    <header className="mb-4 flex items-center gap-3">
+    <header className="mb-5 flex items-center gap-3">
       {back && (
-        <button aria-label="Terug" className="grid h-11 w-11 place-items-center rounded-[1.15rem] border border-white bg-white/90 shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/30" onClick={() => navigate(-1)}>
-          <ArrowLeft size={21} />
+        <button aria-label="Terug" className="grid h-14 w-14 place-items-center rounded-[1.25rem] border border-white bg-white/90 shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/30" onClick={() => navigate(-1)}>
+          <ArrowLeft size={25} />
         </button>
       )}
       <div>
-        <h1 className="text-xl font-extrabold tracking-normal text-navy">{title}</h1>
-        {subtitle ? <p className="text-sm font-semibold text-navy/55">{subtitle}</p> : null}
+        <h1 className="text-2xl font-black tracking-normal text-navy">{title}</h1>
+        {subtitle ? <p className="text-base font-bold text-navy/55">{subtitle}</p> : null}
       </div>
     </header>
   );
 }
 
 export function PrimaryButton(props: ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {
-  return <button {...props} className={`min-h-12 rounded-[1.35rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-5 font-extrabold text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus:outline-none focus:ring-4 focus:ring-lavender/30 ${props.className ?? ""}`} />;
+  return <button {...props} className={`min-h-14 rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus:outline-none focus:ring-4 focus:ring-lavender/30 ${props.className ?? ""}`} />;
 }
 
 export function SecondaryButton(props: ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {
-  return <button {...props} className={`min-h-12 rounded-[1.35rem] border border-lavender/14 bg-white/92 px-5 font-extrabold text-navy shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/20 ${props.className ?? ""}`} />;
+  return <button {...props} className={`min-h-14 rounded-[1.45rem] border border-lavender/14 bg-white/92 px-6 text-lg font-black text-navy shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/20 ${props.className ?? ""}`} />;
 }
 
 export function AvatarMascot({ avatar, emotion, size = "large", showCaption = true }: { avatar?: Avatar; emotion?: EmotionType; size?: "small" | "medium" | "large"; showCaption?: boolean }) {
   const isGiraffe = !avatar || avatar.id === "giraffe";
-  const dimensions = size === "large" ? "h-56 w-56" : size === "medium" ? "h-36 w-36" : "h-24 w-24";
+  const dimensions = size === "large" ? "h-64 w-64" : size === "medium" ? "h-44 w-44" : "h-28 w-28";
   if (!isGiraffe) {
     const textSize = size === "large" ? "text-8xl" : size === "medium" ? "text-6xl" : "text-4xl";
     return (
@@ -118,18 +118,26 @@ export function EmotionCard({ emotion, avatar, onClick }: { emotion: Emotion; av
     weetIkNiet: "100% 100%"
   };
   return (
-    <button onClick={onClick} className={`emotion-card emotion-${emotion.id} min-h-44 rounded-[1.7rem] p-3 text-left transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30`}>
+    <button onClick={onClick} className={`emotion-card emotion-${emotion.id} min-h-52 rounded-[1.8rem] p-3 text-left transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30`}>
       <div className="emotion-card-art" style={{ backgroundPosition: positions[emotion.id] }} aria-hidden />
-      <div className="emotion-label relative z-10 rounded-[1.1rem] bg-white/90 px-3 py-2 text-center text-sm font-black text-navy shadow-[inset_0_1px_0_rgba(255,255,255,.75)]">{emotion.label}</div>
+      <div className="emotion-label relative z-10 rounded-[1.15rem] bg-white/90 px-3 py-2.5 text-center text-base font-black text-navy shadow-[inset_0_1px_0_rgba(255,255,255,.75)]">{emotion.label}</div>
     </button>
   );
 }
 
+function needVisualKey(need: NeedType) {
+  return need === "knuffel" ? "hug" : need === "rustigePlek" ? "quiet" : need === "bewegen" ? "move" : need === "evenAlleen" ? "alone" : need === "praatMetOuder" ? "talk" : need === "ademen" ? "breathe" : need === "koptelefoon" ? "headphones" : "creative";
+}
+
+export function NeedArt({ need }: { need: NeedType }) {
+  return <span className={`need-art need-art-${needVisualKey(need)}`} aria-hidden />;
+}
+
 export function NeedCard({ need, label, onClick }: { need: Need; label?: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="min-h-32 rounded-[1.55rem] border border-white/90 bg-white/92 p-4 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
-      <div className="flowi-icon-token mx-auto mb-3 grid h-16 w-16 place-items-center rounded-[1.25rem] text-4xl">{need.icon}</div>
-      <span className="text-sm font-black text-navy">{label ?? need.label}</span>
+    <button onClick={onClick} className={`need-card need-card-${needVisualKey(need.id)} min-h-52 rounded-[1.8rem] p-3 text-center transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30`}>
+      <NeedArt need={need.id} />
+      <span className="need-label relative z-10 rounded-[1.15rem] bg-white/90 px-3 py-2.5 text-base font-black text-navy shadow-[inset_0_1px_0_rgba(255,255,255,.75)]">{label ?? need.label}</span>
     </button>
   );
 }
@@ -171,10 +179,10 @@ export function ExerciseArt({ title, compact = false }: { title: string; compact
 export function DayPartCard({ title, progress, to }: { title: string; icon: string; progress: number; to: string }) {
   const dayPartVisual = title === "Ochtend" ? "wake" : title === "Na school" ? "school" : title === "Avond" ? "pajamas" : title === "Bedtijd" ? "sleep" : "rest";
   return (
-    <NavLink to={to} className="flex min-h-24 items-center gap-4 rounded-[1.45rem] border border-white/85 bg-white/92 p-3 shadow-card ring-1 ring-lavender/8">
+    <NavLink to={to} className="flex min-h-28 items-center gap-4 rounded-[1.55rem] border border-white/85 bg-white/92 p-4 shadow-card ring-1 ring-lavender/8">
       <TaskArt title={title} visualKey={dayPartVisual as TaskVisualKey} />
       <div className="grid min-h-16 min-w-0 flex-1 content-center">
-        <div className="text-center text-lg font-black">{title}</div>
+        <div className="text-center text-xl font-black">{title}</div>
         <div className="mt-2 h-2 rounded-full bg-lilac/18"><div className="h-2 rounded-full bg-gradient-to-r from-mint to-lavender" style={{ width: `${progress}%` }} /></div>
       </div>
       <ChevronRight className="text-lavender" />
@@ -184,36 +192,36 @@ export function DayPartCard({ title, progress, to }: { title: string; icon: stri
 
 export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit, editable = false, showDetails = true }: { task: Task; done: boolean; needsHelp?: boolean; onDone: () => void; onHelp?: () => void; onEdit?: () => void; editable?: boolean; showDetails?: boolean }) {
   return (
-    <article className={`rounded-[1.45rem] border p-4 shadow-card ring-1 ${done ? "border-mint/35 bg-gradient-to-b from-white to-mint/10 ring-mint/12" : needsHelp ? "border-lavender/30 bg-gradient-to-b from-white to-lavender/8 ring-lavender/12" : "border-white/85 bg-white/94 ring-lavender/8"}`}>
-      <div className="flex items-center gap-3">
-        {editable ? <span className="grid h-10 w-8 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Sleep om te verplaatsen">
-          <GripVertical size={18} />
+    <article className={`rounded-[1.6rem] border p-4 shadow-card ring-1 ${done ? "border-mint/35 bg-gradient-to-b from-white to-mint/10 ring-mint/12" : needsHelp ? "border-lavender/30 bg-gradient-to-b from-white to-lavender/8 ring-lavender/12" : "border-white/85 bg-white/94 ring-lavender/8"}`}>
+      <div className="flex items-center gap-4">
+        {editable ? <span className="grid h-14 w-10 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Sleep om te verplaatsen">
+          <GripVertical size={22} />
         </span> : null}
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
         <div className="flex-1">
-          <h3 className="text-lg font-black leading-tight">{task.title}</h3>
-          {showDetails ? (task.optionalTime ? <span className="text-xs font-bold text-lavender">{task.optionalTime}</span> : <span className="text-xs font-bold text-navy/45">Tijd optioneel</span>) : null}
+          <h3 className="text-xl font-black leading-tight">{task.title}</h3>
+          {showDetails ? (task.optionalTime ? <span className="text-sm font-bold text-lavender">{task.optionalTime}</span> : <span className="text-sm font-bold text-navy/45">Tijd optioneel</span>) : null}
         </div>
-        {onHelp ? <button aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="grid h-12 w-12 place-items-center rounded-2xl border-2 border-lilac/40 bg-white text-lavender">
-          <HelpCircle size={23} />
+        {onHelp ? <button aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-lilac/40 bg-white text-lavender">
+          <HelpCircle size={27} />
         </button> : null}
-        <button aria-label={`${task.title} afvinken`} onClick={onDone} className={`grid h-12 w-12 place-items-center rounded-2xl border-2 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
-          <Check size={24} />
+        <button aria-label={`${task.title} afvinken`} onClick={onDone} className={`grid h-14 w-14 place-items-center rounded-2xl border-2 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
+          <Check size={28} />
         </button>
       </div>
       {done ? (
-        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-mint/10 px-3 py-2 text-xs font-black text-mint">
-          <Sparkles size={15} />
+        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-mint/10 px-3 py-2.5 text-sm font-black text-mint">
+          <Sparkles size={17} />
           <span>Gelukt vandaag</span>
         </div>
       ) : needsHelp ? (
-        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-lavender/10 px-3 py-2 text-xs font-black text-lavender">
-          <Sparkles size={15} />
+        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-lavender/10 px-3 py-2.5 text-sm font-black text-lavender">
+          <Sparkles size={17} />
           <span>Goed geprobeerd</span>
         </div>
       ) : null}
       {onEdit ? <div className="mt-3 flex gap-4">
-        <button onClick={onEdit} className="inline-flex items-center gap-1 text-sm font-extrabold text-navy/55"><Pencil size={14} /> Aanpassen</button>
+        <button onClick={onEdit} className="inline-flex min-h-11 items-center gap-1 text-base font-black text-navy/55"><Pencil size={17} /> Aanpassen</button>
       </div> : null}
     </article>
   );

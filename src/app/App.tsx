@@ -13,7 +13,7 @@ import { useLiveData } from "../hooks/useLiveData";
 import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
 import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Task, TaskTemplate } from "../types/schema";
-import { AppShell, AvatarMascot, DayPartCard, EmotionCard, ExerciseArt, icons, PageHeader, ParentCard, PrimaryButton, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
+import { AppShell, AvatarMascot, DayPartCard, EmotionCard, ExerciseArt, icons, NeedCard, PageHeader, ParentCard, PrimaryButton, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
 import type { TaskVisualKey } from "../utils/taskVisuals";
 
 const dayParts: Record<DayPart, { title: string; icon: string }> = {
@@ -186,25 +186,22 @@ function NeedPage() {
   const { data: profile } = useProfile();
   const filteredNeeds = selectedEmotion === "weetIkNiet" ? needs.filter((need) => ["praatMetOuder", "creatief", "ademen", "rustigePlek"].includes(need.id)) : needs;
   const caregiver = profile?.caregiverName || profile?.caregiverLabel || "ouder";
-  const shownEmotion = selectedEmotion ?? "weetIkNiet";
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Wat helpt nu?" subtitle="Kies een rustig stapje." />
-      <section className="mb-4 overflow-hidden rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/10 p-4 text-center shadow-soft">
-        <AvatarMascot emotion={shownEmotion} size="medium" />
-        <p className="mx-auto mt-3 max-w-xs text-sm font-bold leading-6 text-navy/58">Flowi kiest daarna een oefening die bij jouw keuze past.</p>
-      </section>
+      <PageHeader title="Wat heb je nu nodig?" subtitle="Kies wat jou kan helpen." />
       <div className="grid grid-cols-2 gap-3">
         {filteredNeeds.map((need) => (
-          <button key={need.id} onClick={() => {
-            const strategy = chooseStrategy(selectedEmotion, need.id);
-            setNeed(need.id);
-            setAction(strategy.id);
-            navigate(`/action/${strategy.id}`);
-          }} className="min-h-40 rounded-[1.55rem] border border-white/90 bg-white/92 p-3 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
-            <AvatarMascot emotion={emotionForNeed(need.id)} size="small" />
-            <span className="mt-2 block text-sm font-black text-navy">{need.id === "praatMetOuder" ? `Praat met ${caregiver}` : need.label}</span>
-          </button>
+          <NeedCard
+            key={need.id}
+            need={need}
+            label={need.id === "praatMetOuder" ? `Praat met ${caregiver}` : need.label}
+            onClick={() => {
+              const strategy = chooseStrategy(selectedEmotion, need.id);
+              setNeed(need.id);
+              setAction(strategy.id);
+              navigate(`/action/${strategy.id}`);
+            }}
+          />
         ))}
       </div>
     </div>
@@ -740,7 +737,7 @@ function RewardsPage() {
   const todaysSunshine = Math.max(0, todaysRewards.length - todaysWaterDrops);
   const careMode = todaysSunshine > 0 ? "sun" : hasWaterToday ? "water" : "rest";
   const careTitle = careMode === "sun" ? "Het zonnetje schijnt" : careMode === "water" ? "Flowi gaf water" : "De boom mag rusten";
-  const careText = careMode === "sun" ? "Extra oefenen wordt warmte voor de boom." : careMode === "water" ? "Een groeimoment gaf de boom water." : "Vandaag kan er nog een klein groeimoment komen.";
+  const careText = careMode === "sun" ? "Na water wordt extra oefenen warmte voor de boom." : careMode === "water" ? "Een groeimoment gaf de boom water." : "Vandaag kan er nog een klein groeimoment komen.";
   return (
     <div className="phone-screen growth-garden px-4 pb-5 pt-4">
       <PageHeader title="Mijn groei" subtitle="Flowi's rustboom." back={false} />
@@ -786,19 +783,6 @@ function RewardsPage() {
           ))}
         </div>
         <p className="mt-3 text-center text-xs font-bold leading-5 text-navy/50">{waterDrops} waterdruppels deze week. Extra momenten worden zonnestraaltjes.</p>
-      </section>
-
-      <section className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
-          <span className="mx-auto block h-8 w-6 rounded-full bg-sky/70" />
-          <p className="mt-2 text-sm font-black text-navy">{todaysWaterDrops} van {dailyWaterLimit}</p>
-          <p className="text-xs font-bold text-navy/48">water vandaag</p>
-        </div>
-        <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
-          <span className="mx-auto block h-8 w-8 rounded-full bg-honey/80 shadow-[0_0_0_8px_rgba(255,198,91,.18)]" />
-          <p className="mt-2 text-sm font-black text-navy">{todaysSunshine}</p>
-          <p className="text-xs font-bold text-navy/48">zon vandaag</p>
-        </div>
       </section>
     </div>
   );
