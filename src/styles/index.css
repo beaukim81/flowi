@@ -338,6 +338,88 @@ input, textarea, select {
 .exercise-art-focusObject { background-position: 66.666% 100%; }
 .exercise-art-handHeart { background-position: 100% 100%; }
 
+.exercise-art-handsPress,
+.exercise-art-animalWalk,
+.exercise-art-shakeArms,
+.exercise-art-jumpTen,
+.exercise-art-wiggleStop,
+.exercise-art-turtlePause,
+.exercise-art-waterBreak,
+.exercise-art-softFace,
+.exercise-art-calmBox,
+.exercise-art-helpSentence,
+.exercise-art-thumbChoice,
+.exercise-art-stopSentence {
+  background-image: url("/assets/flowi-exercise-specific-1.jpg");
+}
+
+.exercise-art-firstStep,
+.exercise-art-smallChoice,
+.exercise-art-waitHand,
+.exercise-art-planTogether,
+.exercise-art-robotRag,
+.exercise-art-snailStep,
+.exercise-art-safeAngry,
+.exercise-art-feelFeet,
+.exercise-art-focusOne,
+.exercise-art-fiveThings,
+.exercise-art-softSound,
+.exercise-art-softLight {
+  background-image: url("/assets/flowi-exercise-specific-2.jpg");
+}
+
+.exercise-art-leafBreath,
+.exercise-art-balloonBreath,
+.exercise-art-flowerCandle,
+.exercise-art-sleepBreath,
+.exercise-art-rainbowBreath,
+.exercise-art-heartHand,
+.exercise-art-heavyBody,
+.exercise-art-drawCloud,
+.exercise-art-colorCalm,
+.exercise-art-wallPushSpecific,
+.exercise-art-pillowSqueezeSpecific,
+.exercise-art-dragonBreathSpecific {
+  background-image: url("/assets/flowi-exercise-specific-3.jpg");
+}
+
+.exercise-art-handsPress,
+.exercise-art-firstStep,
+.exercise-art-leafBreath { background-position: 0% 0%; }
+.exercise-art-animalWalk,
+.exercise-art-smallChoice,
+.exercise-art-balloonBreath { background-position: 33.333% 0%; }
+.exercise-art-shakeArms,
+.exercise-art-waitHand,
+.exercise-art-flowerCandle { background-position: 66.666% 0%; }
+.exercise-art-jumpTen,
+.exercise-art-planTogether,
+.exercise-art-sleepBreath { background-position: 100% 0%; }
+.exercise-art-wiggleStop,
+.exercise-art-robotRag,
+.exercise-art-rainbowBreath { background-position: 0% 50%; }
+.exercise-art-turtlePause,
+.exercise-art-snailStep,
+.exercise-art-heartHand { background-position: 33.333% 50%; }
+.exercise-art-waterBreak,
+.exercise-art-safeAngry,
+.exercise-art-heavyBody { background-position: 66.666% 50%; }
+.exercise-art-softFace,
+.exercise-art-feelFeet,
+.exercise-art-drawCloud { background-position: 100% 50%; }
+.exercise-art-calmBox,
+.exercise-art-focusOne,
+.exercise-art-colorCalm { background-position: 0% 100%; }
+.exercise-art-helpSentence,
+.exercise-art-fiveThings,
+.exercise-art-wallPushSpecific { background-position: 33.333% 100%; }
+.exercise-art-thumbChoice,
+.exercise-art-softSound,
+.exercise-art-pillowSqueezeSpecific { background-position: 66.666% 100%; }
+.exercise-art-stopSentence,
+.exercise-art-softLight,
+.exercise-art-dragonBreathSpecific { background-position: 100% 100%; }
+
 .task-art {
   display: block;
   width: 6.1rem;
