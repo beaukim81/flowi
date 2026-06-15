@@ -96,7 +96,7 @@ input, textarea, select {
     linear-gradient(180deg, #f7f4ff 0%, #fbfdff 47%, #fffdf9 100%);
 }
 
-.home-shell {
+.fixed-shell {
   position: fixed;
   inset: 0;
   height: 100dvh;
@@ -105,13 +105,14 @@ input, textarea, select {
 }
 
 .scroll-shell {
-  min-height: 100dvh;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
-.home-main {
+.fixed-main {
   position: fixed;
   inset: 0;
   height: 100dvh;
@@ -119,8 +120,14 @@ input, textarea, select {
 }
 
 .scroll-main {
-  min-height: 100dvh;
-  overflow: visible;
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 .portrait-guard {

@@ -6,9 +6,9 @@ import { getTaskVisualKey, type TaskVisualKey } from "../utils/taskVisuals";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const isHome = location.pathname === "/";
+  const isFixedScreen = location.pathname === "/" || location.pathname === "/rewards";
   return (
-    <div className={`flowi-bg portrait-locked text-navy ${isHome ? "home-shell" : "scroll-shell"}`}>
+    <div className={`flowi-bg portrait-locked text-navy ${isFixedScreen ? "fixed-shell" : "scroll-shell"}`}>
       <div className="portrait-guard" aria-hidden>
         <section className="portrait-guard-card">
           <AvatarMascot emotion="rustig" size="medium" showCaption={false} />
@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="mt-2 text-lg font-bold leading-7 text-navy/62">Flowi werkt rustig en duidelijk als je tablet of telefoon rechtop staat.</p>
         </section>
       </div>
-      <main className={`app-content mx-auto w-full max-w-full px-0 pt-0 sm:max-w-5xl sm:px-6 lg:max-w-6xl ${isHome ? "home-main pb-0 sm:pt-0" : "scroll-main pb-32 sm:pt-6"}`}>{children}</main>
+      <main className={`app-content mx-auto w-full max-w-full px-0 pt-0 sm:max-w-5xl sm:px-6 lg:max-w-6xl ${isFixedScreen ? "fixed-main pb-0 sm:pt-0" : "scroll-main pb-32 sm:pt-6"}`}>{children}</main>
       <BottomNav />
     </div>
   );
