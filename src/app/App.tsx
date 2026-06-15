@@ -538,7 +538,7 @@ function DaySettingsPage() {
           return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library?returnTo=%2Fday-settings")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new?returnTo=%2Fday-settings")}>Taak toevoegen</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library?returnTo=%2Fday-settings")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new?returnTo=%2Fday-settings")}>Handmatige taak</PrimaryButton></div>
       </div>
     </>
   );
@@ -623,7 +623,7 @@ function DaySettingsPartPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={`${dayParts[part]?.title ?? "Dag"} instellen`} subtitle="Voor ouders: aanpassen en slepen." />
+      <PageHeader title={`${dayParts[part]?.title ?? "Dag"} instellen`} subtitle="Voor ouders: aanpassen en slepen." backTo="/day-settings" />
       <section className="reorder-help-card mb-4 flex items-center gap-3 rounded-[1.45rem] bg-white/92 p-3 shadow-card ring-1 ring-lavender/10">
         <div className="drag-handle-preview flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[1.1rem] bg-gradient-to-b from-lilac/34 to-lavender/16 text-lavender">
           <span className="text-2xl leading-none">⋮⋮</span>
@@ -655,7 +655,7 @@ function DaySettingsPartPage() {
           <TaskCard task={draggedTask} done={false} onEdit={() => navigate(`/tasks/${draggedTask.id}/edit`)} onDelete={() => deleteTask(draggedTask)} editable />
         </div>
       ) : null}
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings`)}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings`)}>Taak toevoegen</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings`)}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings`)}>Handmatige taak</PrimaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       </div>
     </>
@@ -749,12 +749,19 @@ function TaskLibraryPage() {
   const requestedDayPart = searchParams.get("dayPart");
   const forcedDayPart = isDayPart(requestedDayPart) ? requestedDayPart : null;
   const returnTo = safeReturnPath(searchParams.get("returnTo"));
-  const [age, setAge] = useState("4-5");
   const [category, setCategory] = useState("Alles");
   const [search, setSearch] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
-  const { data: templates } = useLiveData(() => db.taskTemplates.where("ageGroup").equals(age).toArray(), [], [age]);
+  const { data: templates } = useLiveData(() => db.taskTemplates.toArray(), [], []);
   const { data: ownTasks } = useLiveData(() => db.tasks.where("category").equals("Eigen").toArray(), [] as Task[], []);
+  const standardTemplates = useMemo(() => {
+    const unique = new Map<string, TaskTemplate>();
+    templates.forEach((template) => {
+      const key = `${template.title.toLowerCase()}-${template.category.toLowerCase()}-${template.defaultDayPart}`;
+      if (!unique.has(key)) unique.set(key, { ...template, ageGroup: "alle" });
+    });
+    return Array.from(unique.values());
+  }, [templates]);
   const ownTemplates = useMemo(() => {
     const unique = new Map<string, TaskTemplate>();
     ownTasks.forEach((task) => {
@@ -774,7 +781,7 @@ function TaskLibraryPage() {
     });
     return Array.from(unique.values()).sort((a, b) => a.title.localeCompare(b.title));
   }, [ownTasks]);
-  const libraryItems = [...ownTemplates, ...templates];
+  const libraryItems = [...ownTemplates, ...standardTemplates];
   const categories = ["Alles", ...Array.from(new Set(libraryItems.map((template) => template.category))).sort()];
   const normalizedSearch = search.trim().toLowerCase();
   const visibleTemplates = libraryItems
@@ -809,7 +816,6 @@ function TaskLibraryPage() {
           className="min-h-14 w-full rounded-[1.2rem] border border-lavender/16 bg-lavender/8 px-4 text-lg font-black text-navy outline-none placeholder:text-navy/36 focus:ring-4 focus:ring-lavender/20"
         />
       </label>
-      <div className="mb-4 grid grid-cols-3 gap-2">{["4-5", "6-7", "8-9"].map((tab) => <button key={tab} onClick={() => setAge(tab)} className={`min-h-11 rounded-2xl font-black ${tab === age ? "bg-lavender text-white" : "bg-white text-navy"}`}>{tab}</button>)}</div>
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (
           <button key={item} onClick={() => setCategory(item)} className={`min-h-10 shrink-0 rounded-2xl px-4 text-sm font-black ${item === category ? "bg-mint text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
@@ -1014,7 +1020,7 @@ function PracticePage() {
   const [category, setCategory] = useState("Alles");
   const [activeExercise, setActiveExercise] = useState<PracticeExercise | null>(null);
   const [duration, setDuration] = useState(90);
-  const [rounds, setRounds] = useState(3);
+  const [rounds, setRounds] = useState(1);
   const [remaining, setRemaining] = useState(90);
   const [running, setRunning] = useState(false);
   const [timerEnabled, setTimerEnabled] = useState(false);
@@ -1028,7 +1034,7 @@ function PracticePage() {
     const nextDuration = clampTimerSeconds(activeExercise.durationSeconds ?? 90);
     setDuration(nextDuration);
     setRemaining(nextDuration);
-    setRounds(activeExercise.defaultRounds ?? 3);
+    setRounds(1);
     setRunning(false);
     setTimerEnabled(false);
   }, [activeExercise]);
@@ -1168,7 +1174,7 @@ function ParentsPage() {
       <div className="grid gap-3">
         <ParentCard icon={<SlidersHorizontal />} title="Profiel kind" text="Naam en leeftijd aanpassen." to="/settings" />
         <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day-settings" />
-        <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken per leeftijd toevoegen." to="/task-library" />
+        <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken zoeken en toevoegen." to="/task-library" />
         <ParentCard icon={<Database />} title="Over Flowi & backup" text="Uitleg over de app en gegevens bewaren." to="/about" />
         <ParentCard icon={<HeartHandshake />} title="Privacy" text="Lokale opslag en veiligheid." to="/privacy" />
       </div>

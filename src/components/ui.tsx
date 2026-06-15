@@ -43,12 +43,12 @@ function BottomNav() {
   );
 }
 
-export function PageHeader({ title, subtitle, back = true }: { title: string; subtitle?: string; back?: boolean }) {
+export function PageHeader({ title, subtitle, back = true, backTo }: { title: string; subtitle?: string; back?: boolean; backTo?: string }) {
   const navigate = useNavigate();
   return (
     <header className="mb-5 flex items-center gap-3">
       {back && (
-        <button aria-label="Terug" className="grid h-14 w-14 place-items-center rounded-[1.25rem] border border-white bg-white/90 shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/30" onClick={() => navigate(-1)}>
+        <button aria-label="Terug" className="grid h-14 w-14 place-items-center rounded-[1.25rem] border border-white bg-white/90 shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/30" onClick={() => backTo ? navigate(backTo) : navigate(-1)}>
           <ArrowLeft size={25} />
         </button>
       )}
