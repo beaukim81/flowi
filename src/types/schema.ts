@@ -1,5 +1,20 @@
 export type AvatarId = "giraffe" | "koala" | "vos" | "konijn" | "panda" | "dino";
-export type EmotionType = "rustig" | "verdrietig" | "boos" | "teVeel" | "superDruk" | "inDeWar" | "moe" | "weetIkNiet";
+export type EmotionType =
+  | "rustig"
+  | "blij"
+  | "verdrietig"
+  | "boos"
+  | "spannend"
+  | "overprikkeld"
+  | "druk"
+  | "superDruk"
+  | "inDeWar"
+  | "moe"
+  | "weetIkNiet"
+  | "teVeel"
+  | "snapNiet"
+  | "durfNiet"
+  | "wilHulp";
 export type NeedType = "knuffel" | "rustigePlek" | "bewegen" | "evenAlleen" | "praatMetOuder" | "ademen" | "koptelefoon" | "creatief";
 export type DayPart = "ochtend" | "naSchool" | "avond" | "bedtijd" | "vrij";
 export type RepeatPattern = "elkeDag" | "weekdagen" | "weekend" | "aangepast";

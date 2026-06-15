@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { BookOpen, CalendarDays, Database, HeartHandshake, Minus, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, SlidersHorizontal, Sparkles, Trash2 } from "lucide-react";
+import { registerSW } from "virtual:pwa-register";
+import { BookOpen, CalendarDays, Database, HeartHandshake, Minus, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { avatarAssets } from "../data/avatars";
 import { calmStrategies } from "../data/calmStrategies";
-import { emotions } from "../data/emotions";
+import { emotions, unsureEmotions } from "../data/emotions";
 import { needs } from "../data/needs";
 import { exportBackup, importBackup } from "../db/backup";
 import { db } from "../db/db";
@@ -26,11 +27,54 @@ const dayParts: Record<DayPart, { title: string; icon: string }> = {
 
 const isDayPart = (value: string | null): value is DayPart => Boolean(value && value in dayParts);
 const safeReturnPath = (value: string | null) => value?.startsWith("/") ? value : null;
+const shortExerciseTitle = (title: string) => ({
+  "Ruik bloem, blaas kaars": "Bloem & kaars",
+  "Maak je lijf zwaar": "Lijf zwaar",
+  "Kijk naar één ding": "Kijk naar 1 ding",
+  "5 dingen zien": "5 dingen",
+  "Schud je armen los": "Armen los",
+  "Maak één kleine keuze": "Kleine keuze",
+  "Hulpzin oefenen": "Hulpzin",
+  "Maak je gezicht zacht": "Gezicht zacht",
+  "Robot en lappenpop": "Robot/lappenpop",
+  "Handen tegen elkaar": "Handen duwen",
+  "Boos op veilige plek": "Veilig boos",
+  "Kies uit je rustdoos": "Rustdoos",
+  "Ga naar je rustige plek": "Rustige plek",
+  "Zeg: stop, ik heb hulp nodig": "Vraag hulp",
+  "Pak iets zachts": "Iets zachts"
+} as Record<string, string>)[title] ?? title;
+const shortTaskTitle = (title: string) => ({
+  "Tandenpoetsen ochtend": "Tandenpoetsen",
+  "Tandenpoetsen avond": "Tandenpoetsen",
+  "Medicijn of vitamine met ouder": "Medicijn/vitamine",
+  "Naar de wc voor vertrek": "Naar de wc",
+  "Handen wassen na school": "Handen wassen",
+  "Broodtrommel naar keuken": "Broodtrommel weg",
+  "Drinkbeker naar keuken": "Drinkbeker weg",
+  "Kamer 5 minuten opruimen": "Kamer opruimen",
+  "Huisdier eten geven met hulp": "Huisdier eten",
+  "Sportspullen klaarleggen": "Sportspullen klaar",
+  "Adem rustig in bed": "Rustig ademen",
+  "Rustige plek kiezen": "Rustige plek",
+  "Planten water geven": "Planten water"
+} as Record<string, string>)[title] ?? title;
 
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 const clampTimerSeconds = (seconds: number) => Math.min(300, Math.max(60, Math.round(seconds / 60) * 60));
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    updateSW(true);
+  },
+  onRegisteredSW(_swUrl, registration) {
+    window.setInterval(() => {
+      registration?.update();
+    }, 60 * 60 * 1000);
+  }
+});
 const startOfWeek = () => {
   const date = new Date();
   const day = date.getDay() || 7;
@@ -133,7 +177,13 @@ function useAvatar(profileAvatarId?: string): Avatar {
 }
 
 function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
-  const exactMatch = calmStrategies.find((strategy) => (!emotion || strategy.linkedEmotionTypes.includes(emotion)) && (!need || strategy.linkedNeedTypes.includes(need)));
+  const normalizedEmotion: EmotionType | undefined =
+    emotion === "blij" ? "rustig" :
+    emotion === "overprikkeld" ? "teVeel" :
+    emotion === "druk" ? "superDruk" :
+    emotion === "spannend" || emotion === "snapNiet" || emotion === "durfNiet" || emotion === "wilHulp" ? "inDeWar" :
+    emotion;
+  const exactMatch = calmStrategies.find((strategy) => (!normalizedEmotion || strategy.linkedEmotionTypes.includes(normalizedEmotion)) && (!need || strategy.linkedNeedTypes.includes(need)));
   if (exactMatch) return exactMatch;
 
   const preferredByNeed: Record<NeedType, string[]> = {
@@ -171,8 +221,6 @@ function emotionForNeed(need: NeedType): EmotionType {
 
 function HomePage() {
   const navigate = useNavigate();
-  const { data: profile } = useProfile();
-  const childName = profile?.name?.trim();
   return (
     <section className="phone-screen home-scene relative overflow-hidden px-5 pb-4 pt-5">
       <div className="cloud cloud-a" />
@@ -181,22 +229,22 @@ function HomePage() {
       <div className="leaf-float leaf-b" />
       <div className="home-content relative z-10">
         <div className="flowi-logo mb-1">Flowi<span>♥</span></div>
-        <div className="home-copy">
-          <p className="text-[1.35rem] font-black text-lavender">{childName ? `Hoi ${childName}` : "Hoe is het in je lijf?"}</p>
-        </div>
         <div className="home-main-stage">
-        <div className="home-mascot-wrap relative" aria-label={`Flowi helpt ${profile?.name ?? "jou"}`}>
+        <div className="home-mascot-wrap relative" aria-label="Flowi helpt jou">
           <img src="/assets/flowi-home-mascot.png" alt="" className="home-mascot-free" />
           <div className="speech-bubble">Ik help jou.<br /><span>♥</span></div>
         </div>
         <div className="home-visual-actions" aria-label="Kies wat je wilt doen">
           <button type="button" onClick={() => navigate("/check-in")} className="home-visual-card home-visual-feel" aria-label="Wat voel je?">
+            <span className="home-visual-art" aria-hidden />
             <span className="home-visual-label">Wat voel je?</span>
           </button>
           <button type="button" onClick={() => navigate("/day")} className="home-visual-card home-visual-day" aria-label="Taken doen">
+            <span className="home-visual-art" aria-hidden />
             <span className="home-visual-label">Taken doen</span>
           </button>
           <button type="button" onClick={() => navigate("/help-now")} className="home-visual-card home-visual-help" aria-label="Help mij">
+            <span className="home-visual-art" aria-hidden />
             <span className="home-visual-label">Help mij</span>
           </button>
         </div>
@@ -215,9 +263,9 @@ function CheckInPage() {
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Hoe voel je je nu?" subtitle="Kies wat het beste past." />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {emotions.map((emotion) => (
-          <EmotionCard key={emotion.id} emotion={emotion} avatar={avatar} onClick={() => { setEmotion(emotion.id); navigate("/need"); }} />
+          <EmotionCard key={emotion.id} emotion={emotion} avatar={avatar} onClick={() => { setEmotion(emotion.id); navigate(emotion.id === "weetIkNiet" ? "/check-in/weet-ik-niet" : "/need"); }} />
         ))}
       </div>
       </div>
@@ -225,11 +273,32 @@ function CheckInPage() {
   );
 }
 
+function UnsureEmotionPage() {
+  const navigate = useNavigate();
+  const { setEmotion } = useCurrentFlow();
+  return (
+    <div className="phone-screen px-4 pb-5 pt-4">
+      <PageHeader title="Je koos: weet ik niet" subtitle="Wat past misschien?" />
+      <div className="grid grid-cols-2 gap-3">
+        {unsureEmotions.map((emotion) => (
+          <EmotionCard key={emotion.id} emotion={emotion} onClick={() => { setEmotion(emotion.id); navigate("/need"); }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function NeedPage() {
   const navigate = useNavigate();
   const { selectedEmotion, setNeed, setAction } = useCurrentFlow();
   const { data: profile } = useProfile();
-  const filteredNeeds = selectedEmotion === "weetIkNiet" ? needs.filter((need) => ["praatMetOuder", "creatief", "ademen", "rustigePlek"].includes(need.id)) : needs;
+  const filteredNeeds = selectedEmotion === "wilHulp"
+    ? needs.filter((need) => ["praatMetOuder", "knuffel"].includes(need.id))
+    : selectedEmotion === "durfNiet" || selectedEmotion === "spannend"
+      ? needs.filter((need) => ["praatMetOuder", "ademen", "rustigePlek", "knuffel"].includes(need.id))
+      : selectedEmotion === "snapNiet" || selectedEmotion === "weetIkNiet"
+        ? needs.filter((need) => ["praatMetOuder", "creatief", "ademen", "rustigePlek"].includes(need.id))
+        : needs;
   const caregiver = profile?.caregiverName || profile?.caregiverLabel || "ouder";
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
@@ -297,7 +366,12 @@ function ActionPage() {
   return (
     <section className="phone-screen action-scene p-5 text-center">
       <PageHeader title={action.title} back />
-      <ExerciseArt title={action.title} />
+      <section className="flowi-picture-card flowi-picture-card-breathe mx-auto">
+        <span className="flowi-picture-art">
+          <ExerciseArt title={action.title} />
+        </span>
+        <span className="flowi-picture-label">{shortExerciseTitle(action.title)}</span>
+      </section>
       <p className="mx-auto mt-5 max-w-sm text-sm font-bold leading-6 text-navy/65">{action.childText}</p>
       {timerOpen ? (
         <section className="mt-5 rounded-[1.55rem] bg-white/92 p-4 shadow-card">
@@ -344,8 +418,6 @@ function ActionPage() {
 
 function HelpNowPage() {
   const navigate = useNavigate();
-  const { data: profile } = useProfile();
-  const childName = profile?.name?.trim();
   const fast = ["Ga naar je rustige plek", "Adem zacht", "Zeg: stop, ik heb hulp nodig", "Pak iets zachts"].map((title) => calmStrategies.find((strategy) => strategy.title === title)).filter(Boolean) as CalmStrategy[];
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
@@ -355,17 +427,18 @@ function HelpNowPage() {
         <div className="relative z-10 grid grid-cols-[1fr_auto] items-end gap-2">
           <div>
             <h2 className="text-2xl font-black text-navy">Flowi blijft bij je</h2>
-            <p className="mt-2 text-sm font-bold leading-6 text-navy/58">{childName ? `${childName}, je hoeft niet alles tegelijk. Kies wat nu kan.` : "Je hoeft niet alles tegelijk. Kies wat nu kan."}</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-navy/58">Je hoeft niet alles tegelijk. Kies wat nu kan.</p>
           </div>
           <AvatarMascot emotion="rustig" size="medium" />
         </div>
       </section>
       <div className="grid grid-cols-2 gap-3">
         {fast.map((strategy) => (
-          <button key={strategy.id} onClick={() => navigate(`/action/${strategy.id}`)} className="min-h-48 rounded-[1.55rem] border border-white/90 bg-white/94 p-3 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
-            <ExerciseArt title={strategy.title} compact />
-            <h2 className="mt-2 text-sm font-black text-navy">{strategy.title}</h2>
-            <p className="mt-1 line-clamp-2 text-xs font-bold leading-5 text-navy/52">{strategy.childText}</p>
+          <button key={strategy.id} onClick={() => navigate(`/action/${strategy.id}`)} className="help-choice-card flowi-picture-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
+            <span className="flowi-picture-art">
+              <ExerciseArt title={strategy.title} />
+            </span>
+            <span className="flowi-picture-label">{shortExerciseTitle(strategy.title)}</span>
           </button>
         ))}
       </div>
@@ -480,14 +553,12 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
 }
 
 function DayPage() {
-  const { data: profile } = useProfile();
   const { data: tasks } = useLiveData(() => db.tasks.where("childProfileId").equals("default-child").toArray(), [] as Task[], []);
   const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
-  const childName = profile?.name?.trim();
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={childName ? `${childName}'s dag` : "Mijn dag"} subtitle="Kies wat gelukt is. Flowi helpt als iets lastig is." back={false} />
+      <PageHeader title="Mijn dag" subtitle="Kies wat gelukt is. Flowi helpt als iets lastig is." back={false} />
       <div className="grid gap-3">
         {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
           const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled);
@@ -503,12 +574,10 @@ function DayPage() {
 function DayPartPage() {
   const { dayPart = "ochtend" } = useParams();
   const part = dayPart as DayPart;
-  const { data: profile } = useProfile();
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
   const { data: completions, reload: reloadCompletions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], [part]);
   const [helpTask, setHelpTask] = useState<Task | null>(null);
   const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
-  const childName = profile?.name?.trim();
   const toggleComplete = async (task: Task) => {
     const existing = completions.find((completion) => completion.taskId === task.id);
     if (existing?.status === "done") {
@@ -527,7 +596,7 @@ function DayPartPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle={childName ? `Voor ${childName}: kies wat gelukt is.` : "Kies wat gelukt is. Lukt iets niet? Flowi helpt."} />
+      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle="Kies wat gelukt is. Lukt iets niet? Flowi helpt." />
       <div className="grid gap-3">
         {visibleTasks.length ? visibleTasks.map((task) => {
           const completion = completions.find((item) => item.taskId === task.id);
@@ -563,7 +632,7 @@ function DaySettingsPage() {
           return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library?returnTo=%2Fday-settings")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new?returnTo=%2Fday-settings")}>Handmatige taak</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library?returnTo=%2Fday-settings")}>Taak kiezen</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new?returnTo=%2Fday-settings")}>Handmatige taak</PrimaryButton></div>
       </div>
     </>
   );
@@ -680,7 +749,7 @@ function DaySettingsPartPage() {
           <TaskCard task={draggedTask} done={false} onEdit={() => navigate(`/tasks/${draggedTask.id}/edit`)} onDelete={() => deleteTask(draggedTask)} editable />
         </div>
       ) : null}
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings`)}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings`)}>Handmatige taak</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings`)}>Taak kiezen</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings`)}>Handmatige taak</PrimaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       </div>
     </>
@@ -740,11 +809,13 @@ function TaskFormPage() {
                   key={option.key}
                   type="button"
                   onClick={() => { setVisualKey(option.key); setShowVisualBank(false); }}
-                  className={`rounded-[1.2rem] bg-white p-2 text-left shadow-card ring-2 ${visualKey === option.key ? "ring-lavender" : "ring-transparent"}`}
+                  className={`task-bank-card bg-white text-center shadow-card ring-2 ${visualKey === option.key ? "ring-lavender" : "ring-transparent"}`}
                 >
-                  <TaskArt title={option.label} visualKey={option.key} />
-                  <div className="mt-2 text-sm font-black text-navy">{option.label}</div>
-                  <div className="text-[0.68rem] font-bold leading-4 text-navy/45">{option.hint}</div>
+                  <span className="task-bank-art">
+                    <TaskArt title={option.label} visualKey={option.key} />
+                  </span>
+                  <div className="task-bank-title">{shortTaskTitle(option.label)}</div>
+                  <div className="task-bank-hint">{option.hint}</div>
                 </button>
               ))}
             </div>
@@ -862,12 +933,14 @@ function TaskLibraryPage() {
       <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => {
         const ownTask = template.id.startsWith("own-");
         return (
-          <article key={template.id} className="rounded-[1.4rem] bg-white p-3 text-center shadow-card">
-            <button type="button" onClick={() => choose(template)} className="grid w-full justify-items-center text-center">
-              <TaskArt title={template.title} visualKey={template.visualKey as TaskVisualKey | undefined} />
-              <h3 className="mt-2 font-black">{template.title}</h3>
-              <p className="text-xs font-bold text-navy/50">{template.category}</p>
-              <p className="mt-2 rounded-2xl bg-lavender/8 px-3 py-2 text-center text-xs font-black text-lavender">Toevoegen</p>
+          <article key={template.id} className="task-library-card bg-white text-center shadow-card">
+            <button type="button" onClick={() => choose(template)} className="task-library-main">
+              <span className="task-library-art">
+                <TaskArt title={template.title} visualKey={template.visualKey as TaskVisualKey | undefined} />
+              </span>
+              <h3 className="task-library-title">{shortTaskTitle(template.title)}</h3>
+              <p className="task-library-category">{template.category}</p>
+              <p className="task-library-add">Toevoegen</p>
             </button>
             {ownTask ? (
               <button type="button" onClick={() => removeOwnTemplate(template)} className="mt-2 min-h-10 w-full rounded-2xl bg-coral/10 px-3 text-xs font-black text-coral">
@@ -1186,9 +1259,11 @@ function PracticePage() {
       </div>
       <div className="grid grid-cols-2 gap-3">
         {visibleExercises.map((exercise) => (
-          <button key={exercise.id} onClick={() => setActiveExercise(exercise)} className="exercise-choice-card min-h-56 rounded-[1.75rem] bg-white/94 p-3 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
-            <ExerciseArt title={exercise.title} />
-            <h2 className="mt-3 text-lg font-black leading-tight text-navy">{exercise.title}</h2>
+          <button key={exercise.id} onClick={() => setActiveExercise(exercise)} className="exercise-choice-card flowi-picture-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
+            <span className="flowi-picture-art">
+              <ExerciseArt title={exercise.title} />
+            </span>
+            <span className="flowi-picture-label">{shortExerciseTitle(exercise.title)}</span>
           </button>
         ))}
       </div>
@@ -1222,7 +1297,6 @@ function ParentsPage() {
     <>
       <PageHeader title="Voor ouders" subtitle="Alles blijft op dit apparaat bewaard." back={false} />
       <div className="grid gap-3">
-        <ParentCard icon={<SlidersHorizontal />} title="Profiel kind" text="Naam voor persoonlijke teksten." to="/settings" />
         <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day-settings" />
         <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken zoeken en toevoegen." to="/task-library" />
         <ParentCard icon={<Database />} title="Over Flowi & backup" text="Uitleg over de app en gegevens bewaren." to="/about" />
@@ -1233,22 +1307,13 @@ function ParentsPage() {
 }
 
 function SettingsPage() {
-  const { data: profile } = useProfile();
-  const [name, setName] = useState("");
-  useEffect(() => { if (profile) setName(profile.name); }, [profile]);
-  const save = async () => { if (profile) await db.childProfiles.update(profile.id, { name: name.trim() || "Flowi vriend", updatedAt: now() }); };
   return (
     <>
-      <PageHeader title="Profiel kind" subtitle="Alleen wat nodig is." />
+      <PageHeader title="Instellingen" subtitle="Rustig en eenvoudig." />
       <section className="mb-4 rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-        <h2 className="text-xl font-black text-navy">Waarom een naam?</h2>
-        <p className="mt-1.5 text-base leading-6 text-navy/68">Flowi gebruikt de naam alleen om de app persoonlijker te maken voor een kind dat kan lezen.</p>
-        <p className="mt-2 text-base leading-6 text-navy/68">Je ziet de naam terug op de homepage, bij Mijn dag en bij Help mij nu. Zo voelt Flowi meer alsof hij tegen het kind zelf praat.</p>
+        <h2 className="text-xl font-black text-navy">Eenvoudig houden</h2>
+        <p className="mt-1.5 text-base leading-6 text-navy/68">Flowi gebruikt zo min mogelijk tekst. De app werkt vooral met plaatjes, keuzes en kleine stappen.</p>
       </section>
-      <div className="grid gap-3 rounded-[1.6rem] bg-white p-4 shadow-soft">
-        <input aria-label="Naam kind" value={name} onChange={(event) => setName(event.target.value)} placeholder="Naam kind" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold placeholder:text-navy/32" />
-        <PrimaryButton onClick={save}>Opslaan</PrimaryButton>
-      </div>
       <button onClick={async () => { await db.delete(); location.reload(); }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white p-4 font-black text-coral shadow-card"><Trash2 size={18} /> Data resetten</button>
     </>
   );
@@ -1286,7 +1351,7 @@ function BackupPage() {
 }
 
 function PrivacyPage() {
-  return <><PageHeader title="Privacy" /><div className="rounded-[1.6rem] bg-white p-5 shadow-soft"><p className="font-bold leading-7 text-navy/70">Flowi slaat gegevens alleen lokaal op dit apparaat op. Er wordt niets naar een server gestuurd. Als je appdata of sitegegevens wist, kunnen gegevens verdwijnen. Maak af en toe een backup als je gegevens wilt bewaren.</p><p className="mt-4 text-sm font-bold text-navy/55">Flowi is een hulpmiddel voor rust, dagstructuur en communicatie. Het vervangt geen professionele hulp, diagnose of behandeling. Bij ernstige zorgen of direct gevaar: neem contact op met huisarts, behandelaar of noodhulp.</p></div></>;
+  return <><PageHeader title="Privacy" /><div className="rounded-[1.6rem] bg-white p-5 shadow-soft"><p className="text-base font-normal leading-6 text-navy/68">Flowi slaat gegevens alleen lokaal op dit apparaat op. Er wordt niets naar een server gestuurd. Als je appdata of sitegegevens wist, kunnen gegevens verdwijnen. Maak af en toe een backup als je gegevens wilt bewaren.</p><p className="mt-2 text-base font-normal leading-6 text-navy/58">Flowi is een hulpmiddel voor rust, dagstructuur en communicatie. Het vervangt geen professionele hulp, diagnose of behandeling. Bij ernstige zorgen of direct gevaar: neem contact op met huisarts, behandelaar of noodhulp.</p></div></>;
 }
 
 function AboutPage() {
@@ -1337,7 +1402,7 @@ function AboutPage() {
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
           <h3 className="text-xl font-black text-navy">Wie is Flowi?</h3>
           <p className={`mt-1.5 ${bodyText}`}>Flowi is zacht, geduldig en duidelijk. Hij helpt zonder te duwen, viert kleine stapjes en blijft rustig als iets niet meteen lukt.</p>
-          <p className={`mt-2 ${bodyText}`}>Hij praat kort en vriendelijk, zodat kinderen die kunnen lezen zich persoonlijk aangesproken voelen.</p>
+          <p className={`mt-2 ${bodyText}`}>Hij praat kort en vriendelijk. De meeste keuzes zijn visueel, zodat kinderen ook zonder veel lezen mee kunnen doen.</p>
         </div>
       </section>
 
@@ -1369,6 +1434,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/check-in" element={<CheckInPage />} />
+        <Route path="/check-in/weet-ik-niet" element={<UnsureEmotionPage />} />
         <Route path="/need" element={<NeedPage />} />
         <Route path="/action/:actionId" element={<ActionPage />} />
         <Route path="/help-now" element={<HelpNowPage />} />

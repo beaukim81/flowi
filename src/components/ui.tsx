@@ -54,7 +54,7 @@ export function PageHeader({ title, subtitle, back = true, backTo }: { title: st
       )}
       <div className={back ? "min-w-0 flex-1" : "mx-auto max-w-[18rem]"}>
         <h1 className="break-words text-2xl font-black tracking-normal text-navy">{title}</h1>
-        {subtitle ? <p className="text-base font-bold leading-6 text-navy/55">{subtitle}</p> : null}
+        {subtitle && title !== "Help mij nu" ? <p className="text-base font-bold leading-6 text-navy/55">{subtitle}</p> : null}
       </div>
     </header>
   );
@@ -82,13 +82,20 @@ export function AvatarMascot({ avatar, emotion, size = "large", showCaption = tr
   const positions: Record<EmotionType | "happy", string> = {
     happy: "0% 0%",
     rustig: "0% 0%",
-    verdrietig: "33.333% 0%",
-    boos: "66.666% 0%",
-    teVeel: "100% 0%",
-    superDruk: "0% 100%",
-    inDeWar: "33.333% 100%",
-    moe: "66.666% 100%",
-    weetIkNiet: "100% 100%"
+    blij: "25% 0%",
+    verdrietig: "50% 0%",
+    boos: "75% 0%",
+    spannend: "100% 0%",
+    overprikkeld: "0% 50%",
+    druk: "25% 50%",
+    superDruk: "25% 50%",
+    inDeWar: "0% 100%",
+    moe: "50% 50%",
+    weetIkNiet: "75% 50%",
+    teVeel: "100% 50%",
+    snapNiet: "0% 100%",
+    durfNiet: "25% 100%",
+    wilHulp: "75% 100%"
   };
   return (
     <div
@@ -104,32 +111,48 @@ export function AvatarMascot({ avatar, emotion, size = "large", showCaption = tr
 function emotionLabel(emotion: EmotionType) {
   const labels: Record<EmotionType, string> = {
     rustig: "Rustig",
+    blij: "Blij",
     verdrietig: "Verdrietig",
     boos: "Boos",
-    teVeel: "Te veel",
-    superDruk: "Super druk",
-    inDeWar: "In de war",
+    spannend: "Spannend",
+    overprikkeld: "Overprikkeld",
+    druk: "Druk",
+    superDruk: "Druk",
+    inDeWar: "Ik snap het niet",
     moe: "Moe",
-    weetIkNiet: "Weet ik niet"
+    weetIkNiet: "Weet ik niet",
+    teVeel: "Het is te veel",
+    snapNiet: "Ik snap het niet",
+    durfNiet: "Ik durf niet",
+    wilHulp: "Ik wil hulp"
   };
   return labels[emotion];
 }
 
 export function EmotionCard({ emotion, avatar, onClick }: { emotion: Emotion; avatar?: Avatar; onClick: () => void }) {
-  const positions: Record<EmotionType, string> = {
-    rustig: "0% 0%",
-    verdrietig: "33.333% 0%",
-    boos: "66.666% 0%",
-    teVeel: "100% 0%",
-    superDruk: "0% 100%",
-    inDeWar: "33.333% 100%",
-    moe: "66.666% 100%",
-    weetIkNiet: "100% 100%"
+  const files: Record<EmotionType, string> = {
+    rustig: "rustig",
+    blij: "blij",
+    verdrietig: "verdrietig",
+    boos: "boos",
+    spannend: "spannend",
+    overprikkeld: "overprikkeld",
+    druk: "druk",
+    superDruk: "druk",
+    inDeWar: "snap-niet",
+    moe: "moe",
+    weetIkNiet: "weet-ik-niet",
+    teVeel: "te-veel",
+    snapNiet: "snap-niet",
+    durfNiet: "durf-niet",
+    wilHulp: "wil-hulp"
   };
   return (
-    <button onClick={onClick} className={`emotion-card emotion-${emotion.id} min-h-52 rounded-[1.8rem] p-3 text-left transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30`}>
-      <div className="emotion-card-art" style={{ backgroundPosition: positions[emotion.id] }} aria-hidden />
-      <div className="emotion-label relative z-10 rounded-[1.15rem] bg-white/90 px-3 py-2.5 text-center text-base font-black text-navy shadow-[inset_0_1px_0_rgba(255,255,255,.75)]">{emotion.label}</div>
+    <button onClick={onClick} className={`emotion-card emotion-${emotion.id} transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30`}>
+      <span className="emotion-picture-art">
+        <span className="emotion-card-art" style={{ backgroundImage: `url("/assets/emotions/flowi-emotion-${files[emotion.id]}.jpg?v=emotion-square-20260615")` }} aria-hidden />
+      </span>
+      <span className="emotion-label">{emotion.label}</span>
     </button>
   );
 }
@@ -239,16 +262,20 @@ export function DayPartCard({ title, progress, to }: { title: string; icon: stri
 export function ChildTaskCard({ task, done, needsHelp = false, onDone, onHelp }: { task: Task; done: boolean; needsHelp?: boolean; onDone: () => void; onHelp?: () => void }) {
   return (
     <article className={`child-task-card ${done ? "is-done" : needsHelp ? "needs-help" : ""}`}>
-      <button type="button" aria-label={done ? `${task.title} weer open zetten` : `${task.title} afvinken`} aria-pressed={done} onClick={onDone} className="child-task-main">
+      <div className="child-task-main">
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} />
         <h3>{task.title}</h3>
-        {done ? <span className="child-task-status">Gelukt</span> : needsHelp ? <span className="child-task-status help">Geprobeerd</span> : null}
-      </button>
-      {onHelp ? (
-        <button type="button" aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="child-task-help">
-          <HelpCircle size={28} />
+      </div>
+      <div className="child-task-actions" aria-label={`Acties voor ${task.title}`}>
+        <button type="button" aria-label={done ? `${task.title} weer open zetten` : `${task.title} is gelukt`} aria-pressed={done} onClick={onDone} className="child-task-done">
+          <Check size={30} />
         </button>
-      ) : null}
+        {onHelp ? (
+          <button type="button" aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="child-task-help">
+            <HelpCircle size={28} />
+          </button>
+        ) : null}
+      </div>
     </article>
   );
 }

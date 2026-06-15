@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  base: "./",
+  base: "/",
   plugins: [
     react(),
     VitePWA({
@@ -28,7 +28,8 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        globPatterns: ["**/*.{js,css,svg,jpg,woff2}"],
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        globPatterns: ["**/*.{js,css,svg,png,jpg,jpeg,webp,woff2}"],
         navigateFallback: "/index.html",
         runtimeCaching: []
       }

@@ -25,7 +25,7 @@ export async function seedDatabase() {
 
   const profile: ChildProfile = {
     id: "default-child",
-    name: "Flowi vriend",
+    name: "",
     age: 7,
     selectedAvatarId: "giraffe",
     theme: "zacht",
