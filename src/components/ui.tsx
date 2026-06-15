@@ -6,8 +6,15 @@ import { getTaskVisualKey, type TaskVisualKey } from "../utils/taskVisuals";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flowi-bg min-h-dvh text-navy">
-      <main className="mx-auto min-h-dvh w-full px-0 pb-32 pt-0 sm:max-w-5xl sm:px-6 sm:pt-6 lg:max-w-6xl">{children}</main>
+    <div className="flowi-bg portrait-locked min-h-dvh text-navy">
+      <div className="portrait-guard" aria-hidden>
+        <section className="portrait-guard-card">
+          <AvatarMascot emotion="rustig" size="medium" showCaption={false} />
+          <h1 className="mt-4 text-3xl font-black text-navy">Draai Flowi rechtop</h1>
+          <p className="mt-2 text-lg font-bold leading-7 text-navy/62">Flowi werkt rustig en duidelijk als je tablet of telefoon rechtop staat.</p>
+        </section>
+      </div>
+      <main className="app-content mx-auto min-h-dvh w-full px-0 pb-32 pt-0 sm:max-w-5xl sm:px-6 sm:pt-6 lg:max-w-6xl">{children}</main>
       <BottomNav />
     </div>
   );

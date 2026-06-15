@@ -1223,6 +1223,10 @@ function AppRoutes() {
 function Bootstrap() {
   const [ready, setReady] = useState(false);
   useEffect(() => { seedDatabase().finally(() => setReady(true)); }, []);
+  useEffect(() => {
+    const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> };
+    void orientation.lock?.("portrait-primary").catch(() => undefined);
+  }, []);
   const loader = useMemo(() => <div className="grid min-h-dvh place-items-center bg-cream text-2xl font-black text-lavender">Flowi</div>, []);
   if (!ready) return loader;
   return <BrowserRouter><AppRoutes /></BrowserRouter>;
