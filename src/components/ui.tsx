@@ -8,7 +8,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isHome = location.pathname === "/";
   return (
-    <div className="flowi-bg portrait-locked min-h-dvh text-navy">
+    <div className={`flowi-bg portrait-locked text-navy ${isHome ? "home-shell" : "scroll-shell"}`}>
       <div className="portrait-guard" aria-hidden>
         <section className="portrait-guard-card">
           <AvatarMascot emotion="rustig" size="medium" showCaption={false} />
@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="mt-2 text-lg font-bold leading-7 text-navy/62">Flowi werkt rustig en duidelijk als je tablet of telefoon rechtop staat.</p>
         </section>
       </div>
-      <main className={`app-content mx-auto w-full max-w-full px-0 pt-0 sm:max-w-5xl sm:px-6 lg:max-w-6xl ${isHome ? "h-dvh overflow-hidden pb-0 sm:pt-0" : "min-h-dvh pb-32 sm:pt-6"}`}>{children}</main>
+      <main className={`app-content mx-auto w-full max-w-full px-0 pt-0 sm:max-w-5xl sm:px-6 lg:max-w-6xl ${isHome ? "home-main pb-0 sm:pt-0" : "scroll-main pb-32 sm:pt-6"}`}>{children}</main>
       <BottomNav />
     </div>
   );

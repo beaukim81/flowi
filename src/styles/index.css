@@ -7,6 +7,7 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   font-size: 17px;
+  --bottom-nav-height: 5.45rem;
 }
 
 * {
@@ -95,6 +96,33 @@ input, textarea, select {
     linear-gradient(180deg, #f7f4ff 0%, #fbfdff 47%, #fffdf9 100%);
 }
 
+.home-shell {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.scroll-shell {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.home-main {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.scroll-main {
+  min-height: 100dvh;
+  overflow: visible;
+}
+
 .portrait-guard {
   display: none;
 }
@@ -164,8 +192,9 @@ input, textarea, select {
 .home-scene {
   isolation: isolate;
   max-width: 100%;
-  height: calc(100dvh - 5.45rem);
+  height: calc(100dvh - var(--bottom-nav-height));
   min-height: 0;
+  overflow: hidden;
   contain: layout paint;
   overscroll-behavior: none;
   background:
