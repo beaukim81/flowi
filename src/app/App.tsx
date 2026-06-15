@@ -713,7 +713,7 @@ function TaskLibraryPage() {
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Takenbibliotheek" subtitle="Voeg rustig iets toe." />
-      <div className="mb-4 grid grid-cols-4 gap-2">{["4-5", "6-7", "8-9", "10-12"].map((tab) => <button key={tab} onClick={() => setAge(tab)} className={`min-h-11 rounded-2xl font-black ${tab === age ? "bg-lavender text-white" : "bg-white text-navy"}`}>{tab}</button>)}</div>
+      <div className="mb-4 grid grid-cols-3 gap-2">{["4-5", "6-7", "8-9"].map((tab) => <button key={tab} onClick={() => setAge(tab)} className={`min-h-11 rounded-2xl font-black ${tab === age ? "bg-lavender text-white" : "bg-white text-navy"}`}>{tab}</button>)}</div>
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (
           <button key={item} onClick={() => setCategory(item)} className={`min-h-10 shrink-0 rounded-2xl px-4 text-sm font-black ${item === category ? "bg-mint text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
@@ -1029,12 +1029,10 @@ function ParentsPage() {
     <>
       <PageHeader title="Voor ouders" subtitle="Alles blijft op dit apparaat bewaard." back={false} />
       <div className="grid gap-3">
-        <ParentCard icon={<Database />} title="Geen account nodig" text="Flowi gebruikt geen externe database." />
-        <ParentCard icon={<ShieldCheck />} title="Backup mogelijk" text="Exporteer en importeer JSON." to="/backup" />
-        <ParentCard icon={<SlidersHorizontal />} title="Profiel & instellingen" text="Naam, leeftijd, helper en voorkeuren." to="/settings" />
+        <ParentCard icon={<SlidersHorizontal />} title="Profiel kind" text="Naam en leeftijd aanpassen." to="/settings" />
         <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day-settings" />
-        <ParentCard icon={<Palette />} title="Mijn Flowi" text="Het vaste giraffe-maatje van de app." to="/avatar" />
         <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken per leeftijd toevoegen." to="/task-library" />
+        <ParentCard icon={<Database />} title="Over Flowi & backup" text="Uitleg over de app en gegevens bewaren." to="/about" />
         <ParentCard icon={<HeartHandshake />} title="Privacy" text="Lokale opslag en veiligheid." to="/privacy" />
       </div>
     </>
@@ -1043,32 +1041,18 @@ function ParentsPage() {
 
 function SettingsPage() {
   const { data: profile } = useProfile();
-  const { data: settings } = useLiveData(() => db.settings.get("app"), undefined, []);
   const [name, setName] = useState("");
   const [age, setAge] = useState(7);
-  const [caregiverLabel, setCaregiverLabel] = useState("ouder");
-  useEffect(() => { if (profile) { setName(profile.name); setAge(profile.age); setCaregiverLabel(profile.caregiverLabel); } }, [profile]);
-  const save = async () => { if (profile) await db.childProfiles.update(profile.id, { name, age, caregiverLabel, updatedAt: now() }); };
+  useEffect(() => { if (profile) { setName(profile.name); setAge(profile.age); } }, [profile]);
+  const save = async () => { if (profile) await db.childProfiles.update(profile.id, { name, age, updatedAt: now() }); };
   return (
     <>
-      <PageHeader title="Instellingen" subtitle="Geen account. Geen tracking." />
+      <PageHeader title="Profiel kind" subtitle="Alleen wat nodig is." />
       <div className="grid gap-3 rounded-[1.6rem] bg-white p-4 shadow-soft">
-        <input value={name} onChange={(event) => setName(event.target.value)} className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold" />
-        <input type="number" min={4} max={12} value={age} onChange={(event) => setAge(Number(event.target.value))} className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold" />
-        <select value={caregiverLabel} onChange={(event) => setCaregiverLabel(event.target.value)} className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold"><option>mama</option><option>papa</option><option>ouder</option><option>verzorger</option></select>
-        <label className="flex items-center justify-between rounded-2xl bg-lavender/8 p-3 font-bold">Beloningen aan <input type="checkbox" checked={settings?.rewardsEnabled ?? true} onChange={(event) => db.settings.update("app", { rewardsEnabled: event.target.checked })} /></label>
-        <label className="flex items-center justify-between rounded-2xl bg-lavender/8 p-3 font-bold">Reduced motion <input type="checkbox" checked={settings?.reducedMotion ?? false} onChange={(event) => db.settings.update("app", { reducedMotion: event.target.checked })} /></label>
+        <input aria-label="Naam kind" value={name} onChange={(event) => setName(event.target.value)} placeholder="Naam kind" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold placeholder:text-navy/32" />
+        <input aria-label="Leeftijd kind" type="number" min={4} max={9} value={age} onChange={(event) => setAge(Number(event.target.value))} placeholder="Leeftijd" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold placeholder:text-navy/32" />
         <PrimaryButton onClick={save}>Opslaan</PrimaryButton>
       </div>
-      <section className="mt-4 rounded-[1.6rem] bg-white p-5 shadow-soft">
-        <h2 className="text-xl font-black text-navy">Uitleg groeiboom</h2>
-        <div className="mt-3 grid gap-3 text-base font-bold leading-7 text-navy/62">
-          <p>De groeiboom is bedoeld als rustige, visuele aanmoediging voor oefenen en reflectie. Het is geen scorebord voor goed gedrag.</p>
-          <p>Een groeimoment ontstaat bijvoorbeeld na een oefening of na de vraag wat geholpen heeft. Flowi geeft dan zichtbaar water aan de boom.</p>
-          <p>Als er op dezelfde dag extra geoefend wordt, kan het zonnetje gaan schijnen. Taken afvinken staat hier los van, zodat de boom niet te snel vol raakt.</p>
-          <p>Elke week begint de boom visueel opnieuw klein. Oude gegevens blijven lokaal bewaard, maar het kind ziet vooral: vandaag mag ik opnieuw oefenen.</p>
-        </div>
-      </section>
       <button onClick={async () => { await db.delete(); location.reload(); }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white p-4 font-black text-coral shadow-card"><Trash2 size={18} /> Data resetten</button>
     </>
   );
@@ -1110,7 +1094,56 @@ function PrivacyPage() {
 }
 
 function AboutPage() {
-  return <><PageHeader title="Over Flowi" /><div className="rounded-[1.6rem] bg-white p-5 shadow-soft"><h2 className="text-3xl font-black">Flowi</h2><p className="mt-2 font-bold text-navy/60">Hoe is het in je lijf?</p><p className="mt-4 font-bold leading-7 text-navy/70">Flowi helpt je voelen, begrijpen wat je nodig hebt en kleine stappen zetten die je goed doen.</p><p className="mt-4 text-xl font-black text-lavender">Flowi is er voor jou. Jij mag er zijn.</p></div></>;
+  const [message, setMessage] = useState("");
+  const download = async () => {
+    const backup = await exportBackup();
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `flowi-backup-${today()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setMessage("Backup gemaakt.");
+  };
+  const upload = async (file?: File) => {
+    if (!file || !confirm("Hiermee vervang je de huidige gegevens op dit apparaat.")) return;
+    await importBackup(JSON.parse(await file.text()));
+    setMessage("Backup teruggezet.");
+  };
+  return (
+    <>
+      <PageHeader title="Over Flowi" subtitle="Voor ouders en verzorgers." />
+      <section className="rounded-[1.6rem] bg-white p-5 shadow-soft">
+        <h2 className="text-3xl font-black text-navy">Waarom Flowi?</h2>
+        <div className="mt-4 grid gap-3 text-base font-bold leading-7 text-navy/66">
+          <p>Flowi is gemaakt voor jonge kinderen die hulp kunnen gebruiken bij voelen, tot rust komen en kleine stappen zetten door de dag heen.</p>
+          <p>De app gebruikt grote plaatjes, eenvoudige keuzes en een vast giraffe-maatje. Zo hoeft een kind niet veel te lezen om toch iets te kunnen aangeven.</p>
+          <p>Flowi kan helpen bij emoties herkennen, kiezen wat nodig is, korte oefeningen doen en een dagplanning volgen. Een ouder stelt de dagindeling in; het kind kan vooral kijken, kiezen en afvinken.</p>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-[1.6rem] bg-white p-5 shadow-soft">
+        <h2 className="text-xl font-black text-navy">Groeiboom</h2>
+        <div className="mt-3 grid gap-3 text-base font-bold leading-7 text-navy/62">
+          <p>De groeiboom is een rustige visuele aanmoediging voor oefenen en reflectie. Het is geen scorebord voor goed gedrag.</p>
+          <p>Na een oefening of reflectie kan Flowi de boom water geven. Extra oefenen op dezelfde dag kan het zonnetje laten schijnen.</p>
+          <p>Taken afvinken staat los van de boom. Zo groeit de boom niet te snel en blijft hij gericht op emotieregulatie.</p>
+          <p>Elke week begint de boom visueel opnieuw klein. Oude gegevens blijven lokaal bewaard.</p>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-[1.6rem] bg-white p-5 shadow-soft">
+        <h2 className="text-xl font-black text-navy">Gegevens en backup</h2>
+        <p className="mt-2 text-base font-bold leading-7 text-navy/62">Flowi gebruikt geen account en geen externe database. De gegevens staan lokaal op dit apparaat. Maak af en toe een backup als je Flowi op een telefoon gebruikt of gegevens later wilt terugzetten.</p>
+        <div className="mt-4 grid gap-3">
+          <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={20} />Backup maken</PrimaryButton>
+          <label className="grid min-h-14 cursor-pointer place-items-center rounded-2xl border border-lavender/20 bg-white px-5 text-lg font-black text-navy shadow-card"><icons.Upload className="mr-2 inline" size={20} />Backup terugzetten<input type="file" accept="application/json" className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
+          {message ? <p className="font-black text-mint">{message}</p> : null}
+        </div>
+      </section>
+    </>
+  );
 }
 
 function AppRoutes() {
@@ -1136,7 +1169,7 @@ function AppRoutes() {
         <Route path="/avatar" element={<AvatarPage />} />
         <Route path="/parents" element={<ParentsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/backup" element={<BackupPage />} />
+        <Route path="/backup" element={<Navigate to="/about" />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
