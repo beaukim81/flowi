@@ -1,6 +1,7 @@
 export type TaskVisualKey =
   | "wake" | "dress" | "breakfast" | "teeth" | "school" | "coat" | "hands" | "rest" | "study" | "shower" | "pajamas" | "sleep"
   | "makeBed" | "curtains" | "hair" | "faceWash" | "medicine" | "lunchbox" | "drinkBottle" | "shoesOn" | "coatOn" | "coatHang" | "shoesOff" | "unpackBag"
+  | "packBag" | "schoolBagCheck" | "lunchboxKitchen"
   | "drinkWater" | "snack" | "outsidePlay" | "moveBreak" | "homework" | "reading" | "creative" | "toysClean" | "roomClean" | "laundry" | "setTable" | "clearTable"
   | "dishwasher" | "waterPlants" | "petFood" | "sportsBag" | "agenda" | "weekPlan" | "screenOff" | "calmCard" | "breatheBed" | "dimLight" | "askHelp" | "wallPush"
   | "outsidePlayGiraffe" | "craftGiraffe" | "drinkCupKitchen" | "headphonesRest"
@@ -16,6 +17,9 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["haren", "kammen"])) return "hair";
   if (has(text, ["gezicht wassen"])) return "faceWash";
   if (has(text, ["medicijn", "vitamine"])) return "medicine";
+  if (has(text, ["schooltas checken"])) return "schoolBagCheck";
+  if (has(text, ["tas pakken"])) return "packBag";
+  if (has(text, ["broodtrommel naar keuken"])) return "lunchboxKitchen";
   if (has(text, ["broodtrommel pakken"])) return "lunchbox";
   if (has(text, ["drinkbeker pakken"])) return "drinkBottle";
   if (has(text, ["drinkbeker naar keuken"])) return "drinkCupKitchen";

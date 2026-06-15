@@ -62,8 +62,11 @@ const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] =
   { key: "coatHang", label: "Jas ophangen", hint: "thuiskomen" },
   { key: "shoesOff", label: "Schoenen uit", hint: "op hun plek" },
   { key: "unpackBag", label: "Tas uitpakken", hint: "na school" },
+  { key: "packBag", label: "Tas pakken", hint: "spullen in tas" },
+  { key: "schoolBagCheck", label: "Tas checken", hint: "lunch en beker" },
   { key: "drinkWater", label: "Water drinken", hint: "slokjes nemen" },
   { key: "drinkCupKitchen", label: "Beker opruimen", hint: "beker naar keuken" },
+  { key: "lunchboxKitchen", label: "Broodtrommel opruimen", hint: "naar keuken" },
   { key: "snack", label: "Snack eten", hint: "rustig aan tafel" },
   { key: "fruit", label: "Fruit eten", hint: "appel, banaan, druiven" },
   { key: "dinner", label: "Avond eten", hint: "warm eten aan tafel" },
@@ -185,15 +188,19 @@ function HomePage() {
           <img src="/assets/flowi-home-mascot.png" alt="" className="home-mascot-free" />
           <div className="speech-bubble">Ik help jou.<br /><span>♥</span></div>
         </div>
-        <div className="home-route-cues" aria-hidden="true">
-          <span className="home-route-cue cue-feel" />
-          <span className="home-route-cue cue-day" />
-          <span className="home-route-cue cue-help" />
-        </div>
-        <div className="home-actions grid gap-3">
-          <PrimaryButton onClick={() => navigate("/check-in")} className="flowi-pill">Hoe voel ik me?</PrimaryButton>
-          <button onClick={() => navigate("/day")} className="flowi-pill min-h-12 rounded-[1.35rem] bg-gradient-to-b from-[#9bd886] to-[#59b477] px-5 font-extrabold text-white shadow-[0_14px_24px_rgba(89,180,119,.24)]">Mijn dag</button>
-          <button onClick={() => navigate("/help-now")} className="flowi-pill min-h-12 rounded-[1.35rem] bg-gradient-to-b from-[#ffb58b] to-[#ff7f74] px-5 font-extrabold text-white shadow-[0_14px_24px_rgba(255,127,116,.24)]">Help mij nu</button>
+        <div className="home-visual-actions" aria-label="Kies wat je wilt doen">
+          <button type="button" onClick={() => navigate("/check-in")} className="home-visual-card home-visual-feel" aria-label="Hoe voel ik me?">
+            <span className="home-visual-giraffe" aria-hidden />
+            <span className="home-feeling-bubbles" aria-hidden><i /><i /><i /></span>
+          </button>
+          <button type="button" onClick={() => navigate("/day")} className="home-visual-card home-visual-day" aria-label="Mijn dag">
+            <span className="home-visual-giraffe" aria-hidden />
+            <span className="home-calendar" aria-hidden><i /><i /><i /></span>
+          </button>
+          <button type="button" onClick={() => navigate("/help-now")} className="home-visual-card home-visual-help" aria-label="Help mij nu">
+            <span className="home-visual-giraffe" aria-hidden />
+            <span className="home-help-button" aria-hidden />
+          </button>
         </div>
       </div>
     </section>
@@ -829,7 +836,7 @@ function TaskLibraryPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Takenbibliotheek" subtitle="Voeg rustig iets toe." />
+      <PageHeader title="Takenbibliotheek" />
       {ownTemplates.length ? <p className="mb-3 rounded-[1.25rem] bg-lavender/8 px-4 py-3 text-sm font-black text-navy/58">Zelf toegevoegde taken staan bij de categorie Eigen taken.</p> : null}
       <label className="mb-4 block rounded-[1.45rem] bg-white/94 p-3 shadow-card">
         <span className="sr-only">Zoek taak</span>
@@ -848,8 +855,8 @@ function TaskLibraryPage() {
       <div className="grid grid-cols-2 gap-3">{visibleTemplates.map((template) => {
         const ownTask = template.id.startsWith("own-");
         return (
-          <article key={template.id} className="rounded-[1.4rem] bg-white p-3 text-left shadow-card">
-            <button type="button" onClick={() => choose(template)} className="block w-full text-left">
+          <article key={template.id} className="rounded-[1.4rem] bg-white p-3 text-center shadow-card">
+            <button type="button" onClick={() => choose(template)} className="grid w-full justify-items-center text-center">
               <TaskArt title={template.title} visualKey={template.visualKey as TaskVisualKey | undefined} />
               <h3 className="mt-2 font-black">{template.title}</h3>
               <p className="text-xs font-bold text-navy/50">{template.category}</p>
@@ -936,9 +943,11 @@ function RewardsPage() {
 
         <div className="growth-care-stage relative z-10 mt-5" aria-label="Flowi verzorgt de rustboom">
           <div className="growth-care-sun" aria-hidden />
+          <div className="growth-sun-string" aria-hidden />
           <div className="growth-care-drops" aria-hidden><span /><span /><span /></div>
           <div className="growth-care-flowi" aria-hidden>
-            <AvatarMascot size="medium" emotion="rustig" showCaption={false} />
+            <img src="/assets/flowi-home-mascot.png" alt="" className="growth-flowi-character" />
+            <span className="growth-watering-can" />
           </div>
           <div className="growth-care-tree">
             <span className={`growth-plant plant-${stageIndex} active`} />

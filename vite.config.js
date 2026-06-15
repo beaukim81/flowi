@@ -28,7 +28,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        globPatterns: ["**/*.{js,css,svg,png,woff2}"],
+        globPatterns: ["**/*.{js,css,svg,jpg,woff2}"],
         navigateFallback: "/index.html",
         runtimeCaching: []
       }

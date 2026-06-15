@@ -152,7 +152,7 @@ export function NeedCard({ need, label, onClick }: { need: Need; label?: string;
 }
 
 export function TaskArt({ title, visualKey, compact = false }: { title: string; visualKey?: TaskVisualKey; compact?: boolean }) {
-  const key = visualKey ?? getTaskVisualKey(title);
+  const key = getTaskVisualKey(title, visualKey ?? "rest");
   return <span className={`task-art task-art-${key} ${compact ? "compact" : ""}`} aria-hidden />;
 }
 
@@ -247,7 +247,7 @@ export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
         <div className="min-w-0 flex-1">
           <h3 className="break-words text-lg font-black leading-tight sm:text-xl">{task.title}</h3>
-          {showDetails ? (task.optionalTime ? <span className="text-sm font-bold text-lavender">{task.optionalTime}</span> : <span className="text-sm font-bold text-navy/45">Tijd optioneel</span>) : null}
+          {showDetails && task.optionalTime ? <span className="text-sm font-bold text-lavender">{task.optionalTime}</span> : null}
         </div>
         {onHelp ? <button aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-lilac/40 bg-white text-lavender sm:h-14 sm:w-14">
           <HelpCircle size={27} />
