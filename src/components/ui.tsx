@@ -2,6 +2,7 @@ import { ArrowLeft, Check, ChevronRight, Download, GripVertical, Heart, Home, Le
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import type { Avatar, Emotion, EmotionType, Need, Task } from "../types/schema";
+import { getTaskVisualKey, type TaskVisualKey } from "../utils/taskVisuals";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -133,25 +134,6 @@ export function NeedCard({ need, label, onClick }: { need: Need; label?: string;
   );
 }
 
-export type TaskVisualKey = "wake" | "dress" | "breakfast" | "teeth" | "school" | "coat" | "hands" | "rest" | "study" | "shower" | "pajamas" | "sleep";
-
-export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"): TaskVisualKey {
-  const text = title.toLowerCase();
-  if (text.includes("ochtend") || text.includes("opstaan") || text.includes("wakker")) return "wake";
-  if (text.includes("aankleden") || text.includes("kleding") || text.includes("shirt") || text.includes("broek")) return "dress";
-  if (text.includes("ontbijt") || text.includes("eten") || text.includes("drinken") || text.includes("beker")) return "breakfast";
-  if (text.includes("tanden") || text.includes("poets")) return "teeth";
-  if (text.includes("school") || text.includes("tas") || text.includes("broodtrommel") || text.includes("sportspullen")) return "school";
-  if (text.includes("jas") || text.includes("schoenen")) return "coat";
-  if (text.includes("handen") || text.includes("wassen")) return "hands";
-  if (text.includes("rust") || text.includes("pauze") || text.includes("koptelefoon") || text.includes("rustige plek")) return "rest";
-  if (text.includes("boek") || text.includes("lezen") || text.includes("agenda") || text.includes("huiswerk") || text.includes("teken")) return "study";
-  if (text.includes("douche") || text.includes("douchen") || text.includes("bad")) return "shower";
-  if (text.includes("pyjama") || text.includes("avond")) return "pajamas";
-  if (text.includes("bed") || text.includes("slapen") || text.includes("scherm uit") || text.includes("bedtijd")) return "sleep";
-  return fallback;
-}
-
 export function TaskArt({ title, visualKey, compact = false }: { title: string; visualKey?: TaskVisualKey; compact?: boolean }) {
   const key = visualKey ?? getTaskVisualKey(title);
   return <span className={`task-art task-art-${key} ${compact ? "compact" : ""}`} aria-hidden />;
@@ -185,7 +167,7 @@ export function TaskCard({ task, done, onDone, onHelp, onEdit }: { task: Task; d
         <span className="grid h-10 w-8 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Sleep om te verplaatsen">
           <GripVertical size={18} />
         </span>
-        <TaskArt title={task.title} compact />
+        <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
         <div className="flex-1">
           <h3 className="font-black">{task.title}</h3>
           {task.optionalTime ? <span className="text-xs font-bold text-lavender">{task.optionalTime}</span> : <span className="text-xs font-bold text-navy/45">Tijd optioneel</span>}
@@ -203,7 +185,7 @@ export function TaskCard({ task, done, onDone, onHelp, onEdit }: { task: Task; d
 }
 
 export function RewardSticker({ icon, label }: { icon: string; label: string }) {
-  return <div className="rounded-[1.4rem] bg-white p-4 text-center shadow-card"><div className="text-4xl">{icon}</div><div className="mt-2 text-xs font-black">{label}</div></div>;
+  return <div className="reward-sticker rounded-[1.4rem] bg-white/92 p-4 text-center shadow-card"><div className="reward-sticker-icon mx-auto grid h-14 w-14 place-items-center rounded-full text-3xl">{icon}</div><div className="mt-2 text-xs font-black leading-tight">{label}</div></div>;
 }
 
 export function ParentCard({ icon, title, text, to }: { icon: ReactNode; title: string; text: string; to?: string }) {

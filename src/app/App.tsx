@@ -15,6 +15,7 @@ import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
 import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Task, TaskTemplate } from "../types/schema";
 import { AppShell, AvatarMascot, DayPartCard, EmotionCard, icons, NeedCard, PageHeader, ParentCard, PracticeArt, PrimaryButton, RewardSticker, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
+import type { TaskVisualKey } from "../utils/taskVisuals";
 
 const dayParts: Record<DayPart, { title: string; icon: string }> = {
   ochtend: { title: "Ochtend", icon: "☀️" },
@@ -27,7 +28,20 @@ const dayParts: Record<DayPart, { title: string; icon: string }> = {
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
-const taskIcons = ["👕", "🥣", "🪥", "🎒", "👟", "🧥", "🧼", "🍎", "🥤", "🍃", "🚿", "🌙", "🛏️", "📚", "✏️", "🧸", "🎧", "⛺", "⭐", "🌱", "🍽️", "🧺", "🧹", "🐾"];
+const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] = [
+  { key: "wake", label: "Opstaan", hint: "ochtend, wakker worden" },
+  { key: "dress", label: "Aankleden", hint: "kleren, jas, schoenen" },
+  { key: "breakfast", label: "Eten", hint: "ontbijt, drinken" },
+  { key: "teeth", label: "Tanden", hint: "poetsen, badkamer" },
+  { key: "school", label: "School", hint: "tas, naar school" },
+  { key: "coat", label: "Jas/tas", hint: "ophangen, thuiskomen" },
+  { key: "hands", label: "Wassen", hint: "handen, schoon" },
+  { key: "rest", label: "Rust", hint: "pauze, rustig plekje" },
+  { key: "study", label: "Lezen", hint: "boek, huiswerk, tekenen" },
+  { key: "shower", label: "Douchen", hint: "bad, douche" },
+  { key: "pajamas", label: "Pyjama", hint: "avondroutine" },
+  { key: "sleep", label: "Slapen", hint: "bedtijd, naar bed" }
+];
 const sortTasks = (tasks: Task[]) => [...tasks].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.createdAt.localeCompare(b.createdAt));
 
 function useProfile() {
@@ -263,14 +277,16 @@ function TaskFormPage() {
   const { data: existing } = useLiveData(() => taskId ? db.tasks.get(taskId) : Promise.resolve(undefined), undefined as Task | undefined, [taskId]);
   const [title, setTitle] = useState("");
   const [icon, setIcon] = useState("⭐");
+  const [visualKey, setVisualKey] = useState<TaskVisualKey | "">("");
+  const [showVisualBank, setShowVisualBank] = useState(false);
   const [dayPart, setDayPart] = useState<DayPart>("ochtend");
   const [optionalTime, setOptionalTime] = useState("");
   const [steps, setSteps] = useState("Begin klein.\nKlaar.");
   const [isEnabled, setIsEnabled] = useState(true);
-  useEffect(() => { if (existing) { setTitle(existing.title); setIcon(existing.icon); setDayPart(existing.dayPart); setOptionalTime(existing.optionalTime ?? ""); setSteps(existing.steps.join("\n")); setIsEnabled(existing.isEnabled); } }, [existing]);
+  useEffect(() => { if (existing) { setTitle(existing.title); setIcon(existing.icon); setVisualKey((existing.visualKey as TaskVisualKey | undefined) ?? ""); setDayPart(existing.dayPart); setOptionalTime(existing.optionalTime ?? ""); setSteps(existing.steps.join("\n")); setIsEnabled(existing.isEnabled); } }, [existing]);
   const save = async () => {
     const currentTasks = await db.tasks.where("dayPart").equals(dayPart).toArray();
-    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: steps.split("\n").filter(Boolean), repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
+    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: steps.split("\n").filter(Boolean), repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
     await db.tasks.put(task);
     navigate(`/day/${dayPart}`);
   };
@@ -286,29 +302,33 @@ function TaskFormPage() {
       <div className="grid gap-3 rounded-[1.6rem] bg-white/90 p-4 shadow-soft">
         <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Titel" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
         <section className="rounded-[1.45rem] bg-gradient-to-br from-sky/12 via-white to-lavender/12 p-4 text-center shadow-card">
-          <TaskArt title={title || "Nieuwe taak"} />
+          <TaskArt title={title || "Nieuwe taak"} visualKey={visualKey || undefined} />
           <p className="mt-3 text-sm font-black text-navy">Flowi-plaatje</p>
-          <p className="text-xs font-bold text-navy/48">Het plaatje past zich aan op de taaknaam.</p>
+          <p className="text-xs font-bold text-navy/48">{visualKey ? "Je koos zelf een plaatje." : "Flowi kiest automatisch op basis van de taaknaam."}</p>
+          <button type="button" onClick={() => setShowVisualBank((value) => !value)} className="mt-3 rounded-2xl bg-white px-4 py-2 text-xs font-black text-lavender shadow-card">{showVisualBank ? "Beeldbank sluiten" : "Ander plaatje kiezen"}</button>
         </section>
-        <section className="rounded-[1.4rem] bg-lavender/8 p-3">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="font-black">Kies een icoontje</span>
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-2xl shadow-card">{icon}</span>
-          </div>
-          <div className="grid grid-cols-6 gap-2">
-            {taskIcons.map((taskIcon) => (
-              <button
-                key={taskIcon}
-                type="button"
-                onClick={() => setIcon(taskIcon)}
-                className={`flowi-icon-token grid h-11 w-full place-items-center rounded-2xl text-2xl ring-2 ${icon === taskIcon ? "ring-lavender" : "ring-transparent"}`}
-                aria-label={`Kies icoon ${taskIcon}`}
-              >
-                {taskIcon}
-              </button>
-            ))}
-          </div>
-        </section>
+        {showVisualBank ? (
+          <section className="rounded-[1.4rem] bg-lavender/8 p-3">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="font-black">Flowi beeldbank</span>
+              <button type="button" onClick={() => setVisualKey("")} className="text-xs font-black text-lavender">Automatisch</button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {taskVisualOptions.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setVisualKey(option.key)}
+                  className={`rounded-[1.2rem] bg-white p-2 text-left shadow-card ring-2 ${visualKey === option.key ? "ring-lavender" : "ring-transparent"}`}
+                >
+                  <TaskArt title={option.label} visualKey={option.key} />
+                  <div className="mt-2 text-sm font-black text-navy">{option.label}</div>
+                  <div className="text-[0.68rem] font-bold leading-4 text-navy/45">{option.hint}</div>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
         <select value={dayPart} onChange={(event) => setDayPart(event.target.value as DayPart)} className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold"><option value="ochtend">Ochtend</option><option value="naSchool">Na school</option><option value="avond">Avond</option><option value="bedtijd">Bedtijd</option><option value="vrij">Vrij</option></select>
         <input value={optionalTime} onChange={(event) => setOptionalTime(event.target.value)} placeholder="Tijd optioneel, bv. 07:30" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
         <textarea value={steps} onChange={(event) => setSteps(event.target.value)} className="min-h-32 rounded-2xl border border-lavender/20 p-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
@@ -331,7 +351,7 @@ function TaskLibraryPage() {
     .sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
   const add = async (template: TaskTemplate) => {
     const currentTasks = await db.tasks.where("dayPart").equals(template.defaultDayPart).toArray();
-    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, category: template.category, ageGroup: template.ageGroup, dayPart: template.defaultDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: "elkeDag", estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
+    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: template.defaultDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: "elkeDag", estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
   };
   return (
     <>
@@ -351,16 +371,75 @@ function TaskLibraryPage() {
 
 function RewardsPage() {
   const { data: rewards } = useLiveData(() => db.rewards.orderBy("earnedAt").reverse().toArray(), [], []);
+  const todaysRewards = rewards.filter((reward) => reward.earnedAt.slice(0, 10) === today());
+  const treeStages = ["Zaadje", "Sprietje", "Plantje", "Struikje", "Rustboom"];
+  const stageIndex = Math.min(treeStages.length - 1, Math.floor(rewards.length / 3));
+  const flowiPhrases = ["Proberen telt.", "Je hoeft het niet perfect te doen.", "Elke keer oefenen helpt.", "Jij mag er zijn.", "Kleine stapjes groeien ook."];
+  const phrase = flowiPhrases[rewards.length % flowiPhrases.length];
+  const gardenStickers = rewards.length ? rewards : rewardStickers;
+  const progress = Math.min(100, ((rewards.length % 12) / 12) * 100 + (rewards.length ? 12 : 0));
   return (
-    <>
-      <PageHeader title="Mijn groei" subtitle="Proberen telt." back={false} />
-      <section className="mb-4 rounded-[2rem] bg-white p-5 shadow-soft">
-        <p className="font-black">Kleine gewoontes elke dag.</p>
-        <div className="mt-4 flex items-end justify-between text-5xl"><span>🌰</span><span>🌱</span><span>🌿</span><span>🌳</span></div>
-        <div className="mt-4 h-3 rounded-full bg-lilac/20"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${Math.min(100, 18 + rewards.length * 9)}%` }} /></div>
+    <div className="phone-screen growth-garden px-4 pb-5 pt-4">
+      <PageHeader title="Mijn groei" subtitle="Flowi's groeituin." back={false} />
+      <section className="growth-hero relative overflow-hidden rounded-[1.9rem] p-5 shadow-soft">
+        <div className="cloud cloud-a" />
+        <div className="relative z-10 grid grid-cols-[1fr_auto] items-end gap-2">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.16em] text-lavender">Rustkracht</div>
+            <h2 className="mt-1 text-2xl font-black text-navy">{treeStages[stageIndex]}</h2>
+            <p className="mt-2 max-w-[12rem] text-sm font-bold leading-6 text-navy/58">Kleine stapjes laten jouw boom groeien.</p>
+          </div>
+          <AvatarMascot size="medium" emotion="rustig" />
+        </div>
+        <div className="relative z-10 mt-5 flex items-end justify-between rounded-[1.5rem] bg-white/72 p-4 shadow-card">
+          {treeStages.map((stage, index) => (
+            <div key={stage} className="grid justify-items-center gap-1">
+              <span className={`growth-plant plant-${index} ${index <= stageIndex ? "active" : ""}`} />
+              <span className={`h-2 w-2 rounded-full ${index <= stageIndex ? "bg-mint" : "bg-lilac/25"}`} />
+            </div>
+          ))}
+        </div>
+        <div className="relative z-10 mt-4 h-3 rounded-full bg-white/70"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
       </section>
-      <div className="grid grid-cols-3 gap-3">{(rewards.length ? rewards : rewardStickers.slice(0, 6)).map((reward, index) => <RewardSticker key={`${reward.label}-${index}`} icon={reward.icon} label={reward.label} />)}</div>
-    </>
+
+      <section className="mt-4 rounded-[1.6rem] bg-white/92 p-4 shadow-card">
+        <div className="flex items-start gap-3">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-lavender/10 text-2xl">💬</span>
+          <div>
+            <h3 className="font-black text-navy">Flowi zegt</h3>
+            <p className="mt-1 text-lg font-black text-lavender">{phrase}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-4">
+        <div className="mb-3 flex items-end justify-between">
+          <div>
+            <h3 className="font-black text-navy">Vandaag gegroeid</h3>
+            <p className="text-xs font-bold text-navy/48">Alles wat je probeert telt.</p>
+          </div>
+          <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-lavender shadow-card">{todaysRewards.length}</span>
+        </div>
+        {todaysRewards.length ? (
+          <div className="grid grid-cols-2 gap-3">
+            {todaysRewards.slice(0, 4).map((reward) => <RewardSticker key={reward.id} icon={reward.icon} label={reward.label} />)}
+          </div>
+        ) : (
+          <div className="rounded-[1.5rem] bg-white/88 p-4 text-center shadow-card">
+            <PracticeArt category="Rust" title="rustig" />
+            <p className="mt-3 font-black text-navy">Vandaag mag rustig zijn.</p>
+            <p className="text-sm font-bold text-navy/52">Je kunt altijd opnieuw beginnen.</p>
+          </div>
+        )}
+      </section>
+
+      <section className="mt-5">
+        <h3 className="mb-3 font-black text-navy">Mijn stickers</h3>
+        <div className="grid grid-cols-3 gap-3">
+          {gardenStickers.slice(0, 12).map((reward, index) => <RewardSticker key={`${reward.label}-${index}`} icon={reward.icon} label={reward.label} />)}
+        </div>
+      </section>
+    </div>
   );
 }
 

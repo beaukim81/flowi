@@ -1,4 +1,5 @@
 import type { DayPart, TaskTemplate } from "../types/schema";
+import { getTaskVisualKey } from "../utils/taskVisuals";
 
 type TemplateSeed = {
   title: string;
@@ -106,6 +107,7 @@ export const taskTemplates: TaskTemplate[] = templates.flatMap((template) =>
     id: `${ageGroup}-${slug(template.title)}`,
     title: template.title,
     icon: iconFor(template.title),
+    visualKey: getTaskVisualKey(template.title),
     category: template.category,
     ageGroup,
     defaultDayPart: template.dayPart,

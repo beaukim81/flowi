@@ -530,3 +530,113 @@ button, input, textarea, select {
   background-image: radial-gradient(circle, transparent 42%, rgba(116,91,220,.34) 45% 55%, transparent 58%);
   background-size: 1.6rem 1.6rem;
 }
+
+.growth-garden {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.82)),
+    radial-gradient(circle at 70% 3%, rgba(224, 245, 212, .75), transparent 150px),
+    radial-gradient(circle at 12% 22%, rgba(220, 238, 255, .75), transparent 140px);
+}
+
+.growth-hero {
+  background:
+    radial-gradient(circle at 78% 7%, rgba(255, 255, 255, 0.9), transparent 80px),
+    linear-gradient(180deg, #edf8ff 0%, #ffffff 52%, #d9efc4 100%);
+}
+
+.growth-hero::after {
+  content: "";
+  position: absolute;
+  left: -12%;
+  right: -12%;
+  bottom: -3.6rem;
+  height: 8rem;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(180deg, rgba(177, 221, 139, 0.82), rgba(132, 192, 112, 0.8));
+}
+
+.growth-plant {
+  position: relative;
+  display: block;
+  width: 2.3rem;
+  height: 3.2rem;
+  opacity: 0.34;
+  transform: scale(0.9);
+  transition: transform .2s ease, opacity .2s ease;
+}
+
+.growth-plant.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.growth-plant::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0.34rem;
+  height: 55%;
+  border-radius: 999px;
+  background: #63ad62;
+  transform: translateX(-50%);
+}
+
+.growth-plant::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 35%;
+  width: 2rem;
+  height: 1.2rem;
+  border-radius: 100% 0 100% 0;
+  background: linear-gradient(135deg, #a9db77, #58aa67);
+  transform: translateX(-50%) rotate(-24deg);
+  box-shadow: 0.5rem 0.35rem 0 -0.1rem #7cc76b;
+}
+
+.plant-0::before {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: #b87222;
+}
+
+.plant-0::after {
+  display: none;
+}
+
+.plant-1 { height: 2.4rem; }
+.plant-2 { height: 3rem; }
+.plant-3 { height: 3.6rem; }
+.plant-4 {
+  width: 3rem;
+  height: 4.2rem;
+}
+
+.plant-4::before {
+  height: 72%;
+  background: #8f5b25;
+}
+
+.plant-4::after {
+  bottom: 45%;
+  width: 2.8rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #bfe785, #74bd65 70%);
+  box-shadow: 0.65rem 0.55rem 0 -0.12rem #67ad5f, -0.55rem 0.55rem 0 -0.12rem #8ccd70;
+}
+
+.reward-sticker {
+  border: 1px solid rgba(255,255,255,.9);
+}
+
+.reward-sticker-icon {
+  background:
+    radial-gradient(circle at 34% 22%, rgba(255,255,255,.96), transparent 45%),
+    linear-gradient(145deg, rgba(255, 246, 196, .9), rgba(206, 193, 255, .46));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 8px 16px rgba(72,63,137,.1);
+}

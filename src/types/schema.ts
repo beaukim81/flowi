@@ -87,6 +87,7 @@ export interface Task {
   childProfileId: string;
   title: string;
   icon: string;
+  visualKey?: string;
   category: string;
   ageGroup: string;
   dayPart: DayPart;
@@ -107,6 +108,7 @@ export interface TaskTemplate {
   id: string;
   title: string;
   icon: string;
+  visualKey?: string;
   category: string;
   ageGroup: string;
   defaultDayPart: DayPart;
