@@ -47,20 +47,26 @@ function HomePage() {
   const { data: profile } = useProfile();
   const avatar = useAvatar(profile?.selectedAvatarId);
   return (
-    <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-b from-sky/20 via-white to-mint/18 p-5 shadow-soft">
-      <div className="absolute -right-10 top-8 h-28 w-28 rounded-full bg-white/70 blur-xl" />
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-mint/25 to-transparent" />
-      <div className="relative">
-        <h1 className="text-3xl font-black text-navy">Hoi! Ik ben Flowi</h1>
-        <p className="mt-1 text-sm font-bold text-navy/60">Fijn dat je er bent 💜</p>
-        <AvatarMascot avatar={avatar} size="large" />
+    <section className="phone-screen home-scene relative overflow-hidden px-5 pb-5 pt-6">
+      <div className="cloud cloud-a" />
+      <div className="cloud cloud-b" />
+      <div className="leaf-float leaf-a" />
+      <div className="leaf-float leaf-b" />
+      <div className="relative z-10">
+        <div className="flowi-logo mb-1">Flowi<span>♥</span></div>
+        <p className="text-[1.35rem] font-black text-lavender">Hoe is het in je lijf?</p>
+        <p className="mt-3 max-w-[15rem] text-sm font-bold leading-6 text-navy/62">Flowi helpt je voelen, kiezen en kleine stappen zetten die je goed doen.</p>
+        <div className="relative mt-1">
+          <AvatarMascot avatar={avatar} size="large" />
+          <div className="speech-bubble">Jij kiest je maatje!<br /><span>♥</span></div>
+        </div>
         <div className="mt-5 grid gap-3">
-          <PrimaryButton onClick={() => navigate("/check-in")}>💜 Hoe voel ik me?</PrimaryButton>
-          <button onClick={() => navigate("/day")} className="min-h-12 rounded-2xl bg-gradient-to-b from-mint to-[#5aad80] px-5 font-extrabold text-white shadow-card">🍃 Mijn dag</button>
-          <SecondaryButton onClick={() => navigate("/help-now")}>🖐️ Help mij nu</SecondaryButton>
+          <PrimaryButton onClick={() => navigate("/check-in")} className="flowi-pill">♥ Hoe voel ik me?</PrimaryButton>
+          <button onClick={() => navigate("/day")} className="flowi-pill min-h-12 rounded-[1.35rem] bg-gradient-to-b from-[#9bd886] to-[#59b477] px-5 font-extrabold text-white shadow-[0_14px_24px_rgba(89,180,119,.24)]">🍃 Mijn dag</button>
+          <SecondaryButton onClick={() => navigate("/help-now")} className="flowi-pill">Help mij nu</SecondaryButton>
         </div>
         <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-          {["Voelen", "Kiezen", "Groeien"].map((word, index) => <div key={word} className="rounded-2xl bg-white/70 p-3 text-xs font-black shadow-card">{["♡", "🍃", "⭐"][index]}<br />{word}</div>)}
+          {["Voelen", "Kiezen", "Groeien"].map((word, index) => <div key={word} className="mini-value-card p-3 text-xs font-black">{["♡", "🍃", "⭐"][index]}<br />{word}<span>{["Herken je gevoel", "Wat heb je nodig?", "Elke dag een stapje"][index]}</span></div>)}
         </div>
       </div>
     </section>
@@ -74,11 +80,13 @@ function CheckInPage() {
   const avatar = useAvatar(profile?.selectedAvatarId);
   return (
     <>
+      <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Hoe voel je je nu?" subtitle="Kies wat het beste past." />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {emotions.map((emotion) => (
           <EmotionCard key={emotion.id} emotion={emotion} avatar={avatar} onClick={() => { setEmotion(emotion.id); navigate("/need"); }} />
         ))}
+      </div>
       </div>
     </>
   );
@@ -92,6 +100,7 @@ function NeedPage() {
   const caregiver = profile?.caregiverName || profile?.caregiverLabel || "ouder";
   return (
     <>
+      <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Wat heb ik nu nodig?" subtitle="Kies wat je nu kan helpen." />
       <div className="grid grid-cols-2 gap-3">
         {filteredNeeds.map((need) => (
@@ -102,6 +111,7 @@ function NeedPage() {
             navigate(`/action/${strategy.id}`);
           }} />
         ))}
+      </div>
       </div>
     </>
   );
@@ -115,7 +125,7 @@ function ActionPage() {
   const avatar = useAvatar(profile?.selectedAvatarId);
   const action = calmStrategies.find((strategy) => strategy.id === actionId) ?? chooseStrategy(selectedEmotion, selectedNeed);
   return (
-    <section className="rounded-[2rem] bg-white p-5 text-center shadow-soft">
+    <section className="phone-screen action-scene p-5 text-center">
       <PageHeader title={action.title} back />
       <AvatarMascot avatar={avatar} emotion={selectedEmotion} size="large" />
       <p className="mx-auto mt-5 max-w-sm text-sm font-bold leading-6 text-navy/65">{action.childText}</p>
@@ -153,6 +163,7 @@ function ReflectionPage() {
   };
   return (
     <>
+      <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Wat hielp jou?" />
       <div className="grid gap-3">
         {["Het voelde mij rustiger", "Het werd een beetje beter", "Nog niet", "Het werd moeilijker"].map((rating, index) => (
@@ -162,6 +173,7 @@ function ReflectionPage() {
           <span className="font-black">Iets anders? Vertel het.</span>
           <textarea value={note} onChange={(event) => setNote(event.target.value)} className="mt-3 min-h-24 w-full rounded-2xl border border-lavender/20 p-3 outline-none focus:ring-4 focus:ring-lavender/20" placeholder="Wil je iets tekenen of opschrijven?" />
         </label>
+      </div>
       </div>
     </>
   );
@@ -173,6 +185,7 @@ function DayPage() {
   const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
   return (
     <>
+      <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Mijn dag" subtitle="Kleine stappen. Tijd is optioneel." />
       <div className="grid gap-3">
         {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
@@ -182,6 +195,7 @@ function DayPage() {
         })}
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/tasks/new")}>Tijd toevoegen</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
+      </div>
     </>
   );
 }
@@ -218,6 +232,7 @@ function DayPartPage() {
   };
   return (
     <>
+      <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title={`${dayParts[part]?.title ?? "Dag"}routine`} subtitle="Tijd optioneel" />
       <div className="grid gap-3">
         {visibleTasks.map((task) => (
@@ -236,6 +251,7 @@ function DayPartPage() {
       <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library")}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new")}>Taak toevoegen</PrimaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       {helpTask ? <div className="mt-4 rounded-[1.5rem] bg-white p-4 shadow-soft"><h2 className="font-black">Help mij starten</h2><p className="text-sm font-bold text-navy/55">Eerste mini-stap: {helpTask.steps[0] ?? "Begin klein."}</p><div className="mt-3 grid grid-cols-2 gap-2">{["Te veel", "Boos", "Moe", "In de war"].map((label) => <span key={label} className="rounded-2xl bg-lavender/10 px-3 py-2 text-center text-xs font-black text-lavender">{label}</span>)}</div></div> : null}
+      </div>
     </>
   );
 }
@@ -265,8 +281,9 @@ function TaskFormPage() {
   };
   return (
     <>
+      <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title={editing ? "Taak aanpassen" : "Nieuwe taak"} subtitle="Tijd is optioneel." />
-      <div className="grid gap-3 rounded-[1.6rem] bg-white p-4 shadow-soft">
+      <div className="grid gap-3 rounded-[1.6rem] bg-white/90 p-4 shadow-soft">
         <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Titel" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
         <section className="rounded-[1.4rem] bg-lavender/8 p-3">
           <div className="mb-3 flex items-center justify-between">
@@ -293,6 +310,7 @@ function TaskFormPage() {
         <label className="flex items-center justify-between rounded-2xl bg-lavender/8 p-3 font-bold">Actief <input type="checkbox" checked={isEnabled} onChange={(event) => setIsEnabled(event.target.checked)} /></label>
         <PrimaryButton onClick={save}>Opslaan</PrimaryButton>
         {editing ? <button onClick={remove} className="min-h-12 rounded-2xl bg-coral/10 px-5 font-extrabold text-coral">Verwijderen</button> : null}
+      </div>
       </div>
     </>
   );
