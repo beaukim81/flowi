@@ -312,6 +312,90 @@ input, textarea, select {
   margin-top: 0.25rem;
 }
 
+.home-route-cues {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .65rem;
+  margin: .35rem 0 .6rem;
+}
+
+.home-route-cue {
+  position: relative;
+  min-height: 3.4rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .84);
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(circle at 34% 20%, rgba(255,255,255,.95), transparent 42%),
+    linear-gradient(180deg, rgba(246,243,255,.94), rgba(255,255,255,.82));
+  box-shadow: 0 10px 22px rgba(72, 63, 137, .1);
+}
+
+.home-route-cue::before,
+.home-route-cue::after {
+  content: "";
+  position: absolute;
+}
+
+.home-route-cue::before {
+  left: 50%;
+  top: 50%;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ffd46e, #f0a12d);
+  box-shadow:
+    -.48rem -.52rem 0 -.28rem #f3ac37,
+    .48rem -.52rem 0 -.28rem #f3ac37,
+    0 .58rem 0 -.42rem #ffe6a5;
+  transform: translate(-50%, -50%);
+}
+
+.home-route-cue::after {
+  left: 50%;
+  top: 52%;
+  width: .85rem;
+  height: .38rem;
+  border-bottom: .12rem solid #8b4f17;
+  border-radius: 0 0 999px 999px;
+  transform: translate(-50%, -50%);
+}
+
+.cue-feel {
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 42%),
+    linear-gradient(180deg, rgba(239,232,255,.96), rgba(255,255,255,.84));
+}
+
+.cue-day {
+  background:
+    radial-gradient(circle at 72% 22%, rgba(255,241,170,.86), transparent 32%),
+    linear-gradient(180deg, rgba(228,247,214,.98), rgba(255,255,255,.84));
+}
+
+.cue-help {
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255,255,255,.95), transparent 42%),
+    linear-gradient(180deg, rgba(255,230,215,.98), rgba(255,255,255,.84));
+}
+
+.cue-feel::after {
+  border-bottom-color: #8a6df1;
+}
+
+.cue-day::before {
+  transform: translate(-50%, -50%) rotate(-6deg);
+}
+
+.cue-help::after {
+  width: .75rem;
+  height: .75rem;
+  border: 0;
+  border-radius: 50%;
+  background: #ff8d86;
+  box-shadow: -.7rem 0 0 -.15rem rgba(255,141,134,.75), .7rem 0 0 -.15rem rgba(255,141,134,.75);
+}
+
 @media (max-height: 700px) {
   .home-scene {
     height: calc(100dvh - 5.25rem);
@@ -339,6 +423,15 @@ input, textarea, select {
 
   .home-actions {
     gap: 0.55rem;
+  }
+
+  .home-route-cues {
+    gap: .5rem;
+    margin: .2rem 0 .45rem;
+  }
+
+  .home-route-cue {
+    min-height: 2.8rem;
   }
 
   .home-actions .flowi-pill,
@@ -1264,6 +1357,40 @@ input, textarea, select {
   bottom: .5rem;
   transform: scale(1.04);
   transform-origin: bottom left;
+  animation: flowi-water-body 3.4s ease-in-out infinite;
+}
+
+.growth-care-flowi::before {
+  content: "";
+  position: absolute;
+  right: -1.2rem;
+  top: 4.6rem;
+  z-index: 12;
+  width: 2.35rem;
+  height: 1.45rem;
+  border-radius: .55rem .55rem .85rem .85rem;
+  background: linear-gradient(180deg, #9be3f2, #5ebfd5);
+  box-shadow:
+    inset .25rem .22rem 0 rgba(255,255,255,.42),
+    0 .55rem 1rem rgba(72, 63, 137, .12);
+  transform: rotate(-18deg);
+  transform-origin: 20% 80%;
+  animation: flowi-water-can 3.4s ease-in-out infinite;
+}
+
+.growth-care-flowi::after {
+  content: "";
+  position: absolute;
+  right: -1.8rem;
+  top: 5rem;
+  z-index: 11;
+  width: 1.45rem;
+  height: .48rem;
+  border-radius: 999px;
+  border-top: .28rem solid #5ebfd5;
+  border-right: .22rem solid #5ebfd5;
+  transform: rotate(-20deg);
+  animation: flowi-water-can 3.4s ease-in-out infinite;
 }
 
 .growth-care-tree {
@@ -1290,6 +1417,7 @@ input, textarea, select {
 
 .growth-focus-sun .growth-care-sun {
   opacity: 1;
+  animation: growth-sunshine 3.8s ease-in-out infinite;
 }
 
 .growth-care-drops {
@@ -1322,6 +1450,50 @@ input, textarea, select {
 .growth-focus-water .growth-care-drops,
 .growth-focus-sun .growth-care-drops {
   opacity: 1;
+  animation: water-drops-fall 1.8s ease-in-out infinite;
+}
+
+.growth-focus-rest .growth-care-flowi {
+  animation: tiny-bounce 3.4s ease-in-out infinite;
+}
+
+.growth-focus-rest .growth-care-flowi::before,
+.growth-focus-rest .growth-care-flowi::after {
+  opacity: .55;
+  animation: none;
+}
+
+@keyframes flowi-water-body {
+  0%, 100% { transform: scale(1.04) rotate(0deg) translateY(0); }
+  38% { transform: scale(1.04) rotate(-2deg) translateY(-.12rem); }
+  55% { transform: scale(1.04) rotate(2deg) translateY(.08rem); }
+  72% { transform: scale(1.04) rotate(-1deg) translateY(0); }
+}
+
+@keyframes flowi-water-can {
+  0%, 100% { transform: rotate(-14deg); }
+  40%, 66% { transform: rotate(-34deg) translate(.18rem, .05rem); }
+}
+
+@keyframes water-drops-fall {
+  0% { transform: translate(-.25rem, -.55rem) rotate(-18deg); opacity: 0; }
+  22% { opacity: 1; }
+  100% { transform: translate(.7rem, 1.55rem) rotate(-18deg); opacity: 0; }
+}
+
+@keyframes growth-sunshine {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 .75rem rgba(255,198,91,.18),
+      0 0 2.4rem rgba(255,198,91,.5);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow:
+      0 0 0 1rem rgba(255,198,91,.2),
+      0 0 3rem rgba(255,198,91,.62);
+  }
 }
 
 .week-seed {
