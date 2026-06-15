@@ -1046,6 +1046,15 @@ function SettingsPage() {
         <label className="flex items-center justify-between rounded-2xl bg-lavender/8 p-3 font-bold">Reduced motion <input type="checkbox" checked={settings?.reducedMotion ?? false} onChange={(event) => db.settings.update("app", { reducedMotion: event.target.checked })} /></label>
         <PrimaryButton onClick={save}>Opslaan</PrimaryButton>
       </div>
+      <section className="mt-4 rounded-[1.6rem] bg-white p-5 shadow-soft">
+        <h2 className="text-xl font-black text-navy">Uitleg groeiboom</h2>
+        <div className="mt-3 grid gap-3 text-base font-bold leading-7 text-navy/62">
+          <p>De groeiboom is bedoeld als rustige, visuele aanmoediging voor oefenen en reflectie. Het is geen scorebord voor goed gedrag.</p>
+          <p>Een groeimoment ontstaat bijvoorbeeld na een oefening of na de vraag wat geholpen heeft. Flowi geeft dan zichtbaar water aan de boom.</p>
+          <p>Als er op dezelfde dag extra geoefend wordt, kan het zonnetje gaan schijnen. Taken afvinken staat hier los van, zodat de boom niet te snel vol raakt.</p>
+          <p>Elke week begint de boom visueel opnieuw klein. Oude gegevens blijven lokaal bewaard, maar het kind ziet vooral: vandaag mag ik opnieuw oefenen.</p>
+        </div>
+      </section>
       <button onClick={async () => { await db.delete(); location.reload(); }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white p-4 font-black text-coral shadow-card"><Trash2 size={18} /> Data resetten</button>
     </>
   );
