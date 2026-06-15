@@ -541,95 +541,91 @@ function DaySettingsPartPage() {
   const part = dayPart as DayPart;
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
-  const [dragOffsetY, setDragOffsetY] = useState(0);
+  const [displayOrder, setDisplayOrder] = useState<string[]>([]);
+  const [dragGhost, setDragGhost] = useState<{ x: number; y: number; width: number; height: number; offsetX: number; offsetY: number } | null>(null);
   const draggedTaskIdRef = useRef<string | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const dragHoldTimerRef = useRef<number | null>(null);
   const dragReadyRef = useRef(false);
-  const reorderingRef = useRef(false);
   const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
+  useEffect(() => {
+    if (!draggedTaskIdRef.current) setDisplayOrder(visibleTasks.map((task) => task.id));
+  }, [tasks]);
   const deleteTask = async (task: Task) => {
     await db.tasks.delete(task.id);
     await db.taskCompletions.where("taskId").equals(task.id).delete();
     await reload();
   };
-  const moveTask = async (sourceTaskId: string, targetTaskId: string) => {
-    if (sourceTaskId === targetTaskId || reorderingRef.current) return;
-    reorderingRef.current = true;
-    const current = sortTasks(tasks.filter((task) => task.isEnabled));
-    const fromIndex = current.findIndex((task) => task.id === sourceTaskId);
-    const toIndex = current.findIndex((task) => task.id === targetTaskId);
-    if (fromIndex < 0 || toIndex < 0) {
-      reorderingRef.current = false;
-      return;
-    }
-    const reordered = [...current];
-    const [moved] = reordered.splice(fromIndex, 1);
-    reordered.splice(toIndex, 0, moved);
-    try {
-      await db.transaction("rw", db.tasks, async () => {
-        await Promise.all(reordered.map((task, sortOrder) => db.tasks.update(task.id, { sortOrder, updatedAt: now() })));
-      });
-      await reload();
-    } finally {
-      reorderingRef.current = false;
-    }
-  };
   const startReorder = (event: React.PointerEvent<HTMLDivElement>, taskId: string) => {
     const target = event.target as HTMLElement;
     if (!target.closest("[data-drag-handle]")) return;
+    const rect = event.currentTarget.getBoundingClientRect();
     draggedTaskIdRef.current = taskId;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
     dragReadyRef.current = false;
-    setDragOffsetY(0);
+    setDisplayOrder(visibleTasks.map((task) => task.id));
     if (dragHoldTimerRef.current) window.clearTimeout(dragHoldTimerRef.current);
     dragHoldTimerRef.current = window.setTimeout(() => {
       dragReadyRef.current = true;
       setDraggedTaskId(taskId);
-      setDragOverTaskId(taskId);
-    }, 520);
+      setDragGhost({ x: rect.left, y: rect.top, width: rect.width, height: rect.height, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top });
+    }, 260);
     event.currentTarget.setPointerCapture?.(event.pointerId);
   };
-  const updateReorder = async (event: React.PointerEvent<HTMLDivElement>) => {
+  const updateReorder = (event: React.PointerEvent<HTMLDivElement>) => {
     const sourceTaskId = draggedTaskIdRef.current;
     const start = dragStartRef.current;
     if (!sourceTaskId || !start) return;
-    const movedBeforeHold = Math.abs(event.clientY - start.y) > 28 || Math.abs(event.clientX - start.x) > 28;
+    const movedBeforeHold = Math.abs(event.clientY - start.y) > 18 || Math.abs(event.clientX - start.x) > 18;
     if (!dragReadyRef.current) {
       if (movedBeforeHold) finishReorder();
       return;
     }
-    setDragOffsetY(event.clientY - start.y);
-    const movedEnough = Math.abs(event.clientY - start.y) > 18 || Math.abs(event.clientX - start.x) > 18;
-    if (!movedEnough) return;
     event.preventDefault();
+    setDragGhost((ghost) => ghost ? { ...ghost, x: event.clientX - ghost.offsetX, y: event.clientY - ghost.offsetY } : ghost);
     const target = document.elementsFromPoint(event.clientX, event.clientY)
       .map((element) => element.closest<HTMLElement>("[data-reorder-task-id]"))
       .find((element) => element?.dataset.reorderTaskId && element.dataset.reorderTaskId !== sourceTaskId);
     const targetTaskId = target?.dataset.reorderTaskId;
-    if (!targetTaskId || targetTaskId === sourceTaskId || targetTaskId === dragOverTaskId) return;
-    setDragOverTaskId(targetTaskId);
-    await moveTask(sourceTaskId, targetTaskId);
+    if (!targetTaskId) return;
+    setDisplayOrder((current) => {
+      const next = current.length ? [...current] : visibleTasks.map((task) => task.id);
+      const fromIndex = next.indexOf(sourceTaskId);
+      const toIndex = next.indexOf(targetTaskId);
+      if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return current;
+      next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, sourceTaskId);
+      return next;
+    });
   };
-  const finishReorder = () => {
+  const finishReorder = async () => {
     if (dragHoldTimerRef.current) {
       window.clearTimeout(dragHoldTimerRef.current);
       dragHoldTimerRef.current = null;
     }
+    const sourceTaskId = draggedTaskIdRef.current;
+    const finalOrder = displayOrder.length ? displayOrder : visibleTasks.map((task) => task.id);
     dragReadyRef.current = false;
     draggedTaskIdRef.current = null;
     dragStartRef.current = null;
     setDraggedTaskId(null);
-    setDragOverTaskId(null);
-    setDragOffsetY(0);
+    setDragGhost(null);
+    if (sourceTaskId && finalOrder.includes(sourceTaskId)) {
+      await db.transaction("rw", db.tasks, async () => {
+        await Promise.all(finalOrder.map((taskId, sortOrder) => db.tasks.update(taskId, { sortOrder, updatedAt: now() })));
+      });
+      await reload();
+    }
   };
+  const taskById = new Map(visibleTasks.map((task) => [task.id, task]));
+  const orderedTasks = (displayOrder.length ? displayOrder : visibleTasks.map((task) => task.id)).map((taskId) => taskById.get(taskId)).filter(Boolean) as Task[];
+  const draggedTask = draggedTaskId ? taskById.get(draggedTaskId) : null;
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title={`${dayParts[part]?.title ?? "Dag"} instellen`} subtitle="Voor ouders: aanpassen en slepen." />
       <div className="grid gap-3">
-        {visibleTasks.map((task) => (
+        {orderedTasks.map((task) => (
           <div
             key={task.id}
             data-reorder-task-id={task.id}
@@ -637,13 +633,21 @@ function DaySettingsPartPage() {
             onPointerMove={updateReorder}
             onPointerUp={finishReorder}
             onPointerCancel={finishReorder}
-            style={draggedTaskId === task.id ? { transform: `translateY(${dragOffsetY}px) scale(1.02)` } : undefined}
-            className={`reorder-task-card ${draggedTaskId === task.id ? "is-dragging" : ""} ${dragOverTaskId === task.id && draggedTaskId !== task.id ? "is-drag-over" : ""}`}
+            className={`reorder-task-card ${draggedTaskId === task.id ? "is-placeholder" : ""}`}
           >
-            <TaskCard task={task} done={false} onEdit={() => navigate(`/tasks/${task.id}/edit`)} onDelete={() => deleteTask(task)} editable />
+            {draggedTaskId === task.id ? (
+              <div className="reorder-placeholder" style={dragGhost ? { minHeight: dragGhost.height } : undefined} />
+            ) : (
+              <TaskCard task={task} done={false} onEdit={() => navigate(`/tasks/${task.id}/edit`)} onDelete={() => deleteTask(task)} editable />
+            )}
           </div>
         ))}
       </div>
+      {draggedTask && dragGhost ? (
+        <div className="drag-floating-card" style={{ left: dragGhost.x, top: dragGhost.y, width: dragGhost.width }}>
+          <TaskCard task={draggedTask} done={false} onEdit={() => navigate(`/tasks/${draggedTask.id}/edit`)} onDelete={() => deleteTask(draggedTask)} editable />
+        </div>
+      ) : null}
       <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings`)}>Uit bibliotheek</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings`)}>Taak toevoegen</PrimaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       </div>
