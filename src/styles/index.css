@@ -17,6 +17,9 @@ html,
 body,
 #root {
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
@@ -82,6 +85,9 @@ input, textarea, select {
 }
 
 .flowi-bg {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 78% 4%, rgba(255, 255, 255, 0.96) 0 90px, transparent 92px),
     radial-gradient(circle at 14% 12%, rgba(232, 243, 255, 0.9), transparent 210px),
@@ -121,8 +127,11 @@ input, textarea, select {
 
 .phone-screen {
   position: relative;
+  width: 100%;
+  max-width: 100%;
   min-height: calc(100dvh - 7.8rem);
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-y: visible;
   touch-action: pan-y;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.28)),
@@ -153,7 +162,10 @@ input, textarea, select {
 }
 
 .home-scene {
+  isolation: isolate;
+  max-width: 100%;
   min-height: calc(100dvh - 7.8rem);
+  contain: layout paint;
   background:
     linear-gradient(180deg, rgba(238, 248, 255, 0.98) 0%, rgba(255, 255, 255, 0.96) 56%, rgba(231, 246, 218, 0.92) 100%);
 }
@@ -174,25 +186,28 @@ input, textarea, select {
 }
 
 .home-copy {
-  max-width: 18rem;
+  max-width: min(18rem, 100%);
 }
 
 .home-mascot-wrap {
-  margin: -1.1rem -0.7rem -0.8rem auto;
-  min-height: 19.2rem;
+  width: 100%;
+  max-width: 100%;
+  margin: -0.5rem 0 -0.6rem auto;
+  min-height: clamp(15.5rem, 58dvh, 19.2rem);
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
+  overflow: visible;
 }
 
 .home-mascot-free {
   position: relative;
   z-index: 2;
   display: block;
-  width: min(21rem, 92vw);
+  width: min(20rem, 82vw);
   aspect-ratio: 1122 / 1402;
   height: auto;
-  max-height: 21rem;
+  max-height: min(21rem, 56dvh);
   object-fit: contain;
   object-position: right bottom;
   filter: drop-shadow(0 1.4rem 1.1rem rgba(132, 96, 24, 0.18));
@@ -203,10 +218,11 @@ input, textarea, select {
 .home-scene::after {
   content: "";
   position: absolute;
-  left: -10%;
-  right: -10%;
+  left: 0;
+  right: 0;
   bottom: -2.4rem;
   height: 10rem;
+  transform: scaleX(1.18);
   border-radius: 50% 50% 0 0;
   background: linear-gradient(180deg, #cde8b8, #a9d28f);
   opacity: 0.72;
@@ -214,8 +230,10 @@ input, textarea, select {
 
 .home-scene::after {
   left: 36%;
+  right: 0;
   bottom: -3.3rem;
   height: 8.6rem;
+  transform: scaleX(1.05);
   background: linear-gradient(180deg, #d9efc4, #b7da98);
   opacity: 0.85;
 }
@@ -269,12 +287,12 @@ input, textarea, select {
 }
 
 .cloud-a {
-  right: -1.6rem;
+  right: -1rem;
   top: 4.7rem;
 }
 
 .cloud-b {
-  left: -2.9rem;
+  left: -2rem;
   top: 13.8rem;
   transform: scale(0.78);
   opacity: 0.72;
@@ -303,7 +321,7 @@ input, textarea, select {
 
 .speech-bubble {
   position: absolute;
-  right: 0.35rem;
+  right: 0;
   top: 1.2rem;
   z-index: 3;
   max-width: 7.2rem;
@@ -370,8 +388,10 @@ input, textarea, select {
 .drag-floating-card {
   position: fixed;
   z-index: 60;
+  max-width: calc(100vw - 1rem);
   pointer-events: none;
-  transform: rotate(-1.5deg) scale(1.03);
+  transform: rotate(-1deg) scale(1.01);
+  transform-origin: center;
   filter: drop-shadow(0 1.4rem 1.8rem rgba(44, 37, 105, .22));
   touch-action: none;
 }
@@ -542,6 +562,12 @@ input, textarea, select {
   width: 5.1rem;
   height: auto;
   border-radius: 1rem;
+}
+
+@media (max-width: 380px) {
+  .task-art.compact {
+    width: 4.35rem;
+  }
 }
 
 .task-art-wake { background-position: 0% 0%; }

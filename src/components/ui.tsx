@@ -14,7 +14,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="mt-2 text-lg font-bold leading-7 text-navy/62">Flowi werkt rustig en duidelijk als je tablet of telefoon rechtop staat.</p>
         </section>
       </div>
-      <main className="app-content mx-auto min-h-dvh w-full px-0 pb-32 pt-0 sm:max-w-5xl sm:px-6 sm:pt-6 lg:max-w-6xl">{children}</main>
+      <main className="app-content mx-auto min-h-dvh w-full max-w-full px-0 pb-32 pt-0 sm:max-w-5xl sm:px-6 sm:pt-6 lg:max-w-6xl">{children}</main>
       <BottomNav />
     </div>
   );
@@ -28,12 +28,12 @@ function BottomNav() {
     { to: "/parents", label: "Meer", icon: MoreHorizontal }
   ];
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/80 bg-white/90 px-3 py-2.5 shadow-[0_-14px_40px_rgba(62,59,130,.12)] backdrop-blur-2xl">
-      <div className="mx-auto grid max-w-lg grid-cols-4 gap-1.5 sm:max-w-4xl">
+    <nav className="fixed inset-x-0 bottom-0 z-30 w-full max-w-full overflow-hidden border-t border-white/80 bg-white/90 px-2 py-2.5 shadow-[0_-14px_40px_rgba(62,59,130,.12)] backdrop-blur-2xl sm:px-3">
+      <div className="mx-auto grid w-full max-w-lg grid-cols-4 gap-1.5 sm:max-w-4xl">
         {items.map((item) => (
-          <NavLink key={item.to} to={item.to} className={({ isActive }) => `flex min-h-16 flex-col items-center justify-center rounded-[1.45rem] text-sm font-black transition ${isActive ? "bg-gradient-to-b from-lilac/28 to-lavender/12 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.8)]" : "text-navy/55"}`}>
+          <NavLink key={item.to} to={item.to} className={({ isActive }) => `flex min-h-16 min-w-0 flex-col items-center justify-center rounded-[1.25rem] px-1 text-[0.8rem] font-black leading-tight transition sm:rounded-[1.45rem] sm:text-sm ${isActive ? "bg-gradient-to-b from-lilac/28 to-lavender/12 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.8)]" : "text-navy/55"}`}>
             <item.icon aria-hidden size={24} strokeWidth={2.5} />
-            {item.label}
+            <span className="truncate">{item.label}</span>
           </NavLink>
         ))}
       </div>
@@ -237,22 +237,22 @@ export function DayPartCard({ title, progress, to }: { title: string; icon: stri
 export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit, onDelete, editable = false, showDetails = true }: { task: Task; done: boolean; needsHelp?: boolean; onDone?: () => void; onHelp?: () => void; onEdit?: () => void; onDelete?: () => void; editable?: boolean; showDetails?: boolean }) {
   return (
     <article className={`rounded-[1.6rem] border p-4 shadow-card ring-1 ${done ? "border-mint/35 bg-gradient-to-b from-white to-mint/10 ring-mint/12" : needsHelp ? "border-lavender/30 bg-gradient-to-b from-white to-lavender/8 ring-lavender/12" : "border-white/85 bg-white/94 ring-lavender/8"}`}>
-      <div className="flex items-center gap-4">
-        {editable ? <span data-drag-handle className="drag-handle grid h-14 w-10 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Vasthouden en slepen om te verplaatsen">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+        {editable ? <span data-drag-handle className="drag-handle grid h-12 w-9 shrink-0 place-items-center rounded-xl bg-lavender/8 text-lavender sm:h-14 sm:w-10" aria-label="Vasthouden en slepen om te verplaatsen">
           <GripVertical size={22} />
         </span> : null}
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
-        <div className="flex-1">
-          <h3 className="text-xl font-black leading-tight">{task.title}</h3>
+        <div className="min-w-0 flex-1">
+          <h3 className="break-words text-lg font-black leading-tight sm:text-xl">{task.title}</h3>
           {showDetails ? (task.optionalTime ? <span className="text-sm font-bold text-lavender">{task.optionalTime}</span> : <span className="text-sm font-bold text-navy/45">Tijd optioneel</span>) : null}
         </div>
-        {onHelp ? <button aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-lilac/40 bg-white text-lavender">
+        {onHelp ? <button aria-label={`Hulp bij ${task.title}`} onClick={onHelp} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-lilac/40 bg-white text-lavender sm:h-14 sm:w-14">
           <HelpCircle size={27} />
         </button> : null}
-        {editable && onDelete ? <button aria-label={`${task.title} verwijderen`} onClick={onDelete} className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-coral/25 bg-coral/10 text-coral">
+        {editable && onDelete ? <button aria-label={`${task.title} verwijderen`} onClick={onDelete} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-coral/25 bg-coral/10 text-coral sm:h-14 sm:w-14">
           <Trash2 size={25} />
         </button> : null}
-        {!editable && onDone ? <button aria-label={`${task.title} afvinken`} onClick={onDone} className={`grid h-14 w-14 place-items-center rounded-2xl border-2 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
+        {!editable && onDone ? <button aria-label={`${task.title} afvinken`} onClick={onDone} className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 sm:h-14 sm:w-14 ${done ? "border-mint bg-mint text-white" : "border-lilac/40 bg-white text-lavender"}`}>
           <Check size={28} />
         </button> : null}
       </div>

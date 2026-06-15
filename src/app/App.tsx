@@ -544,12 +544,15 @@ function DaySettingsPartPage() {
   const [displayOrder, setDisplayOrder] = useState<string[]>([]);
   const [dragGhost, setDragGhost] = useState<{ x: number; y: number; width: number; height: number; offsetX: number; offsetY: number } | null>(null);
   const draggedTaskIdRef = useRef<string | null>(null);
-  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
-  const dragHoldTimerRef = useRef<number | null>(null);
   const dragReadyRef = useRef(false);
+  const displayOrderRef = useRef<string[]>([]);
   const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
   useEffect(() => {
-    if (!draggedTaskIdRef.current) setDisplayOrder(visibleTasks.map((task) => task.id));
+    if (!draggedTaskIdRef.current) {
+      const nextOrder = visibleTasks.map((task) => task.id);
+      displayOrderRef.current = nextOrder;
+      setDisplayOrder(nextOrder);
+    }
   }, [tasks]);
   const deleteTask = async (task: Task) => {
     await db.tasks.delete(task.id);
@@ -559,28 +562,20 @@ function DaySettingsPartPage() {
   const startReorder = (event: React.PointerEvent<HTMLDivElement>, taskId: string) => {
     const target = event.target as HTMLElement;
     if (!target.closest("[data-drag-handle]")) return;
+    event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
+    const initialOrder = visibleTasks.map((task) => task.id);
     draggedTaskIdRef.current = taskId;
-    dragStartRef.current = { x: event.clientX, y: event.clientY };
-    dragReadyRef.current = false;
-    setDisplayOrder(visibleTasks.map((task) => task.id));
-    if (dragHoldTimerRef.current) window.clearTimeout(dragHoldTimerRef.current);
-    dragHoldTimerRef.current = window.setTimeout(() => {
-      dragReadyRef.current = true;
-      setDraggedTaskId(taskId);
-      setDragGhost({ x: rect.left, y: rect.top, width: rect.width, height: rect.height, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top });
-    }, 260);
+    dragReadyRef.current = true;
+    displayOrderRef.current = initialOrder;
+    setDisplayOrder(initialOrder);
+    setDraggedTaskId(taskId);
+    setDragGhost({ x: rect.left, y: rect.top, width: rect.width, height: rect.height, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top });
     event.currentTarget.setPointerCapture?.(event.pointerId);
   };
   const updateReorder = (event: React.PointerEvent<HTMLDivElement>) => {
     const sourceTaskId = draggedTaskIdRef.current;
-    const start = dragStartRef.current;
-    if (!sourceTaskId || !start) return;
-    const movedBeforeHold = Math.abs(event.clientY - start.y) > 18 || Math.abs(event.clientX - start.x) > 18;
-    if (!dragReadyRef.current) {
-      if (movedBeforeHold) finishReorder();
-      return;
-    }
+    if (!sourceTaskId || !dragReadyRef.current) return;
     event.preventDefault();
     setDragGhost((ghost) => ghost ? { ...ghost, x: event.clientX - ghost.offsetX, y: event.clientY - ghost.offsetY } : ghost);
     const target = document.elementsFromPoint(event.clientX, event.clientY)
@@ -595,19 +590,15 @@ function DaySettingsPartPage() {
       if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return current;
       next.splice(fromIndex, 1);
       next.splice(toIndex, 0, sourceTaskId);
+      displayOrderRef.current = next;
       return next;
     });
   };
   const finishReorder = async () => {
-    if (dragHoldTimerRef.current) {
-      window.clearTimeout(dragHoldTimerRef.current);
-      dragHoldTimerRef.current = null;
-    }
     const sourceTaskId = draggedTaskIdRef.current;
-    const finalOrder = displayOrder.length ? displayOrder : visibleTasks.map((task) => task.id);
+    const finalOrder = displayOrderRef.current.length ? displayOrderRef.current : visibleTasks.map((task) => task.id);
     dragReadyRef.current = false;
     draggedTaskIdRef.current = null;
-    dragStartRef.current = null;
     setDraggedTaskId(null);
     setDragGhost(null);
     if (sourceTaskId && finalOrder.includes(sourceTaskId)) {
