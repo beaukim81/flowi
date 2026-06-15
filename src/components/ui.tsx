@@ -182,9 +182,9 @@ export function DayPartCard({ title, progress, to }: { title: string; icon: stri
   );
 }
 
-export function TaskCard({ task, done, onDone, onHelp, onEdit, editable = false, showDetails = true }: { task: Task; done: boolean; onDone: () => void; onHelp?: () => void; onEdit?: () => void; editable?: boolean; showDetails?: boolean }) {
+export function TaskCard({ task, done, needsHelp = false, onDone, onHelp, onEdit, editable = false, showDetails = true }: { task: Task; done: boolean; needsHelp?: boolean; onDone: () => void; onHelp?: () => void; onEdit?: () => void; editable?: boolean; showDetails?: boolean }) {
   return (
-    <article className={`rounded-[1.45rem] border p-4 shadow-card ring-1 ${done ? "border-mint/35 bg-gradient-to-b from-white to-mint/10 ring-mint/12" : "border-white/85 bg-white/94 ring-lavender/8"}`}>
+    <article className={`rounded-[1.45rem] border p-4 shadow-card ring-1 ${done ? "border-mint/35 bg-gradient-to-b from-white to-mint/10 ring-mint/12" : needsHelp ? "border-lavender/30 bg-gradient-to-b from-white to-lavender/8 ring-lavender/12" : "border-white/85 bg-white/94 ring-lavender/8"}`}>
       <div className="flex items-center gap-3">
         {editable ? <span className="grid h-10 w-8 place-items-center rounded-xl bg-lavender/8 text-lavender" aria-label="Sleep om te verplaatsen">
           <GripVertical size={18} />
@@ -205,6 +205,11 @@ export function TaskCard({ task, done, onDone, onHelp, onEdit, editable = false,
         <div className="mt-3 flex items-center gap-2 rounded-2xl bg-mint/10 px-3 py-2 text-xs font-black text-mint">
           <Sparkles size={15} />
           <span>Gelukt vandaag</span>
+        </div>
+      ) : needsHelp ? (
+        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-lavender/10 px-3 py-2 text-xs font-black text-lavender">
+          <Sparkles size={15} />
+          <span>Goed geprobeerd</span>
         </div>
       ) : null}
       {onEdit ? <div className="mt-3 flex gap-4">

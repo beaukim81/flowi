@@ -372,7 +372,7 @@ function ReflectionPage() {
   );
 }
 
-function HelpStartOverlay({ task, onClose }: { task: Task; onClose: () => void }) {
+function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose: () => void; onNeedsHelp?: (reason: HelpReason) => void }) {
   const navigate = useNavigate();
   const [reason, setReason] = useState<HelpReason | null>(null);
   const selectedHelp = reason ? helpReasons.find((item) => item.id === reason) : null;
@@ -393,7 +393,7 @@ function HelpStartOverlay({ task, onClose }: { task: Task; onClose: () => void }
             <button
               key={item.id}
               type="button"
-              onClick={() => setReason(item.id)}
+              onClick={() => { setReason(item.id); onNeedsHelp?.(item.id); }}
               className={`min-h-36 rounded-[1.35rem] p-2 text-center transition ${reason === item.id ? "bg-lavender text-white shadow-card" : "bg-gradient-to-b from-sky/12 via-white to-lavender/8 text-navy shadow-card"}`}
             >
               <AvatarMascot emotion={item.id} size="small" showCaption={false} />
@@ -451,13 +451,18 @@ function DayPartPage() {
     await reloadCompletions();
     await reload();
   };
+  const markNeedsHelp = async (task: Task, reason: HelpReason) => {
+    await db.taskCompletions.put({ id: `${task.id}-${today()}`, childProfileId: "default-child", taskId: task.id, date: today(), status: "needsHelp", completedAt: now(), moodBefore: reason, note: "Goed geprobeerd" });
+    await reloadCompletions();
+    await reload();
+  };
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle="Alleen afvinken wat klaar is." />
       <div className="grid gap-3">
         {visibleTasks.length ? visibleTasks.map((task) => (
-          <TaskCard key={task.id} task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} showDetails={false} />
+          <TaskCard key={task.id} task={task} done={completions.some((completion) => completion.taskId === task.id && completion.status === "done")} needsHelp={completions.some((completion) => completion.taskId === task.id && completion.status === "needsHelp")} onDone={() => complete(task)} onHelp={() => setHelpTask(task)} showDetails={false} />
         )) : (
           <div className="rounded-[1.5rem] bg-white/90 p-5 text-center shadow-card">
             <TaskArt title={dayParts[part]?.title ?? "Rust"} />
@@ -466,7 +471,7 @@ function DayPartPage() {
           </div>
         )}
       </div>
-      {helpTask ? <HelpStartOverlay task={helpTask} onClose={() => setHelpTask(null)} /> : null}
+      {helpTask ? <HelpStartOverlay task={helpTask} onClose={() => setHelpTask(null)} onNeedsHelp={(reason) => markNeedsHelp(helpTask, reason)} /> : null}
       </div>
     </>
   );
