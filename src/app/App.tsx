@@ -79,6 +79,18 @@ const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 const addGrowthReward = (label: string, reason: string) => db.rewards.add({ id: id(), childProfileId: "default-child", label, icon: "*", reason, earnedAt: now() });
 const clampTimerSeconds = (seconds: number) => Math.min(300, Math.max(60, Math.round(seconds / 60) * 60));
+const backupFileAccept = ".json,application/json,text/plain,application/octet-stream";
+const restoreBackupFile = async (file: File | undefined, setMessage: (message: string) => void) => {
+  if (!file) return;
+  if (!confirm("Hiermee vervang je de huidige gegevens op dit apparaat.")) return;
+  try {
+    await importBackup(JSON.parse(await file.text()));
+    setMessage("Backup teruggezet. Flowi herlaadt nu.");
+    window.setTimeout(() => location.reload(), 700);
+  } catch {
+    setMessage("Dit bestand kon Flowi niet lezen. Kies een Flowi-backupbestand.");
+  }
+};
 const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
 if (isLocalPreview && "serviceWorker" in navigator) {
@@ -645,10 +657,12 @@ function DaySettingsPage() {
   const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
   const { data: settings, reload: reloadSettings } = useLiveData(() => db.settings.get("app"), undefined, []);
   const weekPlanningEnabled = Boolean(settings?.weekPlanningEnabled);
+  const showStartChoice = settings ? !settings.onboardingSeen : false;
   const selectedWeekDay = isWeekDay(searchParams.get("weekDay")) ? searchParams.get("weekDay") as WeekDay : currentWeekDay();
+  const todayWeekDay = currentWeekDay();
   const planningWeekDay = weekPlanningEnabled ? selectedWeekDay : null;
   const setWeekPlanning = async (enabled: boolean) => {
-    await db.settings.update("app", { weekPlanningEnabled: enabled });
+    await db.settings.update("app", { weekPlanningEnabled: enabled, onboardingSeen: true });
     if (enabled) {
       setSearchParams({ weekDay: selectedWeekDay });
     } else {
@@ -660,6 +674,22 @@ function DaySettingsPage() {
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Dagindeling" subtitle="Voor ouders: routine instellen." />
+      {showStartChoice ? (
+        <section className="mb-4 rounded-[1.55rem] bg-gradient-to-b from-sky/18 via-white to-mint/12 p-4 shadow-soft">
+          <h2 className="text-xl font-black text-navy">Hoe wil je starten?</h2>
+          <p className="mt-1.5 text-base font-bold leading-6 text-navy/58">Kies wat het rustigst past. Je kunt dit later altijd aanpassen.</p>
+          <div className="mt-4 grid gap-2">
+            <button type="button" onClick={() => setWeekPlanning(false)} className="min-h-14 rounded-[1.3rem] bg-white px-4 text-left text-base font-black text-navy shadow-card">
+              Zelfde dagritme
+              <span className="block text-sm font-bold text-navy/48">Handig als de meeste dagen op elkaar lijken.</span>
+            </button>
+            <button type="button" onClick={() => setWeekPlanning(true)} className="min-h-14 rounded-[1.3rem] bg-lavender px-4 text-left text-base font-black text-white shadow-card">
+              Weekplanning
+              <span className="block text-sm font-bold text-white/78">Handig als maandag anders is dan woensdag of weekend.</span>
+            </button>
+          </div>
+        </section>
+      ) : null}
       <section className="mb-4 rounded-[1.45rem] bg-white/92 p-4 shadow-card ring-1 ring-lavender/10">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -681,10 +711,11 @@ function DaySettingsPage() {
                 key={day.id}
                 type="button"
                 onClick={() => setSearchParams({ weekDay: day.id })}
-                className={`min-h-11 rounded-2xl text-sm font-black ${selectedWeekDay === day.id ? "bg-gradient-to-b from-[#b69cff] to-[#7857df] text-white shadow-[0_10px_18px_rgba(120,87,223,.22)]" : "bg-lavender/10 text-navy/62"}`}
+                className={`min-h-11 rounded-2xl text-sm font-black ${selectedWeekDay === day.id ? "bg-gradient-to-b from-[#b69cff] to-[#7857df] text-white shadow-[0_10px_18px_rgba(120,87,223,.22)]" : todayWeekDay === day.id ? "bg-mint/18 text-navy ring-2 ring-mint/45" : "bg-lavender/10 text-navy/62"}`}
                 aria-label={day.label}
               >
-                {day.short}
+                <span className="block leading-4">{day.short}</span>
+                {todayWeekDay === day.id ? <span className="block text-[0.58rem] leading-3 opacity-80">nu</span> : null}
               </button>
             ))}
           </div>
@@ -1414,6 +1445,15 @@ function ParentsPage() {
   return (
     <>
       <PageHeader title="Voor ouders" subtitle="Alles blijft op dit apparaat bewaard." back={false} />
+      <section className="mb-4 rounded-[1.55rem] bg-gradient-to-b from-lavender/12 via-white to-sky/12 p-4 shadow-card">
+        <div className="flex items-center gap-3">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-lavender/12 text-lavender"><Database size={24} /></div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-black text-navy">Backup bewaren</h2>
+            <p className="text-sm font-bold leading-5 text-navy/52">Maak af en toe een backup, vooral na het instellen van routines.</p>
+          </div>
+        </div>
+      </section>
       <div className="grid gap-3">
         <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day-settings" />
         <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken zoeken en toevoegen." to="/task-library" />
@@ -1451,17 +1491,15 @@ function BackupPage() {
     setMessage("Backup gemaakt.");
   };
   const upload = async (file?: File) => {
-    if (!file || !confirm("Hiermee vervang je de huidige gegevens op dit apparaat.")) return;
-    await importBackup(JSON.parse(await file.text()));
-    setMessage("Backup teruggezet.");
+    await restoreBackupFile(file, setMessage);
   };
   return (
     <>
       <PageHeader title="Backup" subtitle="Bewaar je lokale gegevens." />
       <div className="grid gap-3 rounded-[1.6rem] bg-white p-4 shadow-soft">
         <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={18} />Backup maken</PrimaryButton>
-        <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={18} />Backup terugzetten<input type="file" accept="application/json" className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
-        <p className="text-sm font-bold text-navy/55">Alles blijft lokaal op dit apparaat. Maak af en toe een backup als je gegevens wilt bewaren.</p>
+        <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={18} />Backup terugzetten<input type="file" accept={backupFileAccept} className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
+        <p className="text-sm font-bold text-navy/55">Alles blijft lokaal op dit apparaat. Sla een backup uit WhatsApp eerst op bij Bestanden/Downloads en kies hem daarna hier.</p>
         {message ? <p className="font-black text-mint">{message}</p> : null}
       </div>
     </>
@@ -1487,9 +1525,7 @@ function AboutPage() {
     setMessage("Backup gemaakt.");
   };
   const upload = async (file?: File) => {
-    if (!file || !confirm("Hiermee vervang je de huidige gegevens op dit apparaat.")) return;
-    await importBackup(JSON.parse(await file.text()));
-    setMessage("Backup teruggezet.");
+    await restoreBackupFile(file, setMessage);
   };
   return (
     <>
@@ -1518,6 +1554,11 @@ function AboutPage() {
           <p className={`mt-1.5 ${bodyText}`}>De ouder stelt de dagindeling in. Het kind ziet daarna vooral wat er komt en kan taken afvinken of hulp vragen.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
+          <h3 className="text-xl font-black text-navy">Dagritme of weekplanning?</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Gebruik hetzelfde dagritme als de meeste dagen op elkaar lijken. Dat is vaak het rustigst.</p>
+          <p className={`mt-2 ${bodyText}`}>Zet weekplanning aan als dagen echt verschillen, bijvoorbeeld sport op dinsdag, BSO op donderdag of een ander weekendritme.</p>
+        </div>
+        <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
           <h3 className="text-xl font-black text-navy">Wie is Flowi?</h3>
           <p className={`mt-1.5 ${bodyText}`}>Flowi is zacht, geduldig en duidelijk. Hij helpt zonder te duwen, viert kleine stapjes en blijft rustig als iets niet meteen lukt.</p>
           <p className={`mt-2 ${bodyText}`}>Hij praat kort en vriendelijk. De meeste keuzes zijn visueel, zodat kinderen ook zonder veel lezen mee kunnen doen.</p>
@@ -1536,9 +1577,10 @@ function AboutPage() {
       <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
         <h2 className="text-2xl font-black text-navy">Gegevens en backup</h2>
         <p className={`mt-2 ${bodyText}`}>Flowi gebruikt geen account. Gegevens blijven op dit apparaat. Met een backup kun je ze later zelf terugzetten.</p>
+        <p className={`mt-2 ${bodyText}`}>Krijg je de backup via WhatsApp? Sla het bestand dan eerst op bij Bestanden of Downloads. Daarna kun je hem hier kiezen bij Backup terugzetten.</p>
         <div className="mt-4 grid gap-3">
           <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={20} />Backup maken</PrimaryButton>
-          <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={20} />Backup terugzetten<input type="file" accept="application/json" className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
+          <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={20} />Backup terugzetten<input type="file" accept={backupFileAccept} className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
           {message ? <p className="font-black text-mint">{message}</p> : null}
         </div>
       </section>
