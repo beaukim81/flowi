@@ -238,7 +238,7 @@ function HomePage() {
       <div className="leaf-float leaf-a" />
       <div className="leaf-float leaf-b" />
       <div className="home-content relative z-10">
-        <div className="flowi-logo mb-1">Flowi<span>\u2665</span></div>
+        <div className="flowi-logo mb-1">Flowi<span>{"\u2665"}</span></div>
         <div className="home-main-stage">
         <div className="home-mascot-wrap relative" aria-label="Flowi helpt jou">
           <img src="/assets/flowi-home-mascot.png" alt="" className="home-mascot-free" />
