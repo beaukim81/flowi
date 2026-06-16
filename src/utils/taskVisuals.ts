@@ -5,12 +5,125 @@ export type TaskVisualKey =
   | "drinkWater" | "snack" | "outsidePlay" | "moveBreak" | "homework" | "reading" | "creative" | "toysClean" | "roomClean" | "laundry" | "setTable" | "clearTable"
   | "dishwasher" | "waterPlants" | "petFood" | "sportsBag" | "agenda" | "weekPlan" | "screenOff" | "calmCard" | "breatheBed" | "dimLight" | "askHelp" | "wallPush"
   | "outsidePlayGiraffe" | "craftGiraffe" | "drinkCupKitchen" | "headphonesRest"
-  | "dinner" | "sports" | "swimming" | "musicLesson" | "playdate" | "toilet" | "bsoCare" | "sunscreen" | "bike" | "fruit" | "lunchPrep";
+  | "dinner" | "sports" | "swimming" | "musicLesson" | "playdate" | "toilet" | "bsoCare" | "sunscreen" | "bike" | "fruit" | "lunchPrep"
+  | "dogWalk" | "groceries" | "hairdresser" | "dentist" | "doctor" | "speechTherapy" | "physio" | "therapy" | "clothesShop" | "shoeShop" | "packagePickup" | "garage" | "parentAppointment" | "carRide" | "cityTrip" | "waitingRoom"
+  | "amusementPark" | "indoorPlay" | "trampolinePark" | "pool" | "fair" | "festival" | "mall" | "restaurant" | "cinema" | "bowling" | "arcade" | "playground" | "park" | "libraryActivity" | "museum" | "theaterShow"
+  | "friendVisit" | "playAtFriend" | "sleepover" | "birthdayParty" | "familyParty" | "grandparents" | "visitorsHome" | "familyVisit" | "babysitter" | "grandparentsAfterSchool" | "schoolTrip" | "studyDay" | "test" | "presentation" | "sportsDay" | "schoolParty"
+  | "momTime" | "dadTime" | "siblingTime" | "bonusParentTime" | "familyDinner" | "familyWalk" | "boardGame" | "readTogether" | "cookTogether" | "tidyTogether" | "toMom" | "toDad" | "gameTime" | "movieTogether" | "phoneTime" | "dance"
+  | "soccerOutside" | "basketballOutside" | "sidewalkChalk" | "bubbles" | "trampolineOutdoor" | "sandbox" | "waterPlay" | "hutBuild" | "natureSearch" | "sticksLeaves" | "scooter" | "skating" | "skateboard" | "bikeLoop" | "climbing" | "schoolyard"
+  | "scouting" | "singingLesson" | "pianoLesson" | "guitarLesson" | "drumLesson" | "drawingLesson" | "paintingLesson" | "craftClub" | "dramaLesson" | "chessClub" | "techClub" | "roboticsClub" | "legoClub" | "cookingClub" | "natureClub" | "faithActivity";
 
 const has = (text: string, words: string[]) => words.some((word) => text.includes(word));
 
 export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"): TaskVisualKey {
   const text = title.toLowerCase();
+
+  if (has(text, ["hond uitlaten"])) return "dogWalk";
+  if (has(text, ["boodschap"])) return "groceries";
+  if (has(text, ["kapper"])) return "hairdresser";
+  if (has(text, ["tandarts"])) return "dentist";
+  if (has(text, ["huisarts", "dokter"])) return "doctor";
+  if (has(text, ["logopedie"])) return "speechTherapy";
+  if (has(text, ["fysio"])) return "physio";
+  if (has(text, ["mee naar afspraak"])) return "parentAppointment";
+  if (has(text, ["therapie", "afspraak"])) return "therapy";
+  if (has(text, ["kleding kopen"])) return "clothesShop";
+  if (has(text, ["schoenen kopen"])) return "shoeShop";
+  if (has(text, ["pakketje"])) return "packagePickup";
+  if (has(text, ["garage"])) return "garage";
+  if (has(text, ["auto", "autorijden"])) return "carRide";
+  if (has(text, ["stad in"])) return "cityTrip";
+
+  if (has(text, ["pretpark"])) return "amusementPark";
+  if (has(text, ["binnenspeeltuin"])) return "indoorPlay";
+  if (has(text, ["trampolinepark"])) return "trampolinePark";
+  if (has(text, ["zwembad"])) return "pool";
+  if (has(text, ["kermis"])) return "fair";
+  if (has(text, ["festival"])) return "festival";
+  if (has(text, ["winkelcentrum"])) return "mall";
+  if (has(text, ["restaurant"])) return "restaurant";
+  if (has(text, ["bioscoop"])) return "cinema";
+  if (has(text, ["bowling"])) return "bowling";
+  if (has(text, ["arcade", "speelhal"])) return "arcade";
+  if (has(text, ["speeltuin"])) return "playground";
+  if (has(text, ["naar park"])) return "park";
+  if (has(text, ["bibliotheekactiviteit"])) return "libraryActivity";
+
+  if (has(text, ["vriendje komt", "vriendje spelen thuis"])) return "friendVisit";
+  if (has(text, ["bij vriendje"])) return "playAtFriend";
+  if (has(text, ["logeren"])) return "sleepover";
+  if (has(text, ["kinderfeestje", "verjaardag"])) return "birthdayParty";
+  if (has(text, ["familiefeest"])) return "familyParty";
+  if (has(text, ["bij opa/oma na school"])) return "grandparentsAfterSchool";
+  if (has(text, ["opa", "oma"])) return "grandparents";
+  if (has(text, ["bezoek krijgen"])) return "visitorsHome";
+  if (has(text, ["op bezoek", "familiebezoek", "neef", "nicht", "buren"])) return "familyVisit";
+  if (has(text, ["gastouder", "oppas"])) return "babysitter";
+  if (has(text, ["schoolreisje"])) return "schoolTrip";
+  if (has(text, ["studiedag"])) return "studyDay";
+  if (has(text, ["toets"])) return "test";
+  if (has(text, ["spreekbeurt"])) return "presentation";
+  if (has(text, ["sportdag"])) return "sportsDay";
+  if (has(text, ["schoolfeest", "rapport"])) return "schoolParty";
+
+  if (has(text, ["tijd met mama"])) return "momTime";
+  if (has(text, ["tijd met papa"])) return "dadTime";
+  if (has(text, ["broer", "zus"])) return "siblingTime";
+  if (has(text, ["bonusouder"])) return "bonusParentTime";
+  if (has(text, ["samen eten"])) return "familyDinner";
+  if (has(text, ["samen wandelen"])) return "familyWalk";
+  if (has(text, ["spelletje"])) return "boardGame";
+  if (has(text, ["samen lezen"])) return "readTogether";
+  if (has(text, ["samen koken"])) return "cookTogether";
+  if (has(text, ["samen opruimen"])) return "tidyTogether";
+  if (has(text, ["naar mama"])) return "toMom";
+  if (has(text, ["naar papa"])) return "toDad";
+  if (has(text, ["game tijd"])) return "gameTime";
+  if (has(text, ["film kijken", "tv kijken"])) return "movieTogether";
+  if (has(text, ["telefoon tijd", "schermtijd"])) return "phoneTime";
+  if (has(text, ["dansen"])) return "dance";
+
+  if (has(text, ["voetballen buiten"])) return "soccerOutside";
+  if (has(text, ["basketballen buiten"])) return "basketballOutside";
+  if (has(text, ["stoepkrijt"])) return "sidewalkChalk";
+  if (has(text, ["bellenblaas"])) return "bubbles";
+  if (has(text, ["trampoline"])) return "trampolineOutdoor";
+  if (has(text, ["zandbak"])) return "sandbox";
+  if (has(text, ["water spelen"])) return "waterPlay";
+  if (has(text, ["hut bouwen"])) return "hutBuild";
+  if (has(text, ["natuur zoeken"])) return "natureSearch";
+  if (has(text, ["takken", "bladeren"])) return "sticksLeaves";
+  if (has(text, ["steppen"])) return "scooter";
+  if (has(text, ["skaten", "skeeleren", "schaatsen"])) return "skating";
+  if (has(text, ["skateboard", "surfskaten"])) return "skateboard";
+  if (has(text, ["rondje fietsen", "mountainbiken"])) return "bikeLoop";
+  if (has(text, ["klimmen", "boulderen"])) return "climbing";
+  if (has(text, ["schoolplein"])) return "schoolyard";
+
+  if (has(text, ["scouting"])) return "scouting";
+  if (has(text, ["zangles", "kinderkoor"])) return "singingLesson";
+  if (has(text, ["pianoles"])) return "pianoLesson";
+  if (has(text, ["gitaarles"])) return "guitarLesson";
+  if (has(text, ["drumles"])) return "drumLesson";
+  if (has(text, ["tekenles"])) return "drawingLesson";
+  if (has(text, ["schilderles"])) return "paintingLesson";
+  if (has(text, ["knutselclub"])) return "craftClub";
+  if (has(text, ["theaterles", "toneelclub"])) return "dramaLesson";
+  if (has(text, ["schaakclub"])) return "chessClub";
+  if (has(text, ["techniekclub"])) return "techClub";
+  if (has(text, ["programmeerclub", "robotica"])) return "roboticsClub";
+  if (has(text, ["lego"])) return "legoClub";
+  if (has(text, ["kookclub"])) return "cookingClub";
+  if (has(text, ["natuurclub"])) return "natureClub";
+  if (has(text, ["geloofsactiviteit", "kerk", "moskee", "tempel"])) return "faithActivity";
+  if (has(text, ["leesclub"])) return "readTogether";
+  if (has(text, ["jeugdclub"])) return "friendVisit";
+  if (has(text, ["dansles"])) return "dance";
+  if (has(text, ["wandelen"])) return "familyWalk";
+
+  if (has(text, ["judo", "karate", "taekwondo", "krav maga", "kickboksen", "boksen", "aikido", "jiujitsu", "zelfverdediging"])) return "sports";
+  if (has(text, ["tennis", "badminton", "tafeltennis", "hockey", "handbal", "volleybal", "korfbal", "rugby", "honkbal", "softbal", "waterpolo"])) return "sports";
+  if (has(text, ["atletiek", "hardlopen", "turnen", "gymnastiek", "dans", "ballet", "streetdance", "hiphop", "freerunning", "paardrijden", "ski"])) return "sports";
 
   if (has(text, ["bed opmaken"])) return "makeBed";
   if (has(text, ["gordijn"])) return "curtains";

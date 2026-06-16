@@ -728,7 +728,7 @@ function DaySettingsPage() {
           return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}${weekDayQuery(planningWeekDay)}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Handmatige taak</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Handmatige taak</SecondaryButton></div>
       </div>
     </>
   );
@@ -858,7 +858,7 @@ function DaySettingsPartPage() {
           <TaskCard task={draggedTask} done={false} onEdit={() => navigate(`/tasks/${draggedTask.id}/edit`)} onDelete={() => deleteTask(draggedTask)} editable />
         </div>
       ) : null}
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Handmatige taak</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Handmatige taak</SecondaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       </div>
     </>

@@ -1467,6 +1467,244 @@ input, textarea, select {
   aspect-ratio: 1 / 1;
 }
 
+.task-art-dogWalk,
+.task-art-groceries,
+.task-art-hairdresser,
+.task-art-dentist,
+.task-art-doctor,
+.task-art-speechTherapy,
+.task-art-physio,
+.task-art-therapy,
+.task-art-clothesShop,
+.task-art-shoeShop,
+.task-art-packagePickup,
+.task-art-garage,
+.task-art-parentAppointment,
+.task-art-carRide,
+.task-art-cityTrip,
+.task-art-waitingRoom {
+  background-image: url("/assets/flowi-library-errands.jpg");
+  background-size: 400% 400%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-amusementPark,
+.task-art-indoorPlay,
+.task-art-trampolinePark,
+.task-art-pool,
+.task-art-fair,
+.task-art-festival,
+.task-art-mall,
+.task-art-restaurant,
+.task-art-cinema,
+.task-art-bowling,
+.task-art-arcade,
+.task-art-playground,
+.task-art-park,
+.task-art-libraryActivity,
+.task-art-museum,
+.task-art-theaterShow {
+  background-image: url("/assets/flowi-library-outings.jpg");
+  background-size: 400% 400%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-friendVisit,
+.task-art-playAtFriend,
+.task-art-sleepover,
+.task-art-birthdayParty,
+.task-art-familyParty,
+.task-art-grandparents,
+.task-art-visitorsHome,
+.task-art-familyVisit,
+.task-art-babysitter,
+.task-art-grandparentsAfterSchool,
+.task-art-schoolTrip,
+.task-art-studyDay,
+.task-art-test,
+.task-art-presentation,
+.task-art-sportsDay,
+.task-art-schoolParty {
+  background-image: url("/assets/flowi-library-social-school.jpg");
+  background-size: 400% 400%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-momTime,
+.task-art-dadTime,
+.task-art-siblingTime,
+.task-art-bonusParentTime,
+.task-art-familyDinner,
+.task-art-familyWalk,
+.task-art-boardGame,
+.task-art-readTogether,
+.task-art-cookTogether,
+.task-art-tidyTogether,
+.task-art-toMom,
+.task-art-toDad,
+.task-art-gameTime,
+.task-art-movieTogether,
+.task-art-phoneTime,
+.task-art-dance {
+  background-image: url("/assets/flowi-library-family-screen.jpg");
+  background-size: 400% 400%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-soccerOutside,
+.task-art-basketballOutside,
+.task-art-sidewalkChalk,
+.task-art-bubbles,
+.task-art-trampolineOutdoor,
+.task-art-sandbox,
+.task-art-waterPlay,
+.task-art-hutBuild,
+.task-art-natureSearch,
+.task-art-sticksLeaves,
+.task-art-scooter,
+.task-art-skating,
+.task-art-skateboard,
+.task-art-bikeLoop,
+.task-art-climbing,
+.task-art-schoolyard {
+  background-image: url("/assets/flowi-library-outdoor.jpg");
+  background-size: 400% 400%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-scouting,
+.task-art-singingLesson,
+.task-art-pianoLesson,
+.task-art-guitarLesson,
+.task-art-drumLesson,
+.task-art-drawingLesson,
+.task-art-paintingLesson,
+.task-art-craftClub,
+.task-art-dramaLesson,
+.task-art-chessClub,
+.task-art-techClub,
+.task-art-roboticsClub,
+.task-art-legoClub,
+.task-art-cookingClub,
+.task-art-natureClub,
+.task-art-faithActivity {
+  background-image: url("/assets/flowi-library-clubs.jpg");
+  background-size: 400% 400%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-dogWalk,
+.task-art-amusementPark,
+.task-art-friendVisit,
+.task-art-momTime,
+.task-art-soccerOutside,
+.task-art-scouting { background-position: 0% 0%; }
+
+.task-art-groceries,
+.task-art-indoorPlay,
+.task-art-playAtFriend,
+.task-art-dadTime,
+.task-art-basketballOutside,
+.task-art-singingLesson { background-position: 33.333% 0%; }
+
+.task-art-hairdresser,
+.task-art-trampolinePark,
+.task-art-sleepover,
+.task-art-siblingTime,
+.task-art-sidewalkChalk,
+.task-art-pianoLesson { background-position: 66.666% 0%; }
+
+.task-art-dentist,
+.task-art-pool,
+.task-art-birthdayParty,
+.task-art-bonusParentTime,
+.task-art-bubbles,
+.task-art-guitarLesson { background-position: 100% 0%; }
+
+.task-art-doctor,
+.task-art-fair,
+.task-art-familyParty,
+.task-art-familyDinner,
+.task-art-trampolineOutdoor,
+.task-art-drumLesson { background-position: 0% 33.333%; }
+
+.task-art-speechTherapy,
+.task-art-festival,
+.task-art-grandparents,
+.task-art-familyWalk,
+.task-art-sandbox,
+.task-art-drawingLesson { background-position: 33.333% 33.333%; }
+
+.task-art-physio,
+.task-art-mall,
+.task-art-visitorsHome,
+.task-art-boardGame,
+.task-art-waterPlay,
+.task-art-paintingLesson { background-position: 66.666% 33.333%; }
+
+.task-art-therapy,
+.task-art-restaurant,
+.task-art-familyVisit,
+.task-art-readTogether,
+.task-art-hutBuild,
+.task-art-craftClub { background-position: 100% 33.333%; }
+
+.task-art-clothesShop,
+.task-art-cinema,
+.task-art-babysitter,
+.task-art-cookTogether,
+.task-art-natureSearch,
+.task-art-dramaLesson { background-position: 0% 66.666%; }
+
+.task-art-shoeShop,
+.task-art-bowling,
+.task-art-grandparentsAfterSchool,
+.task-art-tidyTogether,
+.task-art-sticksLeaves,
+.task-art-chessClub { background-position: 33.333% 66.666%; }
+
+.task-art-packagePickup,
+.task-art-arcade,
+.task-art-schoolTrip,
+.task-art-toMom,
+.task-art-scooter,
+.task-art-techClub { background-position: 66.666% 66.666%; }
+
+.task-art-garage,
+.task-art-playground,
+.task-art-studyDay,
+.task-art-toDad,
+.task-art-skating,
+.task-art-roboticsClub { background-position: 100% 66.666%; }
+
+.task-art-parentAppointment,
+.task-art-park,
+.task-art-test,
+.task-art-gameTime,
+.task-art-skateboard,
+.task-art-legoClub { background-position: 0% 100%; }
+
+.task-art-carRide,
+.task-art-libraryActivity,
+.task-art-presentation,
+.task-art-movieTogether,
+.task-art-bikeLoop,
+.task-art-cookingClub { background-position: 33.333% 100%; }
+
+.task-art-cityTrip,
+.task-art-museum,
+.task-art-sportsDay,
+.task-art-phoneTime,
+.task-art-climbing,
+.task-art-natureClub { background-position: 66.666% 100%; }
+
+.task-art-waitingRoom,
+.task-art-theaterShow,
+.task-art-schoolParty,
+.task-art-dance,
+.task-art-schoolyard,
+.task-art-faithActivity { background-position: 100% 100%; }
+
 .flowi-mascot-image {
   display: block;
   aspect-ratio: 3 / 4;
