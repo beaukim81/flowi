@@ -18,11 +18,11 @@ import { AppShell, AvatarMascot, ChildTaskCard, DayPartCard, EmotionCard, Exerci
 import type { TaskVisualKey } from "../utils/taskVisuals";
 
 const dayParts: Record<DayPart, { title: string; icon: string }> = {
-  ochtend: { title: "Ochtend", icon: "☀️" },
-  naSchool: { title: "Na school", icon: "🎒" },
-  avond: { title: "Avond", icon: "🌙" },
-  bedtijd: { title: "Bedtijd", icon: "🛌" },
-  vrij: { title: "Vrij", icon: "⭐" }
+  ochtend: { title: "Ochtend", icon: "\u2600\uFE0F" },
+  naSchool: { title: "Na school", icon: "\uD83C\uDF92" },
+  avond: { title: "Avond", icon: "\uD83C\uDF19" },
+  bedtijd: { title: "Bedtijd", icon: "\uD83D\uDECC" },
+  vrij: { title: "Vrij", icon: "\u2B50" }
 };
 
 const isDayPart = (value: string | null): value is DayPart => Boolean(value && value in dayParts);
@@ -30,10 +30,10 @@ const safeReturnPath = (value: string | null) => value?.startsWith("/") ? value 
 const shortExerciseTitle = (title: string) => ({
   "Ruik bloem, blaas kaars": "Bloem & kaars",
   "Maak je lijf zwaar": "Lijf zwaar",
-  "Kijk naar één ding": "Kijk naar 1 ding",
+  "Kijk naar \u00E9\u00E9n ding": "Kijk naar 1 ding",
   "5 dingen zien": "5 dingen",
   "Schud je armen los": "Armen los",
-  "Maak één kleine keuze": "Kleine keuze",
+  "Maak \u00E9\u00E9n kleine keuze": "Kleine keuze",
   "Hulpzin oefenen": "Hulpzin",
   "Maak je gezicht zacht": "Gezicht zacht",
   "Robot en lappenpop": "Robot/lappenpop",
@@ -63,6 +63,7 @@ const shortTaskTitle = (title: string) => ({
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
+const addGrowthReward = (label: string, reason: string) => db.rewards.add({ id: id(), childProfileId: "default-child", label, icon: "*", reason, earnedAt: now() });
 const clampTimerSeconds = (seconds: number) => Math.min(300, Math.max(60, Math.round(seconds / 60) * 60));
 const updateSW = registerSW({
   immediate: true,
@@ -219,6 +220,15 @@ function emotionForNeed(need: NeedType): EmotionType {
   return map[need];
 }
 
+function helpNowNeedForTitle(title: string): NeedType {
+  const normalized = title.toLowerCase();
+  if (normalized.includes("rustige") || normalized.includes("rustig plekje")) return "rustigePlek";
+  if (normalized.includes("adem")) return "ademen";
+  if (normalized.includes("hulp") || normalized.includes("stop")) return "praatMetOuder";
+  if (normalized.includes("zachts") || normalized.includes("knuffel")) return "knuffel";
+  return "rustigePlek";
+}
+
 function HomePage() {
   const navigate = useNavigate();
   return (
@@ -228,11 +238,10 @@ function HomePage() {
       <div className="leaf-float leaf-a" />
       <div className="leaf-float leaf-b" />
       <div className="home-content relative z-10">
-        <div className="flowi-logo mb-1">Flowi<span>♥</span></div>
+        <div className="flowi-logo mb-1">Flowi<span>\u2665</span></div>
         <div className="home-main-stage">
         <div className="home-mascot-wrap relative" aria-label="Flowi helpt jou">
           <img src="/assets/flowi-home-mascot.png" alt="" className="home-mascot-free" />
-          <div className="speech-bubble">Ik help jou.<br /><span>♥</span></div>
         </div>
         <div className="home-visual-actions" aria-label="Kies wat je wilt doen">
           <button type="button" onClick={() => navigate("/check-in")} className="home-visual-card home-visual-feel" aria-label="Wat voel je?">
@@ -421,7 +430,7 @@ function HelpNowPage() {
   const fast = ["Ga naar je rustige plek", "Adem zacht", "Zeg: stop, ik heb hulp nodig", "Pak iets zachts"].map((title) => calmStrategies.find((strategy) => strategy.title === title)).filter(Boolean) as CalmStrategy[];
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Help mij nu" subtitle="Kies één rustig stapje." />
+      <PageHeader title="Help mij nu" subtitle="Kies \u00E9\u00E9n rustig stapje." />
       <section className="relative mb-4 overflow-hidden rounded-[1.9rem] bg-gradient-to-b from-sky/18 via-white to-mint/14 p-5 shadow-soft">
         <div className="cloud cloud-a" />
         <div className="relative z-10 grid grid-cols-[1fr_auto] items-end gap-2">
@@ -429,17 +438,17 @@ function HelpNowPage() {
             <h2 className="text-2xl font-black text-navy">Flowi blijft bij je</h2>
             <p className="mt-2 text-sm font-bold leading-6 text-navy/58">Je hoeft niet alles tegelijk. Kies wat nu kan.</p>
           </div>
-          <AvatarMascot emotion="rustig" size="medium" />
+          <span className="help-now-hero-art" aria-hidden />
         </div>
       </section>
       <div className="grid grid-cols-2 gap-3">
         {fast.map((strategy) => (
-          <button key={strategy.id} onClick={() => navigate(`/action/${strategy.id}`)} className="help-choice-card flowi-picture-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30">
-            <span className="flowi-picture-art">
-              <ExerciseArt title={strategy.title} />
-            </span>
-            <span className="flowi-picture-label">{shortExerciseTitle(strategy.title)}</span>
-          </button>
+          <NeedCard
+            key={strategy.id}
+            need={{ id: helpNowNeedForTitle(strategy.title), label: strategy.title, icon: "" }}
+            label={shortExerciseTitle(strategy.title)}
+            onClick={() => navigate(`/action/${strategy.id}`)}
+          />
         ))}
       </div>
       <button onClick={() => navigate("/need")} className="mt-4 min-h-12 w-full rounded-[1.35rem] bg-gradient-to-b from-[#ffb58b] to-[#ff7f74] px-5 font-extrabold text-white shadow-[0_14px_24px_rgba(255,127,116,.24)]">Iets anders kiezen</button>
@@ -453,34 +462,26 @@ function ReflectionPage() {
   const [note, setNote] = useState("");
   const save = async (rating: string) => {
     await db.emotionHistory.add({ id: id(), childProfileId: "default-child", emotionType: selectedEmotion, needType: selectedNeed, actionId: selectedActionId, helpedRating: rating, note, createdAt: now() });
-    await db.rewards.add({ id: id(), childProfileId: "default-child", label: "Goed geprobeerd", icon: "💜", reason: "reflectie ingevuld", earnedAt: now() });
+    await db.rewards.add({ id: id(), childProfileId: "default-child", label: "Goed geprobeerd", icon: "\uD83D\uDC9C", reason: "reflectie ingevuld", earnedAt: now() });
     navigate("/rewards");
   };
   const reflectionChoices: { label: string; sublabel: string; emotion: EmotionType }[] = [
     { label: "Rustiger", sublabel: "Mijn lijf voelt zachter", emotion: "rustig" },
-    { label: "Beetje beter", sublabel: "Het hielp een beetje", emotion: "superDruk" },
-    { label: "Nog niet", sublabel: "Ik heb nog hulp nodig", emotion: "inDeWar" },
+    { label: "Beetje beter", sublabel: "Het hielp een beetje", emotion: "blij" },
+    { label: "Nog niet", sublabel: "Ik heb nog hulp nodig", emotion: "spannend" },
     { label: "Moeilijker", sublabel: "Dit paste nu niet", emotion: "verdrietig" }
   ];
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
         <PageHeader title="Wat hielp jou?" subtitle="Kies wat nu het beste past." />
-        <section className="mb-4 rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-mint/12 p-4 text-center shadow-soft">
-          <AvatarMascot emotion="rustig" size="medium" showCaption={false} />
-          <p className="mx-auto mt-3 max-w-xs text-sm font-bold leading-6 text-navy/58">Flowi wil weten of dit stapje jou hielp.</p>
-        </section>
         <div className="grid grid-cols-2 gap-3">
           {reflectionChoices.map((choice) => (
-            <button
+            <EmotionCard
               key={choice.label}
+              emotion={{ id: choice.emotion, label: choice.label, shortText: choice.sublabel, colors: "", marks: "reflectie" }}
               onClick={() => save(choice.label)}
-              className="min-h-44 rounded-[1.55rem] border border-white/90 bg-white/94 p-3 text-center shadow-card transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30"
-            >
-              <AvatarMascot emotion={choice.emotion} size="small" showCaption={false} />
-              <span className="mt-2 block text-lg font-black text-navy">{choice.label}</span>
-              <span className="mt-1 block text-xs font-bold leading-5 text-navy/48">{choice.sublabel}</span>
-            </button>
+            />
           ))}
         </div>
       </div>
@@ -492,7 +493,7 @@ function ReflectionPage() {
       <PageHeader title="Wat hielp jou?" />
       <div className="grid gap-3">
         {["Het voelde mij rustiger", "Het werd een beetje beter", "Nog niet", "Het werd moeilijker"].map((rating, index) => (
-          <button key={rating} onClick={() => save(rating)} className="flex items-center gap-3 rounded-[1.4rem] bg-white p-4 text-left font-black shadow-card"><span className="text-3xl">{["🙂", "😊", "😐", "🙁"][index]}</span>{rating}</button>
+          <button key={rating} onClick={() => save(rating)} className="flex items-center gap-3 rounded-[1.4rem] bg-white p-4 text-left font-black shadow-card"><span className="text-3xl">{["\uD83D\uDE42", "\uD83D\uDE0A", "\uD83D\uDE10", "\uD83D\uDE41"][index]}</span>{rating}</button>
         ))}
         <label className="rounded-[1.4rem] bg-white p-4 shadow-card">
           <span className="font-black">Iets anders? Vertel het.</span>
@@ -518,19 +519,15 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
             <h2 className="font-black text-navy">Wat lukt er niet?</h2>
             <p className="text-sm font-bold text-navy/55">Eerste mini-stap: {task.steps[0] ?? "Begin klein."}</p>
           </div>
-          <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 font-black text-lavender" aria-label="Sluiten">×</button>
+          <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 font-black text-lavender" aria-label="Sluiten">{"\u00D7"}</button>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3">
           {helpReasons.map((item) => (
-            <button
+            <EmotionCard
               key={item.id}
-              type="button"
+              emotion={{ id: item.id, label: item.label, shortText: "", colors: "", marks: "question" }}
               onClick={() => { setReason(item.id); onNeedsHelp?.(item.id); }}
-              className={`min-h-36 rounded-[1.35rem] p-2 text-center transition ${reason === item.id ? "bg-lavender text-white shadow-card" : "bg-gradient-to-b from-sky/12 via-white to-lavender/8 text-navy shadow-card"}`}
-            >
-              <AvatarMascot emotion={item.id} size="small" showCaption={false} />
-              <span className="mt-1 block text-sm font-black">{item.label}</span>
-            </button>
+            />
           ))}
         </div>
         {selectedHelp && strategy ? (
@@ -541,12 +538,10 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
               Doe: {strategy.title}
             </button>
             <ul className="mt-3 grid gap-1.5 text-left">
-              {selectedHelp.tips.map((tip) => <li key={tip} className="text-sm font-bold leading-5 text-navy/60">• {tip}</li>)}
+              {selectedHelp.tips.map((tip) => <li key={tip} className="text-sm font-bold leading-5 text-navy/60">{"\u2022"} {tip}</li>)}
             </ul>
           </div>
-        ) : (
-          <p className="mt-3 text-center text-xs font-bold text-navy/45">Kies wat lastig voelt. Dan helpt Flowi verder.</p>
-        )}
+        ) : null}
       </section>
     </div>
   );
@@ -720,7 +715,7 @@ function DaySettingsPartPage() {
       <PageHeader title={`${dayParts[part]?.title ?? "Dag"} instellen`} subtitle="Voor ouders: aanpassen en slepen." backTo="/day-settings" />
       <section className="reorder-help-card mb-4 flex items-center gap-3 rounded-[1.45rem] bg-white/92 p-3 shadow-card ring-1 ring-lavender/10">
         <div className="drag-handle-preview flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[1.1rem] bg-gradient-to-b from-lilac/34 to-lavender/16 text-lavender">
-          <span className="text-2xl leading-none">⋮⋮</span>
+          <span className="text-2xl leading-none">{"\u22EE\u22EE"}</span>
           <span className="text-[0.62rem] font-black leading-none">Sleep</span>
         </div>
         <p className="min-w-0 text-base font-black leading-6 text-navy/68">Pak de paarse sleepknop vast en schuif de taak omhoog of omlaag.</p>
@@ -765,7 +760,7 @@ function TaskFormPage() {
   const editing = Boolean(taskId);
   const { data: existing } = useLiveData(() => taskId ? db.tasks.get(taskId) : Promise.resolve(undefined), undefined as Task | undefined, [taskId]);
   const [title, setTitle] = useState("");
-  const [icon, setIcon] = useState("⭐");
+  const [icon, setIcon] = useState("\u2B50");
   const [visualKey, setVisualKey] = useState<TaskVisualKey | "">("");
   const [showVisualBank, setShowVisualBank] = useState(false);
   const [dayPart, setDayPart] = useState<DayPart>(isDayPart(requestedDayPart) ? requestedDayPart : "ochtend");
@@ -982,22 +977,29 @@ function TaskLibraryPage() {
 function RewardsPage() {
   const { data: rewards } = useLiveData(() => db.rewards.orderBy("earnedAt").reverse().toArray(), [], []);
   const growthRewards = rewards.filter((reward) => reward.label !== "Ik maakte het af");
-  const todaysRewards = growthRewards.filter((reward) => reward.earnedAt.slice(0, 10) === today());
   const weekStart = startOfWeek();
-  const weekRewards = growthRewards.filter((reward) => reward.earnedAt.slice(0, 10) >= weekStart);
-  const dailyWaterLimit = 2;
-  const waterDrops = Object.values(weekRewards.reduce<Record<string, number>>((days, reward) => {
+  const weekRewards = growthRewards
+    .filter((reward) => reward.earnedAt.slice(0, 10) >= weekStart)
+    .sort((a, b) => a.earnedAt.localeCompare(b.earnedAt));
+  const dailyGrowthLimit = 4;
+  const countedPerDay: Record<string, number> = {};
+  const weekGrowthMoments = weekRewards.filter((reward) => {
     const date = reward.earnedAt.slice(0, 10);
-    days[date] = Math.min(dailyWaterLimit, (days[date] ?? 0) + 1);
-    return days;
-  }, {})).reduce((total, count) => total + count, 0);
-  const todaysWaterDrops = Math.min(dailyWaterLimit, todaysRewards.length);
-  const sunshineMoments = Math.max(0, weekRewards.length - waterDrops);
+    const count = countedPerDay[date] ?? 0;
+    if (count >= dailyGrowthLimit) return false;
+    countedPerDay[date] = count + 1;
+    return true;
+  });
+  const todaysRewards = weekGrowthMoments.filter((reward) => reward.earnedAt.slice(0, 10) === today());
+  const dailyWaterLimit = dailyGrowthLimit;
+  const todaysWaterDrops = todaysRewards.filter((_, index) => index % 2 === 0).length;
+  const waterDrops = weekGrowthMoments.filter((_, index) => index % 2 === 0).length;
+  const sunshineMoments = weekGrowthMoments.filter((_, index) => index % 2 === 1).length;
   const treeStages = ["Zaadje", "Sprietje", "Plantje", "Boompje", "Rustboom"];
-  const stageIndex = Math.min(treeStages.length - 1, Math.floor(waterDrops / 2));
+  const stageIndex = Math.min(treeStages.length - 1, weekGrowthMoments.length === 0 ? 0 : Math.ceil(weekGrowthMoments.length / 2));
   const weeklyGoal = 8;
-  const progress = Math.min(100, (waterDrops / weeklyGoal) * 100);
-  const weekMoments = Array.from({ length: weeklyGoal }, (_, index) => index < waterDrops);
+  const progress = Math.min(100, (weekGrowthMoments.length / weeklyGoal) * 100);
+  const weekMoments = Array.from({ length: weeklyGoal }, (_, index) => index < weekGrowthMoments.length);
   const flowiPhrases = [
     "Elke week kan Flowi's boom groeien.",
     "Proberen telt. Ook als het nog lastig voelt.",
@@ -1005,10 +1007,9 @@ function RewardsPage() {
     "Alles wat je probeert telt mee.",
     "Flowi ziet dat je oefent."
   ];
-  const phrase = flowiPhrases[waterDrops % flowiPhrases.length];
-  const hasWaterToday = todaysWaterDrops > 0;
-  const todaysSunshine = Math.max(0, todaysRewards.length - todaysWaterDrops);
-  const careMode = todaysSunshine > 0 ? "sun" : hasWaterToday ? "water" : "rest";
+  const phrase = flowiPhrases[weekGrowthMoments.length % flowiPhrases.length];
+  const latestGrowthIndex = weekGrowthMoments.length - 1;
+  const careMode = latestGrowthIndex < 0 ? "rest" : latestGrowthIndex % 2 === 0 ? "water" : "sun";
   return (
     <div className="phone-screen growth-garden px-4 pb-5 pt-4">
       <PageHeader title="Mijn groei" subtitle="Flowi's rustboom." back={false} />
@@ -1024,6 +1025,7 @@ function RewardsPage() {
         <div className="growth-care-stage relative z-10 mt-5" aria-label="Flowi verzorgt de rustboom">
           <div className="growth-care-sun" aria-hidden />
           <div className="growth-sun-string" aria-hidden />
+          <div className="growth-sun-handle" aria-hidden />
           <div className="growth-care-drops" aria-hidden><span /><span /><span /></div>
           <div className="growth-care-flowi" aria-hidden>
             <img src="/assets/flowi-home-mascot.png" alt="" className="growth-flowi-character" />
@@ -1081,12 +1083,12 @@ function RewardsPage() {
 
       <section className="mt-4 grid grid-cols-2 gap-3">
         <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
-          <div className="text-3xl">💧</div>
+          <div className="text-3xl">{"\uD83D\uDCA7"}</div>
           <p className="mt-2 text-sm font-black text-navy">{todaysWaterDrops} van {dailyWaterLimit}</p>
           <p className="text-xs font-bold text-navy/48">water vandaag</p>
         </div>
         <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
-          <div className="text-3xl">☀️</div>
+          <div className="text-3xl">{"\u2600\uFE0F"}</div>
           <p className="mt-2 text-sm font-black text-navy">{sunshineMoments}</p>
           <p className="text-xs font-bold text-navy/48">zonnestraaltjes</p>
         </div>
@@ -1139,6 +1141,7 @@ function RewardsPage() {
 }
 
 function PracticePage() {
+  const navigate = useNavigate();
   const { data: exercises } = useLiveData(() => db.practiceExercises.toArray(), [], []);
   const [category, setCategory] = useState("Alles");
   const [activeExercise, setActiveExercise] = useState<PracticeExercise | null>(null);
@@ -1147,6 +1150,7 @@ function PracticePage() {
   const [remaining, setRemaining] = useState(90);
   const [running, setRunning] = useState(false);
   const [timerEnabled, setTimerEnabled] = useState(false);
+  const [completedExerciseId, setCompletedExerciseId] = useState<string | null>(null);
   const categories = ["Alles", ...Array.from(new Set(exercises.map((exercise) => exercise.category))).sort()];
   const visibleExercises = exercises
     .filter((exercise) => category === "Alles" || exercise.category === category)
@@ -1160,15 +1164,22 @@ function PracticePage() {
     setRounds(1);
     setRunning(false);
     setTimerEnabled(false);
+    setCompletedExerciseId(null);
   }, [activeExercise]);
+
+  const completeExercise = async (exercise: PracticeExercise | null) => {
+    if (!exercise || completedExerciseId === exercise.id) return;
+    setCompletedExerciseId(exercise.id);
+    await addGrowthReward(exercise.rewardLabel ?? "Ik oefende", exercise.title);
+    await db.practiceProgress.add({ id: id(), exerciseId: exercise.id, completedAt: now() });
+    navigate("/rewards");
+  };
 
   useEffect(() => {
     if (!running) return;
     if (remaining <= 0) {
       setRunning(false);
-      if (activeExercise) {
-        db.rewards.add({ id: id(), childProfileId: "default-child", label: activeExercise.rewardLabel ?? "Ik oefende", icon: "⭐", reason: activeExercise.title, earnedAt: now() });
-      }
+      void completeExercise(activeExercise);
       return;
     }
     const timer = window.setTimeout(() => setRemaining((value) => Math.max(0, value - 1)), 1000);
@@ -1239,10 +1250,7 @@ function PracticePage() {
             <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start</>}</PrimaryButton>
           </div>
         ) : (
-          <PrimaryButton className="mt-4 w-full" onClick={async () => {
-            await db.rewards.add({ id: id(), childProfileId: "default-child", label: activeExercise.rewardLabel ?? "Ik oefende", icon: "â­", reason: activeExercise.title, earnedAt: now() });
-            setActiveExercise(null);
-          }}>Klaar</PrimaryButton>
+          <PrimaryButton className="mt-4 w-full" onClick={() => void completeExercise(activeExercise)}>Klaar</PrimaryButton>
         )}
         <button className="mt-4 w-full text-center text-sm font-black text-lavender" onClick={() => setActiveExercise(null)}>Terug naar oefeningen</button>
       </div>
@@ -1477,3 +1485,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <Bootstrap />
   </React.StrictMode>
 );
+

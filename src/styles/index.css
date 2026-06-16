@@ -477,19 +477,19 @@ input, textarea, select {
 }
 
 .home-visual-feel .home-visual-art {
-  background-image: url("/assets/flowi-home-feeling.jpg?v=home-cards-20260615");
+  background-image: url("/assets/flowi-home-feeling.jpg?v=home-cards-vivid-20260615");
 }
 
 .home-visual-day .home-visual-art {
-  background-image: url("/assets/flowi-home-day.jpg?v=home-cards-20260615");
+  background-image: url("/assets/flowi-home-day.jpg?v=home-cards-vivid-20260615");
 }
 
 .home-visual-help .home-visual-art {
-  background-image: url("/assets/flowi-home-help.jpg?v=home-cards-20260615");
+  background-image: url("/assets/flowi-home-help.jpg?v=home-cards-vivid-20260615");
   background-position: center 40%;
 }
 
-@media (max-height: 700px) {
+@media (max-height: 760px) {
   .home-scene {
     height: calc(100dvh - 5.25rem);
     padding-top: 0.85rem !important;
@@ -1033,6 +1033,35 @@ input, textarea, select {
   -webkit-overflow-scrolling: touch;
 }
 
+.help-now-hero-art {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(9.25rem, 34vw);
+  aspect-ratio: 1 / 1;
+  border-radius: 1.45rem;
+  background-image: url("/assets/emotions/flowi-emotion-rustig.jpg?v=emotion-square-20260615");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: 0 12px 24px rgba(72, 63, 137, 0.1), inset 0 1px 0 rgba(255,255,255,.82);
+}
+
+.help-start-panel .emotion-card {
+  min-height: 12.6rem;
+  grid-template-rows: minmax(9.25rem, 1fr) auto;
+  padding: .65rem;
+}
+
+.help-start-panel .emotion-picture-art {
+  min-height: 9.25rem;
+}
+
+.help-start-panel .emotion-label {
+  min-height: 2.7rem;
+  font-size: .95rem;
+}
+
 @media (min-width: 640px) {
   .help-start-overlay {
     padding-bottom: 1.25rem;
@@ -1085,12 +1114,12 @@ input, textarea, select {
 }
 
 .task-art {
-  background-image: url("/assets/flowi-emotion-sheet.png");
+  background-image: url("/assets/flowi-emotion-sheet.jpg");
   background-size: 400% 200%;
 }
 
 .need-art {
-  background-image: url("/assets/flowi-need-sheet.png");
+  background-image: url("/assets/flowi-need-sheet.jpg");
   background-repeat: no-repeat;
   background-size: 400% 200%;
 }
@@ -1103,7 +1132,7 @@ input, textarea, select {
   margin-inline: auto;
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 1.35rem;
-  background-image: url("/assets/flowi-exercise-sheet.png");
+  background-image: url("/assets/flowi-exercise-sheet.jpg");
   background-repeat: no-repeat;
   background-size: 400% 300%;
   box-shadow:
@@ -1231,7 +1260,7 @@ input, textarea, select {
   margin-inline: auto;
   overflow: hidden;
   border-radius: 1.25rem;
-  background-image: url("/assets/flowi-task-core-sheet.png");
+  background-image: url("/assets/flowi-task-core-sheet.jpg");
   background-size: 400% 300%;
 }
 
@@ -1272,7 +1301,7 @@ input, textarea, select {
 .task-art-coatHang,
 .task-art-shoesOff,
 .task-art-unpackBag {
-  background-image: url("/assets/flowi-task-sheet.png");
+  background-image: url("/assets/flowi-task-sheet.jpg");
 }
 
 .task-art-drinkWater,
@@ -1287,7 +1316,7 @@ input, textarea, select {
 .task-art-laundry,
 .task-art-setTable,
 .task-art-clearTable {
-  background-image: url("/assets/flowi-action-sheet-1.png");
+  background-image: url("/assets/flowi-action-sheet-1.jpg");
 }
 
 .task-art-dishwasher,
@@ -1302,7 +1331,7 @@ input, textarea, select {
 .task-art-dimLight,
 .task-art-askHelp,
 .task-art-wallPush {
-  background-image: url("/assets/flowi-action-sheet-2.png");
+  background-image: url("/assets/flowi-action-sheet-2.jpg");
   aspect-ratio: 15 / 16;
 }
 
@@ -1310,7 +1339,7 @@ input, textarea, select {
 .task-art-craftGiraffe,
 .task-art-drinkCupKitchen,
 .task-art-headphonesRest {
-  background-image: url("/assets/flowi-task-specific-sheet.png");
+  background-image: url("/assets/flowi-task-specific-sheet.jpg");
   background-size: 200% 200%;
   aspect-ratio: 1 / 1;
 }
@@ -1332,7 +1361,7 @@ input, textarea, select {
 .task-art-fruit,
 .task-art-lunchPrep,
 .task-art-sportsBag {
-  background-image: url("/assets/flowi-routine-sheet-1.png");
+  background-image: url("/assets/flowi-routine-sheet-1.jpg");
   background-size: 400% 300%;
   aspect-ratio: 1 / 1;
 }
@@ -1428,7 +1457,7 @@ input, textarea, select {
 .task-art-coatHang { background-position: 100% 100%; }
 
 .task-art-bsoCare {
-  background-image: url("/assets/flowi-bso-care.png");
+  background-image: url("/assets/flowi-bso-care.jpg");
   background-size: cover;
   background-position: center;
   aspect-ratio: 1 / 1;
@@ -2080,6 +2109,10 @@ input, textarea, select {
 
 .growth-care-stage {
   min-height: 19.5rem;
+  --tree-x: min(15.5rem, 66vw);
+  --flowi-water-x: min(4.6rem, 15vw);
+  --flowi-sun-x: min(8.7rem, 31vw);
+  --sun-x: min(17.2rem, 72vw);
   border-radius: 0;
   background:
     radial-gradient(circle at 72% 12%, rgba(255,255,255,.78), transparent 5rem),
@@ -2093,10 +2126,10 @@ input, textarea, select {
   left: -.2rem;
   bottom: -.8rem;
   z-index: 4;
-  width: min(12.6rem, 50vw);
+  width: min(12.25rem, 48vw);
   transform: translate3d(0, 0, 0) rotate(0deg);
   transform-origin: bottom left;
-  animation: flowi-water-body 4.2s ease-in-out infinite;
+  animation: flowi-water-film 5.2s ease-in-out infinite;
 }
 
 .growth-care-flowi::after {
@@ -2124,8 +2157,8 @@ input, textarea, select {
 
 .growth-watering-can {
   position: absolute;
-  right: -1.15rem;
-  top: 44%;
+  right: -1.85rem;
+  top: 42%;
   z-index: 6;
   width: 3.3rem;
   height: 2rem;
@@ -2134,9 +2167,9 @@ input, textarea, select {
   box-shadow:
     inset .28rem .24rem 0 rgba(255,255,255,.42),
     0 .55rem 1rem rgba(72, 63, 137, .12);
-  transform: rotate(-18deg);
+  transform: rotate(-14deg);
   transform-origin: 20% 80%;
-  animation: flowi-water-can 4.2s ease-in-out infinite;
+  animation: flowi-water-can 5.2s ease-in-out infinite;
 }
 
 .growth-watering-can::before {
@@ -2166,16 +2199,16 @@ input, textarea, select {
 
 .growth-care-tree {
   position: absolute;
-  right: 1.45rem;
+  right: .95rem;
   bottom: 1.1rem;
   z-index: 3;
-  transform: scale(1.75);
+  transform: scale(1.8);
   transform-origin: bottom right;
 }
 
 .growth-care-sun {
   position: absolute;
-  right: 1.45rem;
+  left: var(--sun-x);
   top: .6rem;
   width: 4rem;
   height: 4rem;
@@ -2194,7 +2227,7 @@ input, textarea, select {
 
 .growth-sun-string {
   position: absolute;
-  right: 3.3rem;
+  left: calc(var(--sun-x) + 1.92rem);
   top: 4.35rem;
   z-index: 2;
   width: .16rem;
@@ -2217,14 +2250,31 @@ input, textarea, select {
   box-shadow: 0 .35rem .8rem rgba(72, 63, 137, .12);
 }
 
+.growth-sun-handle {
+  position: absolute;
+  left: calc(var(--sun-x) + 1.52rem);
+  top: 11.3rem;
+  z-index: 6;
+  width: 1rem;
+  height: 1rem;
+  border: .16rem solid rgba(255,255,255,.88);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #b69cff, #7857df);
+  box-shadow: 0 .45rem .9rem rgba(72, 63, 137, .16);
+}
+
 .growth-focus-sun .growth-sun-string {
-  animation: pull-sun-string 3.8s ease-in-out infinite;
+  animation: pull-sun-string 4.6s ease-in-out infinite;
+}
+
+.growth-focus-sun .growth-sun-handle {
+  animation: pull-sun-handle 4.6s ease-in-out infinite;
 }
 
 .growth-care-drops {
   position: absolute;
-  left: min(13.4rem, 51vw);
-  top: 10.4rem;
+  left: calc(var(--tree-x) - 2.4rem);
+  top: 10.1rem;
   z-index: 5;
   display: flex;
   gap: .55rem;
@@ -2252,15 +2302,15 @@ input, textarea, select {
 .growth-focus-water .growth-care-drops,
 .growth-focus-sun .growth-care-drops {
   opacity: 1;
-  animation: water-drops-fall 2.1s ease-in-out infinite;
+  animation: water-drops-fall 2.45s ease-in-out infinite;
 }
 
 .growth-focus-sun .growth-care-flowi {
-  animation: flowi-walk-to-lamp 5.2s ease-in-out infinite;
+  animation: flowi-sun-film 5.8s ease-in-out infinite;
 }
 
 .growth-focus-sun .growth-flowi-character {
-  animation: flowi-little-steps 5.2s ease-in-out infinite;
+  animation: flowi-little-steps 5.8s ease-in-out infinite;
 }
 
 .growth-focus-sun .growth-watering-can,
@@ -2275,29 +2325,35 @@ input, textarea, select {
   animation: none;
 }
 
+.growth-focus-water .growth-sun-handle,
+.growth-focus-rest .growth-sun-handle {
+  opacity: .55;
+}
+
 .growth-focus-rest .growth-care-flowi {
   animation: tiny-bounce 3.4s ease-in-out infinite;
 }
 
-@keyframes flowi-water-body {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
-  24% { transform: translate3d(.18rem, 0, 0) rotate(-.8deg); }
-  48%, 68% { transform: translate3d(.55rem, .08rem, 0) rotate(4deg); }
-  82% { transform: translate3d(.22rem, -.04rem, 0) rotate(-.6deg); }
+@keyframes flowi-water-film {
+  0%, 100% { transform: translate3d(.1rem, 0, 0) rotate(0deg); }
+  16% { transform: translate3d(calc(var(--flowi-water-x) * .38), -.06rem, 0) rotate(-1.2deg); }
+  30% { transform: translate3d(calc(var(--flowi-water-x) * .72), .03rem, 0) rotate(1deg); }
+  44%, 70% { transform: translate3d(var(--flowi-water-x), .08rem, 0) rotate(3.5deg); }
+  84% { transform: translate3d(calc(var(--flowi-water-x) * .46), -.04rem, 0) rotate(-.8deg); }
 }
 
 @keyframes flowi-water-can {
-  0%, 100% { transform: rotate(-12deg) translate(0, 0); }
-  28% { transform: rotate(-18deg) translate(.05rem, 0); }
-  48%, 68% { transform: rotate(-44deg) translate(.35rem, .18rem); }
-  82% { transform: rotate(-18deg) translate(.05rem, 0); }
+  0%, 100% { transform: rotate(-10deg) translate(0, 0); opacity: 1; }
+  30% { transform: rotate(-18deg) translate(.08rem, 0); }
+  44%, 70% { transform: rotate(-52deg) translate(.62rem, .28rem); }
+  84% { transform: rotate(-18deg) translate(.08rem, 0); }
 }
 
 @keyframes water-drops-fall {
-  0%, 26% { transform: translate(-.35rem, -.65rem) rotate(-18deg); opacity: 0; }
-  34% { opacity: 1; }
-  76% { opacity: 1; }
-  100% { transform: translate(1.1rem, 2.15rem) rotate(-18deg); opacity: 0; }
+  0%, 34% { transform: translate(-1.1rem, -.9rem) rotate(-18deg); opacity: 0; }
+  43% { opacity: 1; }
+  78% { opacity: 1; }
+  100% { transform: translate(.9rem, 2.55rem) rotate(-18deg); opacity: 0; }
 }
 
 @keyframes growth-sunshine {
@@ -2317,23 +2373,29 @@ input, textarea, select {
 
 @keyframes pull-sun-string {
   0%, 100% { transform: rotate(0deg) translateY(0); }
-  36% { transform: rotate(-4deg) translateY(.65rem); }
-  58% { transform: rotate(3deg) translateY(.25rem); }
+  42%, 58% { transform: rotate(-3deg) translateY(1.1rem); }
+  72% { transform: rotate(3deg) translateY(.25rem); }
 }
 
-@keyframes flowi-walk-to-lamp {
-  0%, 100% { transform: translate3d(-.25rem, 0, 0) rotate(0deg); }
-  18% { transform: translate3d(1.2rem, -.08rem, 0) rotate(-1deg); }
-  36% { transform: translate3d(2.6rem, 0, 0) rotate(1deg); }
-  54%, 70% { transform: translate3d(3.4rem, 0, 0) rotate(-2deg); }
-  86% { transform: translate3d(1.35rem, -.04rem, 0) rotate(.6deg); }
+@keyframes pull-sun-handle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  42%, 58% { transform: translateY(1.1rem) scale(.94); }
+  72% { transform: translateY(.25rem) scale(1.03); }
+}
+
+@keyframes flowi-sun-film {
+  0%, 100% { transform: translate3d(-.2rem, 0, 0) rotate(0deg); }
+  18% { transform: translate3d(calc(var(--flowi-sun-x) * .38), -.08rem, 0) rotate(-1.4deg); }
+  34% { transform: translate3d(calc(var(--flowi-sun-x) * .74), 0, 0) rotate(1.2deg); }
+  46%, 70% { transform: translate3d(var(--flowi-sun-x), 0, 0) rotate(-2.6deg); }
+  78% { transform: translate3d(calc(var(--flowi-sun-x) * .42), -.04rem, 0) rotate(.8deg); }
 }
 
 @keyframes flowi-little-steps {
   0%, 100% { transform: scaleX(-1) rotate(0deg); }
   18% { transform: scaleX(-1) rotate(-1.6deg); }
   36% { transform: scaleX(-1) rotate(1.4deg); }
-  54%, 70% { transform: scaleX(-1) rotate(-.6deg); }
+  46%, 63% { transform: scaleX(-1) rotate(-3deg); }
 }
 
 .week-seed {
