@@ -2472,6 +2472,15 @@ input, textarea, select {
   transform-origin: center bottom;
 }
 
+.about-flowi-image {
+  display: block;
+  width: 6.4rem;
+  height: auto;
+  align-self: end;
+  filter: drop-shadow(0 .95rem 1rem rgba(132, 96, 24, .16));
+  pointer-events: none;
+}
+
 .growth-watering-can {
   position: absolute;
   right: -1.85rem;

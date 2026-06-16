@@ -247,8 +247,9 @@ export function ExerciseArt({ title, compact = false }: { title: string; compact
   return <span className={`exercise-art exercise-art-${exerciseVisualKey(title)} ${compact ? "compact" : ""}`} aria-hidden />;
 }
 
-export function DayPartCard({ title, progress, to }: { title: string; icon: string; progress: number; to: string }) {
-  const dayPartVisual = title === "Ochtend" ? "wake" : title === "Na school" ? "school" : title === "Avond" ? "pajamas" : title === "Bedtijd" ? "sleep" : "rest";
+export function DayPartCard({ title, progress, to, visualTitle }: { title: string; icon: string; progress: number; to: string; visualTitle?: string }) {
+  const visualLabel = visualTitle ?? title;
+  const dayPartVisual = visualLabel === "Ochtend" ? "wake" : visualLabel === "Na school" || visualLabel === "Middag" ? "school" : visualLabel === "Avond" ? "pajamas" : visualLabel === "Bedtijd" ? "sleep" : "rest";
   return (
     <NavLink to={to} className="flex min-h-28 items-center gap-4 rounded-[1.55rem] border border-white/85 bg-white/92 p-4 shadow-card ring-1 ring-lavender/8">
       <TaskArt title={title} visualKey={dayPartVisual as TaskVisualKey} />

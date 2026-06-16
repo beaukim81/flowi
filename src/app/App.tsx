@@ -39,6 +39,9 @@ const weekDays: { id: WeekDay; label: string; short: string }[] = [
 const isWeekDay = (value: string | null): value is WeekDay => Boolean(value && weekDays.some((day) => day.id === value));
 const currentWeekDay = (): WeekDay => weekDays[((new Date().getDay() || 7) - 1)].id;
 const weekDayLabel = (day: WeekDay) => weekDays.find((item) => item.id === day)?.label ?? "Vandaag";
+const isWeekendWeekDay = (day: WeekDay | null) => day === "zaterdag" || day === "zondag";
+const dayPartTitle = (part: DayPart, weekDay: WeekDay | null = null) =>
+  part === "naSchool" && isWeekendWeekDay(weekDay) ? "Middag" : dayParts[part].title;
 const taskRunsOnDay = (task: Task, weekDay: WeekDay | null) => !weekDay || !task.weekDays?.length || task.weekDays.includes(weekDay);
 const weekDayQuery = (weekDay: WeekDay | null) => weekDay ? `?weekDay=${weekDay}` : "";
 const normalizeTaskTitle = (value: string) =>
@@ -632,7 +635,7 @@ function DayPage() {
         {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
           const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled && taskRunsOnDay(task, activeWeekDay));
           const done = partTasks.filter((task) => completions.some((completion) => completion.taskId === task.id && completion.status === "done")).length;
-          return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day/${part}${weekDayQuery(activeWeekDay)}`} />;
+          return <DayPartCard key={part} title={dayPartTitle(part, activeWeekDay)} visualTitle={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day/${part}${weekDayQuery(activeWeekDay)}`} />;
         })}
       </div>
       </div>
@@ -668,7 +671,7 @@ function DayPartPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle={activeWeekDay ? weekDayLabel(activeWeekDay) : "Kies wat gelukt is. Lukt iets niet? Flowi helpt."} backTo="/day" />
+      <PageHeader title={dayPartTitle(part, activeWeekDay)} subtitle={activeWeekDay ? weekDayLabel(activeWeekDay) : "Kies wat gelukt is. Lukt iets niet? Flowi helpt."} backTo="/day" />
       <div className="grid gap-3">
         {visibleTasks.length ? visibleTasks.map((task) => {
           const completion = completions.find((item) => item.taskId === task.id);
@@ -764,10 +767,10 @@ function DaySettingsPage() {
         {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
           const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled && taskRunsOnDay(task, planningWeekDay));
           const done = partTasks.filter((task) => completions.some((completion) => completion.taskId === task.id && completion.status === "done")).length;
-          return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}${weekDayQuery(planningWeekDay)}`} />;
+          return <DayPartCard key={part} title={dayPartTitle(part, planningWeekDay)} visualTitle={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}${weekDayQuery(planningWeekDay)}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Handmatige taak</SecondaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Zelf taak maken</SecondaryButton></div>
       </div>
     </>
   );
@@ -865,7 +868,7 @@ function DaySettingsPartPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={`${dayParts[part]?.title ?? "Dag"} instellen`} subtitle={planningWeekDay ? weekDayLabel(planningWeekDay) : "Voor ouders: aanpassen en slepen."} backTo={`/day-settings${weekDayQuery(planningWeekDay)}`} />
+      <PageHeader title={`${dayPartTitle(part, planningWeekDay)} instellen`} subtitle={planningWeekDay ? weekDayLabel(planningWeekDay) : "Voor ouders: aanpassen en slepen."} backTo={`/day-settings${weekDayQuery(planningWeekDay)}`} />
       <section className="reorder-help-card mb-4 flex items-center gap-3 rounded-[1.45rem] bg-white/92 p-3 shadow-card ring-1 ring-lavender/10">
         <div className="drag-handle-preview flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[1.1rem] bg-gradient-to-b from-lilac/34 to-lavender/16 text-lavender">
           <span className="text-2xl leading-none">{"\u22EE\u22EE"}</span>
@@ -897,7 +900,7 @@ function DaySettingsPartPage() {
           <TaskCard task={draggedTask} done={false} onEdit={() => navigate(`/tasks/${draggedTask.id}/edit`)} onDelete={() => deleteTask(draggedTask)} editable />
         </div>
       ) : null}
-      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Handmatige taak</SecondaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Zelf taak maken</SecondaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       </div>
     </>
@@ -1586,7 +1589,7 @@ function AboutPage() {
             <h2 className="text-3xl font-black text-navy">Waarom Flowi?</h2>
             <p className={`mt-2 ${bodyText}`}>Een rustige hulp voor jonge kinderen die snel vol zitten, vastlopen of extra structuur nodig hebben.</p>
           </div>
-          <AvatarMascot emotion="rustig" size="small" showCaption={false} />
+          <img src="/assets/flowi-home-mascot.png" alt="" className="about-flowi-image" />
         </div>
       </section>
 
