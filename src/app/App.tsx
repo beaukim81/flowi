@@ -1552,7 +1552,7 @@ function BackupPage() {
       <div className="grid gap-3 rounded-[1.6rem] bg-white p-4 shadow-soft">
         <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={18} />Backup maken</PrimaryButton>
         <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={18} />Backup terugzetten<input type="file" accept={backupFileAccept} className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
-        <p className="text-sm font-bold text-navy/55">Alles blijft lokaal op dit apparaat. Sla een backup uit WhatsApp eerst op bij Bestanden/Downloads en kies hem daarna hier.</p>
+        <p className="text-sm font-bold text-navy/55">Alles blijft lokaal op dit apparaat.</p>
         {message ? <p className="font-black text-mint">{message}</p> : null}
       </div>
     </>
@@ -1630,7 +1630,6 @@ function AboutPage() {
       <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
         <h2 className="text-2xl font-black text-navy">Gegevens en backup</h2>
         <p className={`mt-2 ${bodyText}`}>Flowi gebruikt geen account. Gegevens blijven op dit apparaat. Met een backup kun je ze later zelf terugzetten.</p>
-        <p className={`mt-2 ${bodyText}`}>Krijg je de backup via WhatsApp? Sla het bestand dan eerst op bij Bestanden of Downloads. Daarna kun je hem hier kiezen bij Backup terugzetten.</p>
         <div className="mt-4 grid gap-3">
           <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={20} />Backup maken</PrimaryButton>
           <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={20} />Backup terugzetten<input type="file" accept={backupFileAccept} className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
