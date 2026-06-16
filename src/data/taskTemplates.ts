@@ -277,6 +277,7 @@ const blockedTemplateTitles = new Set([
   "Game tijd",
   "Telefoon tijd",
   "Theaterles",
+  "Dansen",
   "Robotica",
   "Lego-club",
   "Judo",
@@ -289,9 +290,7 @@ const blockedTemplateTitles = new Set([
   "Jiujitsu",
   "Dans",
   "Hiphop",
-  "Basketbal",
-  "Voetbal",
-  "Voetballen buiten"
+  "Voetbal"
 ]);
 
 const titleOverrides = new Map([

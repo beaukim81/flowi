@@ -11,7 +11,7 @@ export type TaskVisualKey =
   | "friendVisit" | "playAtFriend" | "sleepover" | "birthdayParty" | "familyParty" | "grandparents" | "visitorsHome" | "familyVisit" | "babysitter" | "grandparentsAfterSchool" | "schoolTrip" | "studyDay" | "test" | "presentation" | "sportsDay" | "schoolParty"
   | "momTime" | "dadTime" | "siblingTime" | "bonusParentTime" | "familyDinner" | "familyWalk" | "boardGame" | "readTogether" | "cookTogether" | "tidyTogether" | "toMom" | "toDad" | "gameTime" | "movieTogether" | "phoneTime" | "dance"
   | "soccerOutside" | "basketballOutside" | "sidewalkChalk" | "bubbles" | "trampolineOutdoor" | "sandbox" | "waterPlay" | "hutBuild" | "natureSearch" | "sticksLeaves" | "scooter" | "skating" | "skateboard" | "bikeLoop" | "climbing" | "schoolyard"
-  | "scouting" | "singingLesson" | "pianoLesson" | "guitarLesson" | "drumLesson" | "drawingLesson" | "paintingLesson" | "craftClub" | "dramaLesson" | "chessClub" | "techClub" | "roboticsClub" | "legoClub" | "cookingClub" | "natureClub" | "faithActivity";
+  | "scouting" | "singingLesson" | "pianoLesson" | "guitarLesson" | "drumLesson" | "drawingLesson" | "paintingLesson" | "craftClub" | "dramaLesson" | "chessClub" | "techClub" | "roboticsClub" | "legoClub" | "cookingClub" | "natureClub" | "faithActivity"
   | "volleyball" | "handball" | "fieldHockey" | "tennisSport" | "tableTennis" | "badmintonSport" | "athletics" | "gymnastics" | "balletSport" | "streetdanceSport" | "freerunningSport" | "skiingSport" | "horseRiding" | "waterPoloSport" | "rugbySport" | "korfballSport" | "baseballSport" | "selfDefenseSport"
   | "soccerSport" | "basketballSport" | "readingClub" | "youthClub";
 
