@@ -45,7 +45,8 @@ export async function seedDatabase() {
     onboardingSeen: false,
     timeOptionalEnabled: true,
     rewardsEnabled: true,
-    backupReminderEnabled: true
+    backupReminderEnabled: true,
+    weekPlanningEnabled: false
   };
 
   const defaultTasks: Task[] = [

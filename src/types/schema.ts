@@ -17,6 +17,7 @@ export type EmotionType =
   | "wilHulp";
 export type NeedType = "knuffel" | "rustigePlek" | "bewegen" | "evenAlleen" | "praatMetOuder" | "ademen" | "koptelefoon" | "creatief";
 export type DayPart = "ochtend" | "naSchool" | "avond" | "bedtijd" | "vrij";
+export type WeekDay = "maandag" | "dinsdag" | "woensdag" | "donderdag" | "vrijdag" | "zaterdag" | "zondag";
 export type RepeatPattern = "elkeDag" | "weekdagen" | "weekend" | "aangepast";
 export type CompletionStatus = "done" | "skipped" | "needsHelp" | "tooHard";
 
@@ -54,6 +55,7 @@ export interface Settings {
   timeOptionalEnabled: boolean;
   rewardsEnabled: boolean;
   backupReminderEnabled: boolean;
+  weekPlanningEnabled?: boolean;
   lastBackupAt?: string;
 }
 
@@ -110,6 +112,7 @@ export interface Task {
   sortOrder: number;
   steps: string[];
   repeatPattern: RepeatPattern;
+  weekDays?: WeekDay[];
   optionalTime?: string;
   estimatedMinutes?: number;
   rewardEnabled: boolean;

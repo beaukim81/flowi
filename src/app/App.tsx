@@ -13,7 +13,7 @@ import { seedDatabase } from "../db/seed";
 import { useLiveData } from "../hooks/useLiveData";
 import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
-import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Task, TaskTemplate } from "../types/schema";
+import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Task, TaskTemplate, WeekDay } from "../types/schema";
 import { AppShell, AvatarMascot, ChildTaskCard, DayPartCard, EmotionCard, ExerciseArt, icons, NeedCard, PageHeader, ParentCard, PrimaryButton, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
 import type { TaskVisualKey } from "../utils/taskVisuals";
 
@@ -27,6 +27,20 @@ const dayParts: Record<DayPart, { title: string; icon: string }> = {
 
 const isDayPart = (value: string | null): value is DayPart => Boolean(value && value in dayParts);
 const safeReturnPath = (value: string | null) => value?.startsWith("/") ? value : null;
+const weekDays: { id: WeekDay; label: string; short: string }[] = [
+  { id: "maandag", label: "Maandag", short: "Ma" },
+  { id: "dinsdag", label: "Dinsdag", short: "Di" },
+  { id: "woensdag", label: "Woensdag", short: "Wo" },
+  { id: "donderdag", label: "Donderdag", short: "Do" },
+  { id: "vrijdag", label: "Vrijdag", short: "Vr" },
+  { id: "zaterdag", label: "Zaterdag", short: "Za" },
+  { id: "zondag", label: "Zondag", short: "Zo" }
+];
+const isWeekDay = (value: string | null): value is WeekDay => Boolean(value && weekDays.some((day) => day.id === value));
+const currentWeekDay = (): WeekDay => weekDays[((new Date().getDay() || 7) - 1)].id;
+const weekDayLabel = (day: WeekDay) => weekDays.find((item) => item.id === day)?.label ?? "Vandaag";
+const taskRunsOnDay = (task: Task, weekDay: WeekDay | null) => !weekDay || !task.weekDays?.length || task.weekDays.includes(weekDay);
+const weekDayQuery = (weekDay: WeekDay | null) => weekDay ? `?weekDay=${weekDay}` : "";
 const shortExerciseTitle = (title: string) => ({
   "Ruik bloem, blaas kaars": "Bloem & kaars",
   "Maak je lijf zwaar": "Lijf zwaar",
@@ -557,15 +571,17 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
 function DayPage() {
   const { data: tasks } = useLiveData(() => db.tasks.where("childProfileId").equals("default-child").toArray(), [] as Task[], []);
   const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
+  const { data: settings } = useLiveData(() => db.settings.get("app"), undefined, []);
+  const activeWeekDay = settings?.weekPlanningEnabled ? currentWeekDay() : null;
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Mijn dag" subtitle="Kies wat gelukt is. Flowi helpt als iets lastig is." back={false} />
+      <PageHeader title={activeWeekDay ? weekDayLabel(activeWeekDay) : "Mijn dag"} subtitle={activeWeekDay ? "Kijk rustig wat bij vandaag hoort." : "Kies wat gelukt is. Flowi helpt als iets lastig is."} back={false} />
       <div className="grid gap-3">
         {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
-          const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled);
+          const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled && taskRunsOnDay(task, activeWeekDay));
           const done = partTasks.filter((task) => completions.some((completion) => completion.taskId === task.id && completion.status === "done")).length;
-          return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day/${part}`} />;
+          return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day/${part}${weekDayQuery(activeWeekDay)}`} />;
         })}
       </div>
       </div>
@@ -575,11 +591,14 @@ function DayPage() {
 
 function DayPartPage() {
   const { dayPart = "ochtend" } = useParams();
+  const [searchParams] = useSearchParams();
   const part = dayPart as DayPart;
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
   const { data: completions, reload: reloadCompletions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], [part]);
+  const { data: settings } = useLiveData(() => db.settings.get("app"), undefined, []);
   const [helpTask, setHelpTask] = useState<Task | null>(null);
-  const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
+  const activeWeekDay = settings?.weekPlanningEnabled ? (isWeekDay(searchParams.get("weekDay")) ? searchParams.get("weekDay") as WeekDay : currentWeekDay()) : null;
+  const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled && taskRunsOnDay(task, activeWeekDay)));
   const toggleComplete = async (task: Task) => {
     const existing = completions.find((completion) => completion.taskId === task.id);
     if (existing?.status === "done") {
@@ -598,7 +617,7 @@ function DayPartPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle="Kies wat gelukt is. Lukt iets niet? Flowi helpt." />
+      <PageHeader title={dayParts[part]?.title ?? "Mijn dag"} subtitle={activeWeekDay ? weekDayLabel(activeWeekDay) : "Kies wat gelukt is. Lukt iets niet? Flowi helpt."} backTo="/day" />
       <div className="grid gap-3">
         {visibleTasks.length ? visibleTasks.map((task) => {
           const completion = completions.find((item) => item.taskId === task.id);
@@ -621,20 +640,64 @@ function DayPartPage() {
 
 function DaySettingsPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: tasks } = useLiveData(() => db.tasks.where("childProfileId").equals("default-child").toArray(), [] as Task[], []);
   const { data: completions } = useLiveData(() => db.taskCompletions.where("date").equals(today()).toArray(), [], []);
+  const { data: settings, reload: reloadSettings } = useLiveData(() => db.settings.get("app"), undefined, []);
+  const weekPlanningEnabled = Boolean(settings?.weekPlanningEnabled);
+  const selectedWeekDay = isWeekDay(searchParams.get("weekDay")) ? searchParams.get("weekDay") as WeekDay : currentWeekDay();
+  const planningWeekDay = weekPlanningEnabled ? selectedWeekDay : null;
+  const setWeekPlanning = async (enabled: boolean) => {
+    await db.settings.update("app", { weekPlanningEnabled: enabled });
+    if (enabled) {
+      setSearchParams({ weekDay: selectedWeekDay });
+    } else {
+      setSearchParams({});
+    }
+    await reloadSettings();
+  };
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Dagindeling" subtitle="Voor ouders: routine instellen." />
+      <section className="mb-4 rounded-[1.45rem] bg-white/92 p-4 shadow-card ring-1 ring-lavender/10">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-black text-navy">Weekplanning</h2>
+            <p className="text-sm font-bold leading-5 text-navy/52">{weekPlanningEnabled ? "Gebruik aparte taken per dag." : "Uit: dezelfde dagindeling voor elke dag."}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setWeekPlanning(!weekPlanningEnabled)}
+            className={`min-h-12 rounded-2xl px-4 text-sm font-black shadow-card ${weekPlanningEnabled ? "bg-lavender text-white" : "bg-lavender/10 text-lavender"}`}
+          >
+            {weekPlanningEnabled ? "Aan" : "Uit"}
+          </button>
+        </div>
+        {weekPlanningEnabled ? (
+          <div className="mt-4 grid grid-cols-7 gap-1.5">
+            {weekDays.map((day) => (
+              <button
+                key={day.id}
+                type="button"
+                onClick={() => setSearchParams({ weekDay: day.id })}
+                className={`min-h-11 rounded-2xl text-sm font-black ${selectedWeekDay === day.id ? "bg-gradient-to-b from-[#b69cff] to-[#7857df] text-white shadow-[0_10px_18px_rgba(120,87,223,.22)]" : "bg-lavender/10 text-navy/62"}`}
+                aria-label={day.label}
+              >
+                {day.short}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </section>
       <div className="grid gap-3">
         {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => {
-          const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled);
+          const partTasks = tasks.filter((task) => task.dayPart === part && task.isEnabled && taskRunsOnDay(task, planningWeekDay));
           const done = partTasks.filter((task) => completions.some((completion) => completion.taskId === task.id && completion.status === "done")).length;
-          return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}`} />;
+          return <DayPartCard key={part} title={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}${weekDayQuery(planningWeekDay)}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate("/task-library?returnTo=%2Fday-settings")}>Taak kiezen</SecondaryButton><PrimaryButton onClick={() => navigate("/tasks/new?returnTo=%2Fday-settings")}>Handmatige taak</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Handmatige taak</PrimaryButton></div>
       </div>
     </>
   );
@@ -642,24 +705,37 @@ function DaySettingsPage() {
 
 function DaySettingsPartPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { dayPart = "ochtend" } = useParams();
   const part = dayPart as DayPart;
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
+  const { data: settings } = useLiveData(() => db.settings.get("app"), undefined, []);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [displayOrder, setDisplayOrder] = useState<string[]>([]);
   const [dragGhost, setDragGhost] = useState<{ x: number; y: number; width: number; height: number; offsetX: number; offsetY: number } | null>(null);
   const draggedTaskIdRef = useRef<string | null>(null);
   const dragReadyRef = useRef(false);
   const displayOrderRef = useRef<string[]>([]);
-  const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled));
+  const selectedWeekDay = isWeekDay(searchParams.get("weekDay")) ? searchParams.get("weekDay") as WeekDay : currentWeekDay();
+  const planningWeekDay = settings?.weekPlanningEnabled ? selectedWeekDay : null;
+  const visibleTasks = sortTasks(tasks.filter((task) => task.isEnabled && taskRunsOnDay(task, planningWeekDay)));
   useEffect(() => {
     if (!draggedTaskIdRef.current) {
       const nextOrder = visibleTasks.map((task) => task.id);
       displayOrderRef.current = nextOrder;
       setDisplayOrder(nextOrder);
     }
-  }, [tasks]);
+  }, [tasks, planningWeekDay]);
   const deleteTask = async (task: Task) => {
+    if (planningWeekDay) {
+      const currentWeekDays = task.weekDays?.length ? task.weekDays : weekDays.map((day) => day.id);
+      const nextWeekDays = currentWeekDays.filter((day) => day !== planningWeekDay);
+      if (nextWeekDays.length) {
+        await db.tasks.update(task.id, { weekDays: nextWeekDays, repeatPattern: "aangepast", updatedAt: now() });
+        await reload();
+        return;
+      }
+    }
     await db.tasks.delete(task.id);
     await db.taskCompletions.where("taskId").equals(task.id).delete();
     await reload();
@@ -719,7 +795,7 @@ function DaySettingsPartPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={`${dayParts[part]?.title ?? "Dag"} instellen`} subtitle="Voor ouders: aanpassen en slepen." backTo="/day-settings" />
+      <PageHeader title={`${dayParts[part]?.title ?? "Dag"} instellen`} subtitle={planningWeekDay ? weekDayLabel(planningWeekDay) : "Voor ouders: aanpassen en slepen."} backTo={`/day-settings${weekDayQuery(planningWeekDay)}`} />
       <section className="reorder-help-card mb-4 flex items-center gap-3 rounded-[1.45rem] bg-white/92 p-3 shadow-card ring-1 ring-lavender/10">
         <div className="drag-handle-preview flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-[1.1rem] bg-gradient-to-b from-lilac/34 to-lavender/16 text-lavender">
           <span className="text-2xl leading-none">{"\u22EE\u22EE"}</span>
@@ -751,7 +827,7 @@ function DaySettingsPartPage() {
           <TaskCard task={draggedTask} done={false} onEdit={() => navigate(`/tasks/${draggedTask.id}/edit`)} onDelete={() => deleteTask(draggedTask)} editable />
         </div>
       ) : null}
-      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings`)}>Taak kiezen</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings`)}>Handmatige taak</PrimaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><SecondaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</SecondaryButton><PrimaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Handmatige taak</PrimaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       </div>
     </>
@@ -763,24 +839,30 @@ function TaskFormPage() {
   const [searchParams] = useSearchParams();
   const { taskId } = useParams();
   const requestedDayPart = searchParams.get("dayPart");
+  const requestedWeekDay = isWeekDay(searchParams.get("weekDay")) ? searchParams.get("weekDay") as WeekDay : null;
   const returnTo = safeReturnPath(searchParams.get("returnTo"));
   const editing = Boolean(taskId);
   const { data: existing } = useLiveData(() => taskId ? db.tasks.get(taskId) : Promise.resolve(undefined), undefined as Task | undefined, [taskId]);
+  const { data: settings } = useLiveData(() => db.settings.get("app"), undefined, []);
   const [title, setTitle] = useState("");
   const [icon, setIcon] = useState("\u2B50");
   const [visualKey, setVisualKey] = useState<TaskVisualKey | "">("");
   const [showVisualBank, setShowVisualBank] = useState(false);
   const [dayPart, setDayPart] = useState<DayPart>(isDayPart(requestedDayPart) ? requestedDayPart : "ochtend");
+  const [selectedWeekDays, setSelectedWeekDays] = useState<WeekDay[]>(requestedWeekDay ? [requestedWeekDay] : []);
   const [optionalTime, setOptionalTime] = useState("");
   const [steps, setSteps] = useState("");
   const [fallbackStrategyId, setFallbackStrategyId] = useState("");
-  useEffect(() => { if (existing) { setTitle(existing.title); setIcon(existing.icon); setVisualKey((existing.visualKey as TaskVisualKey | undefined) ?? ""); setDayPart(existing.dayPart); setOptionalTime(existing.optionalTime ?? ""); setSteps(existing.steps.join("\n")); setFallbackStrategyId(existing.fallbackStrategyId ?? ""); } }, [existing]);
+  useEffect(() => { if (existing) { setTitle(existing.title); setIcon(existing.icon); setVisualKey((existing.visualKey as TaskVisualKey | undefined) ?? ""); setDayPart(existing.dayPart); setSelectedWeekDays(existing.weekDays ?? []); setOptionalTime(existing.optionalTime ?? ""); setSteps(existing.steps.join("\n")); setFallbackStrategyId(existing.fallbackStrategyId ?? ""); } }, [existing]);
+  const weekPlanningEnabled = Boolean(settings?.weekPlanningEnabled);
+  const toggleWeekDay = (weekDay: WeekDay) => setSelectedWeekDays((current) => current.includes(weekDay) ? current.filter((day) => day !== weekDay) : [...current, weekDay]);
   const save = async () => {
     const currentTasks = await db.tasks.where("dayPart").equals(dayPart).toArray();
     const taskSteps = steps.split("\n").map((step) => step.trim()).filter(Boolean);
-    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, fallbackStrategyId: fallbackStrategyId || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: taskSteps.length ? taskSteps : ["Klaar."], repeatPattern: "elkeDag", optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
+    const weekDaysForTask = weekPlanningEnabled ? (selectedWeekDays.length ? selectedWeekDays : weekDays.map((day) => day.id)) : undefined;
+    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, fallbackStrategyId: fallbackStrategyId || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: taskSteps.length ? taskSteps : ["Klaar."], repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
     await db.tasks.put(task);
-    navigate(returnTo ?? `/day-settings/${dayPart}`);
+    navigate(returnTo === "/day-settings" ? `/day-settings/${dayPart}${weekDayQuery(requestedWeekDay)}` : returnTo ?? `/day-settings/${dayPart}${weekDayQuery(requestedWeekDay)}`);
   };
   const remove = async () => {
     if (!existing) return;
@@ -824,6 +906,25 @@ function TaskFormPage() {
           </section>
         ) : null}
         <select value={dayPart} onChange={(event) => setDayPart(event.target.value as DayPart)} className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold"><option value="ochtend">Ochtend</option><option value="naSchool">Na school</option><option value="avond">Avond</option><option value="bedtijd">Bedtijd</option><option value="vrij">Vrij</option></select>
+        {weekPlanningEnabled ? (
+          <section className="rounded-[1.35rem] bg-lavender/8 p-3">
+            <p className="mb-2 text-sm font-black text-navy">Welke dag?</p>
+            <div className="grid grid-cols-7 gap-1.5">
+              {weekDays.map((day) => (
+                <button
+                  key={day.id}
+                  type="button"
+                  onClick={() => toggleWeekDay(day.id)}
+                  className={`min-h-11 rounded-2xl text-sm font-black ${selectedWeekDays.includes(day.id) ? "bg-gradient-to-b from-[#b69cff] to-[#7857df] text-white" : "bg-white text-navy/58"}`}
+                  aria-label={day.label}
+                >
+                  {day.short}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs font-bold text-navy/46">Geen dag gekozen? Dan zet Flowi deze taak op alle dagen.</p>
+          </section>
+        ) : null}
         <input value={optionalTime} onChange={(event) => setOptionalTime(event.target.value)} placeholder="Tijd optioneel, bv. 07:30" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
         <textarea value={steps} onChange={(event) => setSteps(event.target.value)} placeholder={"Stapjes of notitie voor deze taak.\nJe mag hier zelf typen.\nLaat je dit leeg? Dan maakt Flowi er automatisch een simpele taak van."} className="min-h-32 rounded-2xl border border-lavender/20 p-4 font-bold outline-none placeholder:text-navy/32 focus:ring-4 focus:ring-lavender/20" />
         <label className="grid gap-2 rounded-[1.35rem] bg-lavender/8 p-3">
@@ -846,6 +947,7 @@ function TaskLibraryPage() {
   const [searchParams] = useSearchParams();
   const requestedDayPart = searchParams.get("dayPart");
   const forcedDayPart = isDayPart(requestedDayPart) ? requestedDayPart : null;
+  const requestedWeekDay = isWeekDay(searchParams.get("weekDay")) ? searchParams.get("weekDay") as WeekDay : null;
   const returnTo = safeReturnPath(searchParams.get("returnTo"));
   const [category, setCategory] = useState("Alles");
   const [search, setSearch] = useState("");
@@ -889,9 +991,10 @@ function TaskLibraryPage() {
   const add = async (template: TaskTemplate, dayPart?: DayPart) => {
     const targetDayPart = dayPart ?? forcedDayPart ?? template.defaultDayPart;
     const currentTasks = await db.tasks.where("dayPart").equals(targetDayPart).toArray();
-    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: "elkeDag", estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
+    const weekDaysForTask = requestedWeekDay ? [requestedWeekDay] : undefined;
+    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
     setSelectedTemplate(null);
-    navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}` : returnTo ?? `/day-settings/${targetDayPart}`);
+    navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}${weekDayQuery(requestedWeekDay)}` : returnTo ?? `/day-settings/${targetDayPart}${weekDayQuery(requestedWeekDay)}`);
   };
   const removeOwnTemplate = async (template: TaskTemplate) => {
     const matchingTasks = ownTasks.filter((task) =>
