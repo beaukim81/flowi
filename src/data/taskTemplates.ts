@@ -263,7 +263,65 @@ const extraTemplates: TemplateSeed[] = [
   extraTask("Waterpolo", "Sport", "naSchool", extraSteps.sport, 45)
 ];
 
-const uniqueTemplates = [...templates, ...extraTemplates].filter((template, index, all) => {
+const blockedTemplateTitles = new Set([
+  "Schooltas checken",
+  "Broodtrommel pakken",
+  "Huiswerk starten",
+  "Rustkaart kiezen",
+  "Adem rustig in bed",
+  "Vraag hulp",
+  "Rustige plek kiezen",
+  "Duw tegen de muur",
+  "Spring 10 keer",
+  "Surfskaten",
+  "Game tijd",
+  "Telefoon tijd",
+  "Theaterles",
+  "Robotica",
+  "Lego-club",
+  "Judo",
+  "Karate",
+  "Taekwondo",
+  "Krav maga",
+  "Kickboksen",
+  "Boksen",
+  "Aikido",
+  "Jiujitsu",
+  "Dans",
+  "Hiphop",
+  "Basketbal",
+  "Voetbal",
+  "Voetballen buiten"
+]);
+
+const titleOverrides = new Map([
+  ["Sporten", "Voetbal"],
+  ["Naar school gaan", "Naar school"],
+  ["Basketballen buiten", "Basketballen"],
+  ["Geloofsactiviteit", "Naar de kerk"]
+]);
+
+const normalizeCategory = (category: string, title: string) => {
+  const lowerTitle = title.toLowerCase();
+  if (["voetbal", "basketbal", "basketballen", "zwemles", "sport", "voetballen buiten", "basketballen buiten", "hockey", "tennis", "badminton", "tafeltennis", "atletiek", "hardlopen", "turnen", "gymnastiek", "ballet", "streetdance", "freerunning", "paardrijden", "ski", "waterpolo", "rugby", "korfbal", "honkbal", "softbal", "handbal", "volleybal", "judo", "karate", "taekwondo", "krav maga", "kickboksen", "boksen", "aikido", "jiujitsu"].some((word) => lowerTitle.includes(word))) return "Sport";
+  if (lowerTitle.includes("zelfverdediging")) return "Sport";
+  if (["Ochtend", "Slaapkamer", "Zelfzorg", "Voorbereiden", "Eten & drinken", "Helpen", "Na school", "Opruimen", "Bedtijd", "Rust", "Bewegen", "Creatief"].includes(category)) return "Dagelijkse taken";
+  if (["School", "Opvang"].includes(category)) return "School & opvang";
+  if (category === "Afspraken") return "Afspraken";
+  if (["Sport"].includes(category)) return "Sport";
+  if (category === "Clubs") return "Clubs";
+  return "Vrije tijd";
+};
+
+const preparedTemplates = [...templates, ...extraTemplates]
+  .filter((template) => !blockedTemplateTitles.has(template.title))
+  .map((template) => ({
+    ...template,
+    title: titleOverrides.get(template.title) ?? template.title,
+    category: normalizeCategory(template.category, titleOverrides.get(template.title) ?? template.title)
+  }));
+
+const uniqueTemplates = preparedTemplates.filter((template, index, all) => {
   const key = `${template.title.toLowerCase()}|${template.category.toLowerCase()}|${template.dayPart}`;
   return all.findIndex((item) => `${item.title.toLowerCase()}|${item.category.toLowerCase()}|${item.dayPart}` === key) === index;
 });

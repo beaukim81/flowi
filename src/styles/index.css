@@ -1705,6 +1705,85 @@ input, textarea, select {
 .task-art-schoolyard,
 .task-art-faithActivity { background-position: 100% 100%; }
 
+.task-art-soccerSport,
+.task-art-basketballSport,
+.task-art-volleyball,
+.task-art-handball,
+.task-art-fieldHockey,
+.task-art-tennisSport,
+.task-art-tableTennis,
+.task-art-badmintonSport,
+.task-art-athletics,
+.task-art-gymnastics,
+.task-art-balletSport,
+.task-art-streetdanceSport,
+.task-art-freerunningSport,
+.task-art-skiingSport,
+.task-art-horseRiding,
+.task-art-waterPoloSport {
+  background-image: url("/assets/flowi-library-sports-2.jpg");
+  background-size: 400% 400%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-rugbySport,
+.task-art-korfballSport,
+.task-art-baseballSport,
+.task-art-selfDefenseSport,
+.task-art-schoolParty,
+.task-art-studyDay,
+.task-art-faithActivity,
+.task-art-roboticsClub,
+.task-art-dramaLesson,
+.task-art-readTogether,
+.task-art-cookTogether,
+.task-art-natureClub,
+.task-art-musicLesson,
+.task-art-craftClub,
+.task-art-readingClub,
+.task-art-youthClub,
+.task-art-cinema,
+.task-art-friendVisit,
+.task-art-playAtFriend {
+  background-image: url("/assets/flowi-library-special-2.jpg");
+  background-size: 400% 400%;
+  aspect-ratio: 1 / 1;
+}
+
+.task-art-soccerSport { background-position: 0% 0%; }
+.task-art-basketballSport { background-position: 33.333% 0%; }
+.task-art-volleyball { background-position: 66.666% 0%; }
+.task-art-handball { background-position: 100% 0%; }
+.task-art-fieldHockey { background-position: 0% 33.333%; }
+.task-art-tennisSport { background-position: 33.333% 33.333%; }
+.task-art-tableTennis { background-position: 66.666% 33.333%; }
+.task-art-badmintonSport { background-position: 100% 33.333%; }
+.task-art-athletics { background-position: 0% 66.666%; }
+.task-art-gymnastics { background-position: 33.333% 66.666%; }
+.task-art-balletSport { background-position: 66.666% 66.666%; }
+.task-art-streetdanceSport { background-position: 100% 66.666%; }
+.task-art-freerunningSport { background-position: 0% 100%; }
+.task-art-skiingSport { background-position: 33.333% 100%; }
+.task-art-horseRiding { background-position: 66.666% 100%; }
+.task-art-waterPoloSport { background-position: 100% 100%; }
+
+.task-art-rugbySport { background-position: 0% 0%; }
+.task-art-korfballSport { background-position: 33.333% 0%; }
+.task-art-baseballSport { background-position: 66.666% 0%; }
+.task-art-selfDefenseSport { background-position: 100% 0%; }
+.task-art-schoolParty { background-position: 0% 33.333%; }
+.task-art-studyDay { background-position: 33.333% 33.333%; }
+.task-art-faithActivity { background-position: 66.666% 33.333%; }
+.task-art-roboticsClub { background-position: 100% 33.333%; }
+.task-art-dramaLesson { background-position: 0% 66.666%; }
+.task-art-readingClub { background-position: 33.333% 66.666%; }
+.task-art-cookTogether { background-position: 66.666% 66.666%; }
+.task-art-natureClub { background-position: 100% 66.666%; }
+.task-art-musicLesson { background-position: 0% 100%; }
+.task-art-craftClub { background-position: 33.333% 100%; }
+.task-art-youthClub { background-position: 66.666% 100%; }
+.task-art-cinema { background-position: 100% 100%; }
+
 .flowi-mascot-image {
   display: block;
   aspect-ratio: 3 / 4;

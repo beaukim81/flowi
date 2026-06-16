@@ -12,6 +12,8 @@ export type TaskVisualKey =
   | "momTime" | "dadTime" | "siblingTime" | "bonusParentTime" | "familyDinner" | "familyWalk" | "boardGame" | "readTogether" | "cookTogether" | "tidyTogether" | "toMom" | "toDad" | "gameTime" | "movieTogether" | "phoneTime" | "dance"
   | "soccerOutside" | "basketballOutside" | "sidewalkChalk" | "bubbles" | "trampolineOutdoor" | "sandbox" | "waterPlay" | "hutBuild" | "natureSearch" | "sticksLeaves" | "scooter" | "skating" | "skateboard" | "bikeLoop" | "climbing" | "schoolyard"
   | "scouting" | "singingLesson" | "pianoLesson" | "guitarLesson" | "drumLesson" | "drawingLesson" | "paintingLesson" | "craftClub" | "dramaLesson" | "chessClub" | "techClub" | "roboticsClub" | "legoClub" | "cookingClub" | "natureClub" | "faithActivity";
+  | "volleyball" | "handball" | "fieldHockey" | "tennisSport" | "tableTennis" | "badmintonSport" | "athletics" | "gymnastics" | "balletSport" | "streetdanceSport" | "freerunningSport" | "skiingSport" | "horseRiding" | "waterPoloSport" | "rugbySport" | "korfballSport" | "baseballSport" | "selfDefenseSport"
+  | "soccerSport" | "basketballSport" | "readingClub" | "youthClub";
 
 const has = (text: string, words: string[]) => words.some((word) => text.includes(word));
 
@@ -65,6 +67,8 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["spreekbeurt"])) return "presentation";
   if (has(text, ["sportdag"])) return "sportsDay";
   if (has(text, ["schoolfeest", "rapport"])) return "schoolParty";
+  if (has(text, ["studiedag"])) return "studyDay";
+  if (has(text, ["naar de kerk", "geloofsactiviteit", "kerk", "moskee", "tempel"])) return "faithActivity";
 
   if (has(text, ["tijd met mama"])) return "momTime";
   if (has(text, ["tijd met papa"])) return "dadTime";
@@ -83,8 +87,28 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["telefoon tijd", "schermtijd"])) return "phoneTime";
   if (has(text, ["dansen"])) return "dance";
 
-  if (has(text, ["voetballen buiten"])) return "soccerOutside";
-  if (has(text, ["basketballen buiten"])) return "basketballOutside";
+  if (has(text, ["voetbal"])) return "soccerSport";
+  if (has(text, ["basketbal"])) return "basketballSport";
+  if (has(text, ["basketballen buiten"])) return "basketballSport";
+  if (has(text, ["basketbal buiten"])) return "basketballSport";
+  if (has(text, ["volleyball"])) return "volleyball";
+  if (has(text, ["handbal"])) return "handball";
+  if (has(text, ["hockey"])) return "fieldHockey";
+  if (has(text, ["tennis"])) return "tennisSport";
+  if (has(text, ["tafeltennis"])) return "tableTennis";
+  if (has(text, ["badminton"])) return "badmintonSport";
+  if (has(text, ["atletiek", "hardlopen"])) return "athletics";
+  if (has(text, ["turnen", "gymnastiek"])) return "gymnastics";
+  if (has(text, ["ballet"])) return "balletSport";
+  if (has(text, ["streetdance"])) return "streetdanceSport";
+  if (has(text, ["freerunning"])) return "freerunningSport";
+  if (has(text, ["ski", "skiën"])) return "skiingSport";
+  if (has(text, ["paardrijden"])) return "horseRiding";
+  if (has(text, ["waterpolo"])) return "waterPoloSport";
+  if (has(text, ["rugby"])) return "rugbySport";
+  if (has(text, ["korfbal"])) return "korfballSport";
+  if (has(text, ["honkbal", "softbal"])) return "baseballSport";
+  if (has(text, ["zelfverdediging", "judo", "karate", "taekwondo", "krav maga", "kickboksen", "boksen", "aikido", "jiujitsu"])) return "selfDefenseSport";
   if (has(text, ["stoepkrijt"])) return "sidewalkChalk";
   if (has(text, ["bellenblaas"])) return "bubbles";
   if (has(text, ["trampoline"])) return "trampolineOutdoor";
@@ -111,19 +135,19 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["theaterles", "toneelclub"])) return "dramaLesson";
   if (has(text, ["schaakclub"])) return "chessClub";
   if (has(text, ["techniekclub"])) return "techClub";
-  if (has(text, ["programmeerclub", "robotica"])) return "roboticsClub";
   if (has(text, ["lego"])) return "legoClub";
   if (has(text, ["kookclub"])) return "cookingClub";
   if (has(text, ["natuurclub"])) return "natureClub";
   if (has(text, ["geloofsactiviteit", "kerk", "moskee", "tempel"])) return "faithActivity";
-  if (has(text, ["leesclub"])) return "readTogether";
-  if (has(text, ["jeugdclub"])) return "friendVisit";
+  if (has(text, ["leesclub"])) return "readingClub";
+  if (has(text, ["jeugdclub"])) return "youthClub";
+  if (has(text, ["vader/bonusouder", "bonusouder"])) return "bonusParentTime";
+  if (has(text, ["programmeerclub", "robotica"])) return "roboticsClub";
   if (has(text, ["dansles"])) return "dance";
   if (has(text, ["wandelen"])) return "familyWalk";
-
-  if (has(text, ["judo", "karate", "taekwondo", "krav maga", "kickboksen", "boksen", "aikido", "jiujitsu", "zelfverdediging"])) return "sports";
+  
   if (has(text, ["tennis", "badminton", "tafeltennis", "hockey", "handbal", "volleybal", "korfbal", "rugby", "honkbal", "softbal", "waterpolo"])) return "sports";
-  if (has(text, ["atletiek", "hardlopen", "turnen", "gymnastiek", "dans", "ballet", "streetdance", "hiphop", "freerunning", "paardrijden", "ski"])) return "sports";
+  if (has(text, ["atletiek", "hardlopen", "turnen", "gymnastiek", "ballet", "streetdance", "hiphop", "freerunning", "paardrijden", "ski"])) return "sports";
 
   if (has(text, ["bed opmaken"])) return "makeBed";
   if (has(text, ["gordijn"])) return "curtains";
