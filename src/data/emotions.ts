@@ -16,6 +16,5 @@ export const unsureEmotions: Emotion[] = [
   { id: "teVeel", label: "Het is te veel", shortText: "Alles voelt vol.", colors: "from-violet-100 to-purple-200", marks: "swirl" },
   { id: "snapNiet", label: "Ik snap het niet", shortText: "Even uitleg nodig.", colors: "from-slate-100 to-blue-100", marks: "question" },
   { id: "durfNiet", label: "Ik durf niet", shortText: "Het voelt spannend.", colors: "from-violet-100 to-blue-100", marks: "spark" },
-  { id: "moe", label: "Ik ben moe", shortText: "Mijn lijf wil rust.", colors: "from-blue-900 to-indigo-500", marks: "moon" },
   { id: "wilHulp", label: "Ik wil hulp", shortText: "Samen is fijner.", colors: "from-blue-50 to-violet-100", marks: "help" }
 ];

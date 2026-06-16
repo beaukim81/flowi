@@ -308,8 +308,8 @@ input, textarea, select {
 
 .home-main-stage {
   display: grid;
-  grid-template-columns: minmax(8.4rem, 36%) minmax(0, 1fr);
-  gap: 1rem;
+  grid-template-columns: minmax(8.4rem, 34%) minmax(0, 1fr);
+  gap: .65rem;
   min-height: 0;
   flex: 1 1 auto;
   align-items: center;
@@ -320,7 +320,7 @@ input, textarea, select {
   order: 2;
   width: 100%;
   max-width: 100%;
-  margin: -0.55rem -.25rem -.25rem auto;
+  margin: -0.35rem -1.35rem -0.35rem auto;
   min-height: 0;
   display: flex;
   justify-content: flex-end;
@@ -331,11 +331,11 @@ input, textarea, select {
 .home-mascot-wrap::after {
   content: "";
   position: absolute;
-  right: clamp(.8rem, 8vw, 4.2rem);
-  bottom: 1.08rem;
+  right: clamp(.05rem, 4vw, 2.2rem);
+  bottom: .45rem;
   z-index: 1;
-  width: min(16rem, 60vw);
-  height: 2.25rem;
+  width: min(21rem, 76vw);
+  height: 2.8rem;
   border-radius: 50%;
   background:
     radial-gradient(ellipse at center, rgba(112, 158, 72, .32) 0 42%, rgba(112, 158, 72, .12) 58%, transparent 72%),
@@ -347,7 +347,7 @@ input, textarea, select {
   position: relative;
   z-index: 2;
   display: block;
-  width: min(20.2rem, 61vw, 43dvh);
+  width: min(31rem, 86vw, 68dvh);
   aspect-ratio: 1122 / 1402;
   height: auto;
   max-height: 100%;
@@ -355,7 +355,7 @@ input, textarea, select {
   object-position: right bottom;
   filter: drop-shadow(0 1.4rem 1.1rem rgba(132, 96, 24, 0.18));
   pointer-events: none;
-  transform: translateY(-.08rem);
+  transform: translate(.65rem, .55rem);
 }
 
 .home-actions {
@@ -501,8 +501,8 @@ input, textarea, select {
     line-height: 1.25rem;
   }
   .home-mascot-free {
-    width: min(16.4rem, 56vw, 36dvh);
-    transform: translateY(-.08rem);
+    width: min(24rem, 76vw, 55dvh);
+    transform: translate(.45rem, .35rem);
   }
 
   .speech-bubble {
@@ -544,8 +544,8 @@ input, textarea, select {
 
 @media (max-width: 360px) {
   .home-main-stage {
-    grid-template-columns: minmax(7.45rem, 35%) minmax(0, 1fr);
-    gap: .55rem;
+    grid-template-columns: minmax(7.45rem, 34%) minmax(0, 1fr);
+    gap: .38rem;
   }
 
   .home-visual-card {

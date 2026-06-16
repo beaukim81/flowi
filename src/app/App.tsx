@@ -65,7 +65,16 @@ const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 const addGrowthReward = (label: string, reason: string) => db.rewards.add({ id: id(), childProfileId: "default-child", label, icon: "*", reason, earnedAt: now() });
 const clampTimerSeconds = (seconds: number) => Math.min(300, Math.max(60, Math.round(seconds / 60) * 60));
-const updateSW = registerSW({
+const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+
+if (isLocalPreview && "serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => registrations.forEach((registration) => registration.unregister()));
+  if ("caches" in window) {
+    caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
+  }
+}
+
+const updateSW = isLocalPreview ? (() => undefined) : registerSW({
   immediate: true,
   onNeedRefresh() {
     updateSW(true);
@@ -73,7 +82,7 @@ const updateSW = registerSW({
   onRegisteredSW(_swUrl, registration) {
     window.setInterval(() => {
       registration?.update();
-    }, 60 * 60 * 1000);
+    }, 15 * 60 * 1000);
   }
 });
 const startOfWeek = () => {
@@ -235,8 +244,6 @@ function HomePage() {
     <section className="phone-screen home-scene relative overflow-hidden px-5 pb-4 pt-5">
       <div className="cloud cloud-a" />
       <div className="cloud cloud-b" />
-      <div className="leaf-float leaf-a" />
-      <div className="leaf-float leaf-b" />
       <div className="home-content relative z-10">
         <div className="flowi-logo mb-1">Flowi<span>{"\u2665"}</span></div>
         <div className="home-main-stage">
