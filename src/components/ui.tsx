@@ -3,6 +3,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import type { Avatar, Emotion, EmotionType, Need, NeedType, Task } from "../types/schema";
 import { getTaskVisualKey, type TaskVisualKey } from "../utils/taskVisuals";
+import { isKnownTaskVisualKey } from "../utils/taskVisuals";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -175,7 +176,8 @@ export function NeedCard({ need, label, onClick }: { need: Need; label?: string;
 }
 
 export function TaskArt({ title, visualKey, compact = false }: { title: string; visualKey?: TaskVisualKey; compact?: boolean }) {
-  const key = getTaskVisualKey(title, visualKey ?? "rest");
+  const fallback: TaskVisualKey = isKnownTaskVisualKey(visualKey) ? visualKey : "rest";
+  const key = getTaskVisualKey(title, fallback);
   return <span className={`task-art task-art-${key} ${compact ? "compact" : ""}`} aria-hidden />;
 }
 

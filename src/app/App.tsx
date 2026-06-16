@@ -41,6 +41,45 @@ const currentWeekDay = (): WeekDay => weekDays[((new Date().getDay() || 7) - 1)]
 const weekDayLabel = (day: WeekDay) => weekDays.find((item) => item.id === day)?.label ?? "Vandaag";
 const taskRunsOnDay = (task: Task, weekDay: WeekDay | null) => !weekDay || !task.weekDays?.length || task.weekDays.includes(weekDay);
 const weekDayQuery = (weekDay: WeekDay | null) => weekDay ? `?weekDay=${weekDay}` : "";
+const normalizeTaskTitle = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+const blockedLibraryTaskTitles = new Set([
+  "schooltas checken",
+  "broodtrommel pakken",
+  "rustkaart kiezen",
+  "adem rustig in bed",
+  "vraag hulp",
+  "rustige plek kiezen",
+  "duw tegen de muur",
+  "spring 10 keer",
+  "surfskaten",
+  "game tijd",
+  "telefoon tijd",
+  "theaterles",
+  "dansen",
+  "natuurclub",
+  "knutselclub",
+  "toneelclub",
+  "programmeerclub",
+  "leesclub",
+  "jeugdclub",
+  "naar de kerk",
+  "robotica",
+  "lego-club",
+  "judo",
+  "karate",
+  "taekwondo",
+  "krav maga",
+  "kickboksen",
+  "boksen",
+  "aikido",
+  "jiujitsu"
+].map((value) => normalizeTaskTitle(value)));
 const shortExerciseTitle = (title: string) => ({
   "Ruik bloem, blaas kaars": "Bloem & kaars",
   "Maak je lijf zwaar": "Lijf zwaar",
@@ -988,6 +1027,7 @@ function TaskLibraryPage() {
   const standardTemplates = useMemo(() => {
     const unique = new Map<string, TaskTemplate>();
     templates.forEach((template) => {
+      if (blockedLibraryTaskTitles.has(normalizeTaskTitle(template.title))) return;
       const key = `${template.title.toLowerCase()}-${template.category.toLowerCase()}-${template.defaultDayPart}`;
       if (!unique.has(key)) unique.set(key, { ...template, ageGroup: "alle" });
     });
@@ -996,6 +1036,7 @@ function TaskLibraryPage() {
   const ownTemplates = useMemo(() => {
     const unique = new Map<string, TaskTemplate>();
     ownTasks.forEach((task) => {
+      if (blockedLibraryTaskTitles.has(normalizeTaskTitle(task.title))) return;
       const key = `${task.title.toLowerCase()}-${task.steps.join("|").toLowerCase()}-${task.visualKey ?? ""}`;
       if (unique.has(key)) return;
       unique.set(key, {
@@ -1019,6 +1060,15 @@ function TaskLibraryPage() {
     .filter((template) => category === "Alles" || template.category === category)
     .filter((template) => !normalizedSearch || `${template.title} ${template.category} ${template.suggestedSteps.join(" ")}`.toLowerCase().includes(normalizedSearch))
     .sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
+
+  useEffect(() => {
+    const cleanupIds = ownTasks
+      .filter((task) => blockedLibraryTaskTitles.has(normalizeTaskTitle(task.title)))
+      .map((task) => task.id);
+    if (cleanupIds.length > 0) {
+      void db.tasks.bulkDelete(cleanupIds);
+    }
+  }, [ownTasks]);
   const add = async (template: TaskTemplate, dayPart?: DayPart) => {
     const targetDayPart = dayPart ?? forcedDayPart ?? template.defaultDayPart;
     const currentTasks = await db.tasks.where("dayPart").equals(targetDayPart).toArray();

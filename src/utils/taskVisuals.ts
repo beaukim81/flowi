@@ -15,6 +15,27 @@ export type TaskVisualKey =
   | "volleyball" | "handball" | "fieldHockey" | "tennisSport" | "tableTennis" | "badmintonSport" | "athletics" | "gymnastics" | "balletSport" | "streetdanceSport" | "freerunningSport" | "skiingSport" | "horseRiding" | "waterPoloSport" | "rugbySport" | "korfballSport" | "baseballSport" | "selfDefenseSport"
   | "soccerSport" | "basketballSport" | "readingClub" | "youthClub";
 
+const allVisualKeys: TaskVisualKey[] = [
+  "wake", "dress", "breakfast", "teeth", "school", "coat", "hands", "rest", "study", "shower", "pajamas", "sleep",
+  "makeBed", "curtains", "hair", "faceWash", "medicine", "lunchbox", "drinkBottle", "shoesOn", "coatOn", "coatHang", "shoesOff", "unpackBag",
+  "packBag", "schoolBagCheck", "lunchboxKitchen",
+  "drinkWater", "snack", "outsidePlay", "moveBreak", "homework", "reading", "creative", "toysClean", "roomClean", "laundry", "setTable", "clearTable",
+  "dishwasher", "waterPlants", "petFood", "sportsBag", "agenda", "weekPlan", "screenOff", "calmCard", "breatheBed", "dimLight", "askHelp", "wallPush",
+  "outsidePlayGiraffe", "craftGiraffe", "drinkCupKitchen", "headphonesRest",
+  "dinner", "sports", "swimming", "musicLesson", "playdate", "toilet", "bsoCare", "sunscreen", "bike", "fruit", "lunchPrep",
+  "dogWalk", "groceries", "hairdresser", "dentist", "doctor", "speechTherapy", "physio", "therapy", "clothesShop", "shoeShop", "packagePickup", "garage", "parentAppointment", "carRide", "cityTrip", "waitingRoom",
+  "amusementPark", "indoorPlay", "trampolinePark", "pool", "fair", "festival", "mall", "restaurant", "cinema", "bowling", "arcade", "playground", "park", "libraryActivity", "museum", "theaterShow",
+  "friendVisit", "playAtFriend", "sleepover", "birthdayParty", "familyParty", "grandparents", "visitorsHome", "familyVisit", "babysitter", "grandparentsAfterSchool", "schoolTrip", "studyDay", "test", "presentation", "sportsDay", "schoolParty",
+  "momTime", "dadTime", "siblingTime", "bonusParentTime", "familyDinner", "familyWalk", "boardGame", "readTogether", "cookTogether", "tidyTogether", "toMom", "toDad", "gameTime", "movieTogether", "phoneTime", "dance",
+  "soccerOutside", "basketballOutside", "sidewalkChalk", "bubbles", "trampolineOutdoor", "sandbox", "waterPlay", "hutBuild", "natureSearch", "sticksLeaves", "scooter", "skating", "skateboard", "bikeLoop", "climbing", "schoolyard",
+  "scouting", "singingLesson", "pianoLesson", "guitarLesson", "drumLesson", "drawingLesson", "paintingLesson", "craftClub", "dramaLesson", "chessClub", "techClub", "roboticsClub", "legoClub", "cookingClub", "natureClub", "faithActivity",
+  "volleyball", "handball", "fieldHockey", "tennisSport", "tableTennis", "badmintonSport", "athletics", "gymnastics", "balletSport", "streetdanceSport", "freerunningSport", "skiingSport", "horseRiding", "waterPoloSport", "rugbySport", "korfballSport", "baseballSport", "selfDefenseSport",
+  "soccerSport", "basketballSport", "readingClub", "youthClub"
+];
+
+export const isKnownTaskVisualKey = (value: string | undefined): value is TaskVisualKey =>
+  typeof value === "string" && allVisualKeys.includes(value as TaskVisualKey);
+
 const has = (text: string, words: string[]) => words.some((word) => text.includes(word));
 
 export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"): TaskVisualKey {
@@ -27,6 +48,7 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["huisarts", "dokter"])) return "doctor";
   if (has(text, ["logopedie"])) return "speechTherapy";
   if (has(text, ["fysio"])) return "physio";
+  if (has(text, ["afspraak ouder"])) return "parentAppointment";
   if (has(text, ["mee naar afspraak"])) return "parentAppointment";
   if (has(text, ["therapie", "afspraak"])) return "therapy";
   if (has(text, ["kleding kopen"])) return "clothesShop";
@@ -49,7 +71,7 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["arcade", "speelhal"])) return "arcade";
   if (has(text, ["speeltuin"])) return "playground";
   if (has(text, ["naar park"])) return "park";
-  if (has(text, ["bibliotheekactiviteit"])) return "libraryActivity";
+  if (has(text, ["bibliotheek"])) return "libraryActivity";
 
   if (has(text, ["vriendje komt", "vriendje spelen thuis"])) return "friendVisit";
   if (has(text, ["bij vriendje"])) return "playAtFriend";
@@ -66,7 +88,8 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["toets"])) return "test";
   if (has(text, ["spreekbeurt"])) return "presentation";
   if (has(text, ["sportdag"])) return "sportsDay";
-  if (has(text, ["schoolfeest", "rapport"])) return "schoolParty";
+  if (has(text, ["schoolfeest"])) return "schoolParty";
+  if (has(text, ["rapport"])) return "test";
   if (has(text, ["studiedag"])) return "studyDay";
   if (has(text, ["naar de kerk", "geloofsactiviteit", "kerk", "moskee", "tempel"])) return "faithActivity";
 
@@ -91,12 +114,14 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["basketbal"])) return "basketballSport";
   if (has(text, ["basketballen buiten"])) return "basketballSport";
   if (has(text, ["basketbal buiten"])) return "basketballSport";
-  if (has(text, ["volleyball"])) return "volleyball";
+  if (has(text, ["volleyball", "volleybal"])) return "volleyball";
   if (has(text, ["handbal"])) return "handball";
   if (has(text, ["hockey"])) return "fieldHockey";
   if (has(text, ["tennis"])) return "tennisSport";
   if (has(text, ["tafeltennis"])) return "tableTennis";
   if (has(text, ["badminton"])) return "badmintonSport";
+  if (has(text, ["dansen", "dans"])) return "dance";
+  if (has(text, ["skeeleren"])) return "skating";
   if (has(text, ["atletiek", "hardlopen"])) return "athletics";
   if (has(text, ["turnen", "gymnastiek"])) return "gymnastics";
   if (has(text, ["ballet"])) return "balletSport";
@@ -108,6 +133,7 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["rugby"])) return "rugbySport";
   if (has(text, ["korfbal"])) return "korfballSport";
   if (has(text, ["honkbal", "softbal"])) return "baseballSport";
+  if (has(text, ["mountainbiken", "mountainbike", "bergfietsen"])) return "bikeLoop";
   if (has(text, ["zelfverdediging", "judo", "karate", "taekwondo", "krav maga", "kickboksen", "boksen", "aikido", "jiujitsu"])) return "selfDefenseSport";
   if (has(text, ["stoepkrijt"])) return "sidewalkChalk";
   if (has(text, ["bellenblaas"])) return "bubbles";
@@ -135,7 +161,7 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["theaterles", "toneelclub"])) return "dramaLesson";
   if (has(text, ["schaakclub"])) return "chessClub";
   if (has(text, ["techniekclub"])) return "techClub";
-  if (has(text, ["lego"])) return "legoClub";
+  if (has(text, ["lego-club", "lego club", "lego"])) return "legoClub";
   if (has(text, ["kookclub"])) return "cookingClub";
   if (has(text, ["natuurclub"])) return "natureClub";
   if (has(text, ["geloofsactiviteit", "kerk", "moskee", "tempel"])) return "faithActivity";
@@ -210,6 +236,7 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["ontbijt", "eten", "drinken", "beker"])) return "breakfast";
   if (has(text, ["tanden", "poets"])) return "teeth";
   if (has(text, ["school", "tas", "broodtrommel"])) return "school";
+  if (has(text, ["knuffel"])) return "playdate";
   if (has(text, ["jas", "schoenen"])) return "coat";
   if (has(text, ["handen", "wassen"])) return "hands";
   if (has(text, ["rust", "pauze", "koptelefoon", "rustige plek"])) return "rest";
