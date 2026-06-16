@@ -719,15 +719,22 @@ function DaySettingsPage() {
       {showStartChoice ? (
         <section className="mb-4 rounded-[1.55rem] bg-gradient-to-b from-sky/18 via-white to-mint/12 p-4 shadow-soft">
           <h2 className="text-xl font-black text-navy">Hoe wil je starten?</h2>
-          <p className="mt-1.5 text-base font-bold leading-6 text-navy/58">Kies wat het rustigst past. Je kunt dit later altijd aanpassen.</p>
-          <div className="mt-4 grid gap-2">
-            <button type="button" onClick={() => setWeekPlanning(false)} className="min-h-14 rounded-[1.3rem] bg-white px-4 text-left text-base font-black text-navy shadow-card">
-              Zelfde dagritme
-              <span className="block text-sm font-bold text-navy/48">Handig als de meeste dagen op elkaar lijken.</span>
+          <div className="mt-4 grid gap-3">
+            <button
+              type="button"
+              onClick={() => setWeekPlanning(false)}
+              className={`rounded-[1.35rem] px-4 py-3.5 text-left shadow-card transition ${!weekPlanningEnabled ? "bg-white ring-2 ring-mint/45" : "bg-white/82 ring-1 ring-lavender/10"}`}
+            >
+              <span className="block text-lg font-black text-navy">Zelfde dagritme</span>
+              <span className="mt-1 block text-sm font-medium leading-5 text-navy/58">Handig als alle dagen hetzelfde zijn.</span>
             </button>
-            <button type="button" onClick={() => setWeekPlanning(true)} className="min-h-14 rounded-[1.3rem] bg-lavender px-4 text-left text-base font-black text-white shadow-card">
-              Weekplanning
-              <span className="block text-sm font-bold text-white/78">Handig als maandag anders is dan woensdag of weekend.</span>
+            <button
+              type="button"
+              onClick={() => setWeekPlanning(true)}
+              className={`rounded-[1.35rem] px-4 py-3.5 text-left shadow-card transition ${weekPlanningEnabled ? "bg-lavender text-white" : "bg-white/82 text-navy ring-1 ring-lavender/10"}`}
+            >
+              <span className="block text-lg font-black">Weekplanning</span>
+              <span className={`mt-1 block text-sm font-medium leading-5 ${weekPlanningEnabled ? "text-white/82" : "text-navy/58"}`}>Handig als dagen van elkaar verschillen.</span>
             </button>
           </div>
         </section>
@@ -736,14 +743,18 @@ function DaySettingsPage() {
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-black text-navy">Weekplanning</h2>
-            <p className="text-sm font-bold leading-5 text-navy/52">{weekPlanningEnabled ? "Gebruik aparte taken per dag." : "Uit: dezelfde dagindeling voor elke dag."}</p>
+            <p className="text-sm font-medium leading-5 text-navy/54">{weekPlanningEnabled ? "Aan: kies taken per dag." : "Uit: dezelfde dagindeling voor elke dag."}</p>
           </div>
           <button
             type="button"
             onClick={() => setWeekPlanning(!weekPlanningEnabled)}
-            className={`min-h-12 rounded-2xl px-4 text-sm font-black shadow-card ${weekPlanningEnabled ? "bg-lavender text-white" : "bg-lavender/10 text-lavender"}`}
+            aria-pressed={weekPlanningEnabled}
+            className={`flex min-h-12 items-center gap-3 rounded-[1.15rem] px-3 py-2 shadow-card transition ${weekPlanningEnabled ? "bg-lavender/14 text-lavender" : "bg-slate-100/88 text-navy/54"}`}
           >
-            {weekPlanningEnabled ? "Aan" : "Uit"}
+            <span className="text-sm font-black">{weekPlanningEnabled ? "Aan" : "Uit"}</span>
+            <span className={`relative block h-7 w-12 rounded-full transition ${weekPlanningEnabled ? "bg-lavender" : "bg-navy/18"}`}>
+              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-[0_3px_8px_rgba(31,35,90,.18)] transition ${weekPlanningEnabled ? "left-6" : "left-1"}`} />
+            </span>
           </button>
         </div>
         {weekPlanningEnabled ? (
@@ -770,7 +781,7 @@ function DaySettingsPage() {
           return <DayPartCard key={part} title={dayPartTitle(part, planningWeekDay)} visualTitle={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}${weekDayQuery(planningWeekDay)}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Zelf taak maken</SecondaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak maken</SecondaryButton></div>
       </div>
     </>
   );
@@ -900,7 +911,7 @@ function DaySettingsPartPage() {
           <TaskCard task={draggedTask} done={false} onEdit={() => navigate(`/tasks/${draggedTask.id}/edit`)} onDelete={() => deleteTask(draggedTask)} editable />
         </div>
       ) : null}
-      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Zelf taak maken</SecondaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak maken</SecondaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       </div>
     </>
