@@ -314,28 +314,29 @@ input, textarea, select {
   flex: 1 1 auto;
   align-items: center;
   padding-top: 2.65rem;
+  position: relative;
 }
 
 .home-mascot-wrap {
+  position: relative;
   order: 2;
   width: 100%;
   max-width: 100%;
-  margin: -0.35rem -1.35rem -0.35rem auto;
+  height: 100%;
+  margin: 0 -1.75rem -0.8rem auto;
   min-height: 0;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
+  display: block;
   overflow: visible;
 }
 
 .home-mascot-wrap::after {
   content: "";
   position: absolute;
-  right: clamp(.05rem, 4vw, 2.2rem);
-  bottom: .45rem;
+  right: clamp(.05rem, 3vw, 2rem);
+  bottom: .25rem;
   z-index: 1;
-  width: min(21rem, 76vw);
-  height: 2.8rem;
+  width: min(25rem, 83vw);
+  height: 3.1rem;
   border-radius: 50%;
   background:
     radial-gradient(ellipse at center, rgba(112, 158, 72, .32) 0 42%, rgba(112, 158, 72, .12) 58%, transparent 72%),
@@ -344,18 +345,21 @@ input, textarea, select {
 }
 
 .home-mascot-free {
-  position: relative;
+  position: absolute;
+  right: clamp(-3.2rem, -6vw, -1.2rem);
+  bottom: -1.25rem;
   z-index: 2;
   display: block;
-  width: min(31rem, 86vw, 68dvh);
+  width: min(40rem, 88vw, 76dvh);
   aspect-ratio: 1122 / 1402;
   height: auto;
-  max-height: 100%;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
   object-position: right bottom;
   filter: drop-shadow(0 1.4rem 1.1rem rgba(132, 96, 24, 0.18));
   pointer-events: none;
-  transform: translate(.65rem, .55rem);
+  transform: none;
 }
 
 .home-actions {
@@ -365,6 +369,8 @@ input, textarea, select {
 
 .home-visual-actions {
   order: 1;
+  position: relative;
+  z-index: 5;
   display: grid;
   grid-template-columns: 1fr;
   gap: .48rem;
@@ -501,8 +507,10 @@ input, textarea, select {
     line-height: 1.25rem;
   }
   .home-mascot-free {
-    width: min(24rem, 76vw, 55dvh);
-    transform: translate(.45rem, .35rem);
+    right: clamp(-3.45rem, -7vw, -1.35rem);
+    bottom: -1.45rem;
+    width: min(37rem, 90vw, 74dvh);
+    transform: none;
   }
 
   .speech-bubble {
