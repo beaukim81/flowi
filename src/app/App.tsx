@@ -189,6 +189,13 @@ function growthResponseForReward(reward?: Reward) {
   const label = reward.label.toLowerCase();
   const combined = `${label} ${reason}`;
 
+  if (combined.includes("gevoel") || combined.includes("voelde") || combined.includes("liet zien")) {
+    return {
+      title: "Flowi zag dat jij liet zien wat er in je was.",
+      subtitle: "Je boom krijgt lieve hartjes voor jouw gevoel.",
+      careMode: "heart" as const
+    };
+  }
   if (combined.includes("adem") || combined.includes("rust") || combined.includes("zacht")) {
     return {
       title: "Flowi zag dat jij rust vond.",
@@ -235,7 +242,7 @@ function growthResponseForReward(reward?: Reward) {
   return {
     title: reward.label,
     subtitle: "Jouw boom groeit door wat jij net hebt gedaan.",
-    careMode: (["water", "sun", "heart"] as const)[Math.abs(reward.earnedAt.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % 3]
+    careMode: "heart" as const
   };
 }
 
@@ -653,6 +660,7 @@ function HomePage() {
       <div className="home-content relative z-10">
         <div className="flowi-logo mb-1">Flowi<span>{"\u2665"}</span></div>
         <div className="home-main-stage">
+        <div className="home-choice-pill" aria-hidden>Waar wil je beginnen?</div>
         <div className="home-mascot-wrap relative" aria-label="Flowi helpt jou">
           <img src="/assets/flowi-home-mascot.png" alt="" className="home-mascot-free" />
         </div>
@@ -665,9 +673,9 @@ function HomePage() {
             <span className="home-visual-art" aria-hidden />
             <span className="home-visual-label">Taken doen</span>
           </button>
-          <button type="button" onClick={() => navigate("/help-now")} className="home-visual-card home-visual-help" aria-label="Help mij">
+          <button type="button" onClick={() => navigate("/help-now")} className="home-visual-card home-visual-help" aria-label="Help mij nu">
             <span className="home-visual-art" aria-hidden />
-            <span className="home-visual-label">Help mij</span>
+            <span className="home-visual-label">Help mij nu</span>
           </button>
         </div>
         </div>
@@ -1421,12 +1429,15 @@ function TaskFormPage() {
             <p className="mt-2 text-xs font-bold text-navy/46">Geen dag gekozen? Dan zet Flowi deze taak op alle dagen.</p>
           </section>
         ) : null}
-        <input
-          type="time"
-          value={optionalTime}
-          onChange={(event) => setOptionalTime(event.target.value)}
-          className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20"
-        />
+        <label className="grid gap-2 rounded-[1.35rem] bg-lavender/8 p-3">
+          <span className="text-sm font-black text-navy">Tijd toevoegen (optioneel)</span>
+          <input
+            type="time"
+            value={optionalTime}
+            onChange={(event) => setOptionalTime(event.target.value)}
+            className="min-h-12 rounded-2xl border border-lavender/20 bg-white px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20"
+          />
+        </label>
         <textarea value={steps} onChange={(event) => setSteps(event.target.value)} placeholder={"Stapjes of notitie voor deze taak.\nJe mag hier zelf typen.\nLaat je dit leeg? Dan maakt Flowi er automatisch een simpele taak van."} className="min-h-32 rounded-2xl border border-lavender/20 p-4 font-bold outline-none placeholder:text-navy/32 focus:ring-4 focus:ring-lavender/20" />
         <label className="grid gap-2 rounded-[1.35rem] bg-lavender/8 p-3">
           <span className="text-sm font-black text-navy">Hulp als dit lastig is</span>
@@ -1508,11 +1519,9 @@ function TaskLibraryPage() {
   const add = async (template: TaskTemplate, dayPart?: DayPart, weekDaysSelection?: WeekDay[] | null, optionalTimeSelection?: string) => {
     const targetDayPart = dayPart ?? forcedDayPart ?? template.defaultDayPart;
     const currentTasks = await db.tasks.where("dayPart").equals(targetDayPart).toArray();
-    const weekDaysForTask = requestedWeekDay
-      ? [requestedWeekDay]
-      : weekPlanningEnabled
-        ? (weekDaysSelection?.length ? weekDaysSelection : undefined)
-        : undefined;
+    const weekDaysForTask = weekPlanningEnabled
+      ? (weekDaysSelection?.length ? weekDaysSelection : undefined)
+      : undefined;
     await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, optionalTime: optionalTimeSelection || undefined, estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
     setSelectedTemplate(null);
     setSelectedLibraryTime("");
@@ -1604,7 +1613,7 @@ function TaskLibraryPage() {
                 </div>
               ) : null}
               <div className="mt-4 rounded-[1.35rem] bg-lavender/8 p-3">
-                <label className="block text-sm font-black text-navy/58" htmlFor="library-task-time">Tijd toevoegen</label>
+                <label className="block text-sm font-black text-navy/58" htmlFor="library-task-time">Tijd toevoegen (optioneel)</label>
                 <input
                   id="library-task-time"
                   type="time"
@@ -1613,9 +1622,9 @@ function TaskLibraryPage() {
                   className="mt-2 min-h-12 w-full rounded-2xl border border-lavender/20 bg-white px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20"
                 />
               </div>
-              {weekPlanningEnabled && !requestedWeekDay ? (
+              {weekPlanningEnabled ? (
                 <div className="mt-4">
-                  <p className="mb-2 text-sm font-black text-navy/58">Voor welke dag?</p>
+                  <p className="mb-2 text-sm font-black text-navy/58">Voor welke dag(en)?</p>
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {weekDays.map((day) => (
                       <button
@@ -1637,10 +1646,10 @@ function TaskLibraryPage() {
                 onClick={() => void add(
                   selectedTemplate,
                   selectedLibraryDayPart,
-                  weekPlanningEnabled && !requestedWeekDay ? selectedLibraryWeekDays : (requestedWeekDay ? [requestedWeekDay] : undefined),
+                  weekPlanningEnabled ? selectedLibraryWeekDays : undefined,
                   selectedLibraryTime
                 )}
-                disabled={weekPlanningEnabled && !requestedWeekDay ? selectedLibraryWeekDays.length === 0 : false}
+                disabled={weekPlanningEnabled ? selectedLibraryWeekDays.length === 0 : false}
               >
                 Taak toevoegen
               </PrimaryButton>
@@ -2003,48 +2012,53 @@ function AboutPage() {
 
       <section className="mt-4 grid gap-2.5">
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Voor wie is Flowi?</h3>
-          <p className={`mt-1.5 ${bodyText}`}>Flowi is bedoeld voor jonge kinderen die nog niet altijd goed kunnen uitleggen wat ze voelen, nodig hebben of wat er misgaat.</p>
-          <p className={`mt-2 ${bodyText}`}>De app past vooral bij kinderen die baat hebben bij voorspelbaarheid, visuele ondersteuning, kleine keuzes en een rustige opbouw van de dag.</p>
+          <h3 className="text-xl font-black text-navy">Voor wie en wanneer?</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Flowi past bij jonge kinderen die nog niet altijd woorden hebben voor gevoel, spanning, onrust of wat er misgaat in een taak of overgang.</p>
+          <p className={`mt-2 ${bodyText}`}>De app helpt vooral wanneer een kind baat heeft bij voorspelbaarheid, visuele keuzes, herhaling en kleine stapjes thuis, op school of in de opvang.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Hoe helpt Flowi?</h3>
-          <p className={`mt-1.5 ${bodyText}`}>Flowi werkt met grote plaatjes, korte woorden en kleine stapjes. Zo hoeft een kind niet veel te lezen om toch te kunnen kiezen, aangeven of meedoen.</p>
-          <p className={`mt-2 ${bodyText}`}>De app helpt bij drie dingen: voelen wat er speelt, zien wat er vandaag komt en kiezen wat kan helpen als iets moeilijk wordt.</p>
+          <h3 className="text-xl font-black text-navy">Wat ziet het kind in de app?</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Flowi laat vooral grote plaatjes, korte woorden en duidelijke keuzes zien. Zo hoeft een kind niet veel te lezen om toch te kunnen kiezen of meedoen.</p>
+          <p className={`mt-2 ${bodyText}`}>De kindkant draait om drie dingen: voelen wat er is, zien wat er vandaag komt en een helpend stapje kiezen als iets lastig wordt.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Dagindeling en rol van de ouder</h3>
-          <p className={`mt-1.5 ${bodyText}`}>De ouder of verzorger stelt de planning in. Dat kan als vast dagritme of als weekplanning wanneer dagen echt van elkaar verschillen.</p>
-          <p className={`mt-2 ${bodyText}`}>Het kind krijgt daarna vooral een rustige weergave van de dag te zien. Zo blijft de kindkant simpel, terwijl de volwassene de structuur bewaakt.</p>
+          <h3 className="text-xl font-black text-navy">Planning en rol van de volwassene</h3>
+          <p className={`mt-1.5 ${bodyText}`}>De ouder, verzorger of leerkracht zet de structuur neer. Dat kan als vast dagritme of als weekplanning als dagen echt van elkaar verschillen.</p>
+          <p className={`mt-2 ${bodyText}`}>Het kind ziet daarna alleen de rustige voorkant van die planning. Zo blijft de app overzichtelijk, terwijl de volwassene de inhoud, volgorde en verwachtingen bewaakt.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Gevoel, hulp en oefeningen</h3>
-          <p className={`mt-1.5 ${bodyText}`}>Een kind kan met Flowi aangeven hoe het zich voelt, wat het nodig heeft en welke kleine stap nu helpend kan zijn.</p>
-          <p className={`mt-2 ${bodyText}`}>De oefeningen zijn bewust kort en visueel. Ze werken het best samen met een ouder, verzorger of leerkracht die helpt vertragen, voordoen en dichtbij blijven.</p>
-          <p className={`mt-2 ${bodyText}`}>Bij spanning, boosheid of verdriet is samen reguleren meestal duidelijker en veiliger dan een kind alles alleen laten oplossen.</p>
+          <h3 className="text-xl font-black text-navy">Gevoel, hulp en samen reguleren</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Een kind kan met Flowi laten zien hoe het zich voelt, wat het nodig heeft en welke oefening nu mogelijk kan helpen.</p>
+          <p className={`mt-2 ${bodyText}`}>De oefeningen zijn bewust kort en visueel. Ze werken meestal het best als een volwassene helpt vertragen, voordoet, nabij blijft en meebeweegt met wat haalbaar is.</p>
+          <p className={`mt-2 ${bodyText}`}>Flowi is dus geen lijstje dat een kind alleen moet afwerken. Juist bij spanning, boosheid, verdriet of overprikkeling is samen reguleren vaak de veiligste en duidelijkste route.</p>
+        </div>
+        <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
+          <h3 className="text-xl font-black text-navy">Wat helpt een volwassene in het moment?</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Rustig blijven, dichtbij blijven en maar één kleine stap tegelijk aanbieden helpt vaak meer dan veel praten of veel uitleg tegelijk geven.</p>
+          <p className={`mt-2 ${bodyText}`}>Je hoeft niet alles op te lossen. Soms is samen kijken, één keuze aanwijzen, een oefening voordoen of even meedoen al precies genoeg.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
           <h3 className="text-xl font-black text-navy">Wie is Flowi?</h3>
           <p className={`mt-1.5 ${bodyText}`}>Flowi is een rustig maatje in de app: zacht, duidelijk en geduldig. Hij helpt zonder druk te zetten en maakt grote dingen kleiner.</p>
-          <p className={`mt-2 ${bodyText}`}>Daarom gebruikt de app zo min mogelijk tekst en zo veel mogelijk herkenbare beelden en voorspelbare keuzes.</p>
+          <p className={`mt-2 ${bodyText}`}>Daarom gebruikt de app zo min mogelijk tekst en zo veel mogelijk herkenbare beelden, vaste kleuren en voorspelbare keuzes.</p>
         </div>
       </section>
 
       <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
         <h2 className="text-2xl font-black text-navy">Groeiboom</h2>
         <div className={`mt-2 grid gap-2 ${bodyText}`}>
-          <p>De groeiboom is een zachte aanmoediging. Het is geen scorebord.</p>
-          <p>Na oefenen of reflecteren kan Flowi de boom water geven. Extra momenten kunnen het zonnetje laten schijnen.</p>
-          <p>Taken afvinken staat los van de boom. Zo blijft groei gericht op oefenen met rust en gevoel.</p>
+          <p>De groeiboom is een zachte aanmoediging. Het is geen scorebord en geen systeem van straf of goed/fout.</p>
+          <p>Flowi laat de boom groeien na momenten van voelen, oefenen, hulp vragen of samen stilstaan bij wat hielp.</p>
+          <p>Taken afvinken staat bewust los van de boom. Zo blijft groei gekoppeld aan emotieregulatie en niet aan presteren.</p>
         </div>
       </section>
 
       <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft ring-1 ring-lavender/10">
         <h2 className="text-2xl font-black text-navy">Wat Flowi wel en niet is</h2>
         <div className={`mt-2 grid gap-2 ${bodyText}`}>
-          <p>Flowi is een hulpmiddel voor structuur, co-regulatie en kleine helpende keuzes in het moment.</p>
+          <p>Flowi is een hulpmiddel voor structuur, samen reguleren en kleine helpende keuzes in het moment.</p>
           <p>Flowi is geen behandeling, geen diagnose en geen vervanging van een ouder, leerkracht of hulpverlener.</p>
-          <p>Als een kind vast blijft lopen, veel spanning houdt of meer nodig heeft dan de app kan bieden, is extra begeleiding buiten Flowi belangrijk.</p>
+          <p>Blijft een kind vaak vastlopen of is er meer steun nodig dan de app kan geven, dan is dat geen mislukking van Flowi maar een teken dat extra begeleiding belangrijk is.</p>
         </div>
       </section>
 

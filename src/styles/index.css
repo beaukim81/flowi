@@ -317,6 +317,25 @@ input, textarea, select {
   position: relative;
 }
 
+.home-choice-pill {
+  position: absolute;
+  left: 0;
+  top: .1rem;
+  z-index: 7;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.2rem;
+  max-width: min(10rem, 52vw);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .9);
+  padding: .45rem .9rem;
+  color: #22306f;
+  font-size: clamp(.82rem, 3.5vw, .98rem);
+  font-weight: 900;
+  line-height: 1.05;
+  box-shadow: 0 .75rem 1.55rem rgba(88, 111, 168, .12), inset 0 1px 0 rgba(255,255,255,.8);
+}
+
 .home-mascot-wrap {
   position: relative;
   order: 2;
@@ -529,6 +548,13 @@ input, textarea, select {
     margin: 0 0 .4rem;
   }
 
+  .home-choice-pill {
+    top: .2rem;
+    min-height: 1.95rem;
+    padding: .34rem .72rem;
+    font-size: .76rem;
+  }
+
   .home-visual-card {
     width: min(100%, 7.7rem);
     min-height: 9.75rem;
@@ -554,6 +580,12 @@ input, textarea, select {
   .home-main-stage {
     grid-template-columns: minmax(7.45rem, 34%) minmax(0, 1fr);
     gap: .38rem;
+  }
+
+  .home-choice-pill {
+    max-width: 8.55rem;
+    padding-inline: .72rem;
+    font-size: .74rem;
   }
 
   .home-visual-card {
