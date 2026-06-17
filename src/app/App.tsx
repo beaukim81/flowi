@@ -256,17 +256,104 @@ function useAvatar(profileAvatarId?: string): Avatar {
 
 function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
   const normalizedEmotion: EmotionType | undefined =
-    emotion === "blij" ? "rustig" :
     emotion === "overprikkeld" ? "teVeel" :
     emotion === "druk" ? "superDruk" :
-    emotion === "spannend" || emotion === "snapNiet" || emotion === "durfNiet" || emotion === "wilHulp" ? "inDeWar" :
     emotion;
   const exactMatch = calmStrategies.find((strategy) => (!normalizedEmotion || strategy.linkedEmotionTypes.includes(normalizedEmotion)) && (!need || strategy.linkedNeedTypes.includes(need)));
   if (exactMatch) return exactMatch;
 
+  const findStrategyByTitles = (titles: string[]) =>
+    titles.map((title) => calmStrategies.find((strategy) => strategy.title === title)).find(Boolean);
+
+  const preferredByEmotionAndNeed: Partial<Record<EmotionType, Partial<Record<NeedType, string[]>>>> = {
+    rustig: {
+      ademen: ["Geef je rustkracht water", "Adem zacht"],
+      creatief: ["Bewaar dit gevoel", "Kies iets fijns"]
+    },
+    blij: {
+      ademen: ["Geef je rustkracht water", "Adem zacht"],
+      creatief: ["Kies iets fijns", "Bewaar dit gevoel"],
+      praatMetOuder: ["Kies samen"]
+    },
+    verdrietig: {
+      knuffel: ["Vraag een knuffel", "Pak iets zachts"],
+      ademen: ["Hand op je hart"],
+      creatief: ["Teken je wolk"],
+      praatMetOuder: ["Kies dichtbij of ruimte"]
+    },
+    boos: {
+      bewegen: ["Duw tegen de muur", "Stamp 10 keer", "Draag iets zwaars"],
+      ademen: ["Adem als een draak"],
+      knuffel: ["Knijp in een kussen"],
+      praatMetOuder: ["Zeg: stop, ik heb hulp nodig"]
+    },
+    spannend: {
+      ademen: ["Hand op je hart", "Adem zacht"],
+      rustigePlek: ["Ga naar je rustige plek", "Zoek een rustig plekje"],
+      knuffel: ["Pak iets zachts", "Vraag een knuffel"],
+      praatMetOuder: ["Kies samen", "Zeg: stop, ik heb hulp nodig"]
+    },
+    teVeel: {
+      koptelefoon: ["Zet je koptelefoon op"],
+      rustigePlek: ["Ga naar je rustige plek", "Maak het licht zachter"],
+      evenAlleen: ["Kruip onder een deken"],
+      ademen: ["Kijk naar één ding", "Adem zacht"]
+    },
+    overprikkeld: {
+      koptelefoon: ["Zet je koptelefoon op"],
+      rustigePlek: ["Ga naar je rustige plek", "Maak het licht zachter"],
+      evenAlleen: ["Kruip onder een deken"],
+      ademen: ["Kijk naar één ding", "Adem zacht"]
+    },
+    druk: {
+      bewegen: ["Spring 10 keer", "Schud je armen los", "Doe een dierenloop"]
+    },
+    superDruk: {
+      bewegen: ["Spring 10 keer", "Schud je armen los", "Doe een dierenloop"]
+    },
+    moe: {
+      rustigePlek: ["Zoek een rustig plekje", "Maak het licht zachter"],
+      evenAlleen: ["Even niets"],
+      ademen: ["Adem zacht"],
+      praatMetOuder: ["Kies samen"]
+    },
+    inDeWar: {
+      praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet"],
+      rustigePlek: ["Maak één kleine keuze"],
+      ademen: ["Adem zacht"]
+    },
+    snapNiet: {
+      praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet"],
+      creatief: ["Teken je warboel"],
+      rustigePlek: ["Maak één kleine keuze"],
+      ademen: ["Adem zacht"]
+    },
+    durfNiet: {
+      praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet"],
+      knuffel: ["Vraag een knuffel", "Pak iets zachts"],
+      rustigePlek: ["Ga naar je rustige plek"],
+      ademen: ["Hand op je hart", "Adem zacht"]
+    },
+    wilHulp: {
+      praatMetOuder: ["Zeg: stop, ik heb hulp nodig", "Kies samen"],
+      knuffel: ["Vraag een knuffel", "Pak iets zachts"]
+    },
+    weetIkNiet: {
+      praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet"],
+      rustigePlek: ["Maak één kleine keuze"],
+      ademen: ["Adem zacht"],
+      creatief: ["Teken je warboel"]
+    }
+  };
+
+  const directEmotionNeedMatch = emotion && need
+    ? findStrategyByTitles(preferredByEmotionAndNeed[emotion]?.[need] ?? [])
+    : undefined;
+  if (directEmotionNeedMatch) return directEmotionNeedMatch;
+
   const preferredByNeed: Record<NeedType, string[]> = {
     knuffel: ["Pak iets zachts", "Vraag een knuffel", "Kies dichtbij of ruimte"],
-    rustigePlek: ["Ga naar je rustige plek", "Zoek een rustig plekje", "Licht zachter"],
+    rustigePlek: ["Ga naar je rustige plek", "Zoek een rustig plekje", "Maak het licht zachter"],
     bewegen: ["Spring 10 keer", "Schud je armen los", "Draag iets zwaars"],
     evenAlleen: ["Even niets", "Kruip onder een deken", "Zoek een rustig plekje"],
     praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet", "Zeg: stop, ik heb hulp nodig"],
@@ -275,7 +362,28 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
     creatief: ["Teken je wolk", "Bewaar dit gevoel", "Kies iets fijns"]
   };
 
-  const preferred = need ? preferredByNeed[need].map((title) => calmStrategies.find((strategy) => strategy.title === title)).find(Boolean) : undefined;
+  const emotionOnlyFallbacks: Partial<Record<EmotionType, string[]>> = {
+    rustig: ["Geef je rustkracht water", "Bewaar dit gevoel"],
+    blij: ["Kies iets fijns", "Bewaar dit gevoel"],
+    verdrietig: ["Vraag een knuffel", "Hand op je hart", "Teken je wolk"],
+    boos: ["Duw tegen de muur", "Adem als een draak", "Zeg: stop, ik heb hulp nodig"],
+    spannend: ["Hand op je hart", "Adem zacht", "Ga naar je rustige plek"],
+    teVeel: ["Ga naar je rustige plek", "Zet je koptelefoon op", "Maak het licht zachter"],
+    overprikkeld: ["Ga naar je rustige plek", "Zet je koptelefoon op", "Maak het licht zachter"],
+    druk: ["Spring 10 keer", "Schud je armen los", "Doe een dierenloop"],
+    superDruk: ["Spring 10 keer", "Schud je armen los", "Doe een dierenloop"],
+    moe: ["Zoek een rustig plekje", "Adem zacht", "Even niets"],
+    inDeWar: ["Kies samen", "Maak één kleine keuze", "Zeg: ik weet het even niet"],
+    snapNiet: ["Kies samen", "Teken je warboel", "Maak één kleine keuze"],
+    durfNiet: ["Hand op je hart", "Vraag een knuffel", "Kies samen"],
+    wilHulp: ["Zeg: stop, ik heb hulp nodig", "Kies samen"],
+    weetIkNiet: ["Maak één kleine keuze", "Kies samen", "Adem zacht"]
+  };
+
+  const emotionPreferred = emotion ? findStrategyByTitles(emotionOnlyFallbacks[emotion] ?? []) : undefined;
+  if (emotionPreferred) return emotionPreferred;
+
+  const preferred = need ? findStrategyByTitles(preferredByNeed[need]) : undefined;
   if (preferred) return preferred;
 
   return calmStrategies.find((strategy) => need ? strategy.linkedNeedTypes.includes(need) : false)
@@ -376,7 +484,10 @@ function NeedPage() {
   const navigate = useNavigate();
   const { selectedEmotion, setNeed, setAction } = useCurrentFlow();
   const { data: profile } = useProfile();
-  const filteredNeeds = selectedEmotion === "wilHulp"
+  const isPositiveEmotion = selectedEmotion === "rustig" || selectedEmotion === "blij";
+  const filteredNeeds = isPositiveEmotion
+    ? needs.filter((need) => ["ademen", "creatief"].includes(need.id))
+    : selectedEmotion === "wilHulp"
     ? needs.filter((need) => ["praatMetOuder", "knuffel"].includes(need.id))
     : selectedEmotion === "durfNiet" || selectedEmotion === "spannend"
       ? needs.filter((need) => ["praatMetOuder", "ademen", "rustigePlek", "knuffel"].includes(need.id))
@@ -386,7 +497,7 @@ function NeedPage() {
   const caregiver = profile?.caregiverName || profile?.caregiverLabel || "ouder";
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Wat heb je nu nodig?" subtitle="Kies wat jou kan helpen." />
+      <PageHeader title={isPositiveEmotion ? "Wat wil je nu doen?" : "Wat heb je nu nodig?"} subtitle={isPositiveEmotion ? "Je mag dit fijne gevoel even houden of rustig verdergaan." : "Kies wat jou kan helpen."} />
       <div className="grid grid-cols-2 gap-3">
         {filteredNeeds.map((need) => (
           <NeedCard
@@ -402,6 +513,7 @@ function NeedPage() {
           />
         ))}
       </div>
+      {isPositiveEmotion ? <SecondaryButton className="mt-4 w-full" onClick={() => navigate("/day")}>Ga verder met mijn dag</SecondaryButton> : null}
     </div>
   );
 }
@@ -410,6 +522,7 @@ function ActionPage() {
   const navigate = useNavigate();
   const { actionId } = useParams();
   const { selectedEmotion, selectedNeed } = useCurrentFlow();
+  const isPositiveEmotion = selectedEmotion === "rustig" || selectedEmotion === "blij";
   const action = calmStrategies.find((strategy) => strategy.id === actionId) ?? chooseStrategy(selectedEmotion, selectedNeed);
   const suggestedDuration = clampTimerSeconds(action.durationSeconds ?? 120);
   const [duration, setDuration] = useState(suggestedDuration);
@@ -491,7 +604,7 @@ function ActionPage() {
           </div>
         </section>
       ) : null}
-      <PrimaryButton className="mt-5 w-full" onClick={() => navigate("/reflection")}>Ik ben klaar</PrimaryButton>
+      <PrimaryButton className="mt-5 w-full" onClick={() => navigate(isPositiveEmotion ? "/day" : "/reflection")}>{isPositiveEmotion ? "Klaar" : "Ik ben klaar"}</PrimaryButton>
       <div className="mt-4 grid gap-2">
         <SecondaryButton onClick={() => navigate("/need")}>Iets anders kiezen</SecondaryButton>
         <button className="font-extrabold text-lavender" onClick={() => setHelpOpen((value) => !value)}>{helpOpen ? "Hulpkaart sluiten" : "Vraag hulp"}</button>
