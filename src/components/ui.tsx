@@ -42,7 +42,7 @@ function BottomNav() {
       match: ["/check-in", "/need", "/reflection"],
       label: "Wat voel je",
       icon: Heart,
-      activeClass: "bg-gradient-to-b from-sky/32 to-sky/10 text-sky-700 shadow-[inset_0_1px_0_rgba(255,255,255,.84)]"
+      activeClass: "bg-gradient-to-b from-[#d8f6c8] to-[#effbdd] text-[#4e8d39] shadow-[inset_0_1px_0_rgba(255,255,255,.84)]"
     },
     {
       to: "/day",
