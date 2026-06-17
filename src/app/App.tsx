@@ -1934,7 +1934,6 @@ function SettingsPage() {
 
 function BackupPage() {
   const [message, setMessage] = useState("");
-  const [open, setOpen] = useState(false);
   const download = async () => {
     const backup = await exportBackup();
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
@@ -1962,19 +1961,10 @@ function BackupPage() {
         </div>
       </section>
       <section className="mt-4 rounded-[1.6rem] bg-white p-4 shadow-soft">
-        <button type="button" onClick={() => setOpen((value) => !value)} className="flex w-full items-center justify-between gap-3 rounded-[1.4rem] bg-lavender/8 px-4 py-4 text-left">
-          <div>
-            <h3 className="text-lg font-black text-navy">Backupknoppen</h3>
-            <p className="mt-1 text-sm font-medium leading-5 text-navy/55">{open ? "Tik om weer in te klappen." : "Tik om backup maken of terugzetten te openen."}</p>
-          </div>
-          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white text-lavender shadow-card">{open ? <Minus size={18} /> : <Plus size={18} />}</span>
-        </button>
-        {open ? (
-          <div className="mt-3 grid gap-3">
-            <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={18} />Backup maken</PrimaryButton>
-            <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={18} />Backup terugzetten<input type="file" accept={backupFileAccept} className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
-          </div>
-        ) : null}
+        <div className="grid gap-3">
+          <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={18} />Backup maken</PrimaryButton>
+          <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={18} />Backup terugzetten<input type="file" accept={backupFileAccept} className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
+        </div>
         {message ? <p className="mt-3 font-black text-mint">{message}</p> : null}
       </section>
     </>
