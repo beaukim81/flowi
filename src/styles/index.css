@@ -2694,56 +2694,38 @@ input, textarea, select {
   pointer-events: none;
 }
 
-.growth-watering-can {
-  position: absolute;
-  right: -2.45rem;
-  top: 43%;
-  z-index: 6;
-  width: 3.3rem;
-  height: 2rem;
-  border-radius: .7rem .7rem .95rem .95rem;
-  background: linear-gradient(180deg, #9be3f2, #5ebfd5);
-  box-shadow:
-    inset .28rem .24rem 0 rgba(255,255,255,.42),
-    0 .55rem 1rem rgba(72, 63, 137, .12);
-  transform: rotate(-38deg);
-  transform-origin: 20% 80%;
-  animation: none;
-}
-
-.growth-watering-can::before {
-  content: "";
-  position: absolute;
-  right: -1.28rem;
-  top: .82rem;
-  width: 1.4rem;
-  height: .42rem;
-  border-radius: 999px;
-  border-top: .28rem solid #5ebfd5;
-  border-right: .22rem solid #5ebfd5;
-  transform: rotate(12deg);
-}
-
-.growth-watering-can::after {
-  content: "";
-  position: absolute;
-  left: .55rem;
-  top: -.48rem;
-  width: 1.3rem;
-  height: .85rem;
-  border: .22rem solid #5ebfd5;
-  border-bottom: 0;
-  border-radius: 999px 999px 0 0;
-}
-
 .growth-care-tree {
   position: absolute;
-  right: .55rem;
+  right: 3.2rem;
   bottom: 1.15rem;
   z-index: 3;
   transform: scale(2.08);
   transform-origin: bottom right;
 }
+
+.growth-care-sparkles {
+  position: absolute;
+  left: calc(var(--tree-x) - .15rem);
+  top: calc(var(--heart-top) + 1.6rem);
+  z-index: 4;
+  width: 3.5rem;
+  height: 3rem;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.growth-care-sparkles span {
+  position: absolute;
+  width: .8rem;
+  height: .8rem;
+  background: radial-gradient(circle, rgba(255,255,255,.96) 0 26%, rgba(255,214,112,.95) 27% 52%, transparent 53%);
+  filter: drop-shadow(0 .2rem .45rem rgba(255,198,91,.28));
+  clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
+}
+
+.growth-care-sparkles span:nth-child(1) { left: 0; top: .65rem; animation-delay: 0s; }
+.growth-care-sparkles span:nth-child(2) { left: 1.2rem; top: 0; width: 1rem; height: 1rem; animation-delay: .45s; }
+.growth-care-sparkles span:nth-child(3) { left: 2.45rem; top: .95rem; animation-delay: .9s; }
 
 .growth-care-hearts {
   position: absolute;
@@ -2887,12 +2869,6 @@ input, textarea, select {
   animation: water-drops-fall 2.45s ease-in-out infinite;
 }
 
-.growth-focus-sun .growth-watering-can,
-.growth-focus-rest .growth-watering-can {
-  opacity: 0;
-  animation: none;
-}
-
 .growth-focus-sun .growth-care-drops,
 .growth-focus-rest .growth-care-drops {
   opacity: 0;
@@ -2908,11 +2884,16 @@ input, textarea, select {
   animation: growth-heart-fall 2.8s ease-in-out infinite;
 }
 
-@keyframes flowi-water-can {
-  0%, 100% { transform: rotate(-10deg) translate(0, 0); opacity: 1; }
-  30% { transform: rotate(-18deg) translate(.08rem, 0); }
-  44%, 70% { transform: rotate(-52deg) translate(.62rem, .28rem); }
-  84% { transform: rotate(-18deg) translate(.08rem, 0); }
+.growth-focus-water .growth-care-sparkles,
+.growth-focus-heart .growth-care-sparkles,
+.growth-focus-sun .growth-care-sparkles {
+  opacity: 1;
+}
+
+.growth-focus-water .growth-care-sparkles span,
+.growth-focus-heart .growth-care-sparkles span,
+.growth-focus-sun .growth-care-sparkles span {
+  animation: growth-tree-sparkle 2.9s ease-in-out infinite;
 }
 
 @keyframes water-drops-fall {
@@ -3051,6 +3032,17 @@ input, textarea, select {
   100% {
     opacity: 0;
     transform: translateY(4.6rem) rotate(-45deg) scale(1.06);
+  }
+}
+
+@keyframes growth-tree-sparkle {
+  0%, 100% {
+    opacity: .28;
+    transform: scale(.78) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08) rotate(12deg);
   }
 }
 

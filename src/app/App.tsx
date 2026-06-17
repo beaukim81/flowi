@@ -858,27 +858,27 @@ function ActionPage() {
 
       {helpOpen ? (
         <div className="fixed inset-0 z-50 grid place-items-end bg-navy/28 p-3 backdrop-blur-sm sm:place-items-center" onClick={() => setHelpOpen(false)}>
-          <section className="w-full max-w-md rounded-[2rem] bg-white/96 p-4 shadow-[0_24px_52px_rgba(50,44,108,.24)] ring-1 ring-lavender/12" onClick={(event) => event.stopPropagation()}>
+          <section className="help-suggestion-overlay w-full max-w-md rounded-[2rem] p-4 shadow-[0_24px_52px_rgba(50,44,108,.24)] ring-1 ring-lavender/12" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flowi-picture-card flowi-picture-card-breathe w-[8rem] shrink-0">
+                <div className="flowi-picture-card help-suggestion-card w-[8rem] shrink-0">
                   <span className="flowi-picture-art">
                     <ExerciseArt title="Hulpzin oefenen" compact />
                   </span>
-                  <span className="flowi-picture-label">Help mij nu</span>
+                  <span className="flowi-picture-label">Vraag hulp</span>
                 </div>
                 <div className="text-left">
-                  <h2 className="text-xl font-black text-navy">Help mij nu</h2>
-                  <p className="mt-1 text-sm font-medium leading-6 text-navy/58">Kies wat je nu wilt laten zien of zeggen.</p>
+                  <h2 className="text-xl font-black text-navy">Zo kun je hulp vragen</h2>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-navy/74">Kies wat je wilt laten zien of zeggen.</p>
                 </div>
               </div>
-              <button type="button" aria-label="Hulp sluiten" onClick={() => setHelpOpen(false)} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-lavender/10 text-lavender">
+              <button type="button" aria-label="Hulp sluiten" onClick={() => setHelpOpen(false)} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/66 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.78)]">
                 <X size={22} />
               </button>
             </div>
             <div className="mt-4 grid gap-2.5">
               {helpOptions.map((line) => (
-                <button key={line} type="button" className="rounded-[1.35rem] bg-gradient-to-b from-lavender/10 to-sky/10 px-4 py-3 text-left text-base font-black leading-6 text-navy shadow-[inset_0_1px_0_rgba(255,255,255,.72)]">
+                <button key={line} type="button" className="rounded-[1.35rem] bg-white/88 px-4 py-3 text-left text-base font-black leading-6 text-navy shadow-[0_10px_22px_rgba(61,58,130,.08),inset_0_1px_0_rgba(255,255,255,.74)]">
                   {line}
                 </button>
               ))}
@@ -1421,7 +1421,12 @@ function TaskFormPage() {
             <p className="mt-2 text-xs font-bold text-navy/46">Geen dag gekozen? Dan zet Flowi deze taak op alle dagen.</p>
           </section>
         ) : null}
-        <input value={optionalTime} onChange={(event) => setOptionalTime(event.target.value)} placeholder="Tijd optioneel, bv. 07:30" className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20" />
+        <input
+          type="time"
+          value={optionalTime}
+          onChange={(event) => setOptionalTime(event.target.value)}
+          className="min-h-12 rounded-2xl border border-lavender/20 px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20"
+        />
         <textarea value={steps} onChange={(event) => setSteps(event.target.value)} placeholder={"Stapjes of notitie voor deze taak.\nJe mag hier zelf typen.\nLaat je dit leeg? Dan maakt Flowi er automatisch een simpele taak van."} className="min-h-32 rounded-2xl border border-lavender/20 p-4 font-bold outline-none placeholder:text-navy/32 focus:ring-4 focus:ring-lavender/20" />
         <label className="grid gap-2 rounded-[1.35rem] bg-lavender/8 p-3">
           <span className="text-sm font-black text-navy">Hulp als dit lastig is</span>
@@ -1450,6 +1455,7 @@ function TaskLibraryPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
   const [selectedLibraryDayPart, setSelectedLibraryDayPart] = useState<DayPart>(forcedDayPart ?? "ochtend");
   const [selectedLibraryWeekDays, setSelectedLibraryWeekDays] = useState<WeekDay[]>(requestedWeekDay ? [requestedWeekDay] : []);
+  const [selectedLibraryTime, setSelectedLibraryTime] = useState("");
   const { data: templates } = useLiveData(() => db.taskTemplates.toArray(), [], []);
   const { data: ownTasks } = useLiveData(() => db.tasks.where("category").equals("Eigen").toArray(), [] as Task[], []);
   const { data: settings } = useLiveData(() => db.settings.get("app"), undefined, []);
@@ -1499,7 +1505,7 @@ function TaskLibraryPage() {
       void db.tasks.bulkDelete(cleanupIds);
     }
   }, [ownTasks]);
-  const add = async (template: TaskTemplate, dayPart?: DayPart, weekDaysSelection?: WeekDay[] | null) => {
+  const add = async (template: TaskTemplate, dayPart?: DayPart, weekDaysSelection?: WeekDay[] | null, optionalTimeSelection?: string) => {
     const targetDayPart = dayPart ?? forcedDayPart ?? template.defaultDayPart;
     const currentTasks = await db.tasks.where("dayPart").equals(targetDayPart).toArray();
     const weekDaysForTask = requestedWeekDay
@@ -1507,8 +1513,9 @@ function TaskLibraryPage() {
       : weekPlanningEnabled
         ? (weekDaysSelection?.length ? weekDaysSelection : undefined)
         : undefined;
-    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
+    await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, optionalTime: optionalTimeSelection || undefined, estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
     setSelectedTemplate(null);
+    setSelectedLibraryTime("");
     const nextWeekDay = weekDaysForTask?.length === 1 ? weekDaysForTask[0] : null;
     navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}${weekDayQuery(nextWeekDay)}` : returnTo ?? `/day-settings/${targetDayPart}${weekDayQuery(nextWeekDay)}`);
   };
@@ -1526,12 +1533,9 @@ function TaskLibraryPage() {
     });
   };
   const choose = (template: TaskTemplate) => {
-    if (forcedDayPart && (!weekPlanningEnabled || requestedWeekDay)) {
-      void add(template, forcedDayPart, requestedWeekDay ? [requestedWeekDay] : undefined);
-      return;
-    }
     setSelectedLibraryDayPart(forcedDayPart ?? template.defaultDayPart);
     setSelectedLibraryWeekDays(requestedWeekDay ? [requestedWeekDay] : []);
+    setSelectedLibraryTime("");
     setSelectedTemplate(template);
   };
   const toggleLibraryWeekDay = (weekDay: WeekDay) => {
@@ -1579,50 +1583,69 @@ function TaskLibraryPage() {
       {!visibleTemplates.length ? <div className="mt-4 rounded-[1.45rem] bg-white/90 p-5 text-center text-lg font-black text-navy/55 shadow-card">Geen taak gevonden.</div> : null}
       {selectedTemplate ? (
         <div className="fixed inset-0 z-40 grid place-items-end bg-navy/28 p-3 backdrop-blur-sm sm:place-items-center">
-          <section className="w-full max-w-xl rounded-[1.9rem] bg-white p-4 shadow-soft">
-            <div className="grid grid-cols-[auto_1fr] items-center gap-3">
-              <TaskArt title={selectedTemplate.title} visualKey={selectedTemplate.visualKey as TaskVisualKey | undefined} compact />
-              <div>
-                <h2 className="text-2xl font-black text-navy">{selectedTemplate.title}</h2>
-                <p className="text-sm font-bold text-navy/52">{forcedDayPart ? "Kies op welke dag deze taak komt." : "Kies waar deze taak in het dagritme hoort."}</p>
+          <section className="flex max-h-[82vh] w-full max-w-xl flex-col overflow-hidden rounded-[1.9rem] bg-white p-4 shadow-soft">
+            <div className="overflow-y-auto pr-1">
+              <div className="grid grid-cols-[auto_1fr] items-center gap-3">
+                <TaskArt title={selectedTemplate.title} visualKey={selectedTemplate.visualKey as TaskVisualKey | undefined} compact />
+                <div>
+                  <h2 className="text-xl font-black text-navy">{selectedTemplate.title}</h2>
+                  <p className="text-sm font-bold text-navy/52">{forcedDayPart ? "Kies op welke dag deze taak komt." : "Kies waar deze taak in het dagritme hoort."}</p>
+                </div>
               </div>
-            </div>
-            {!forcedDayPart ? (
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => (
-                  <button key={part} type="button" onClick={() => weekPlanningEnabled && !requestedWeekDay ? setSelectedLibraryDayPart(part) : void add(selectedTemplate, part, requestedWeekDay ? [requestedWeekDay] : undefined)} className={`rounded-[1.45rem] p-3 text-center shadow-card ring-2 ${part === selectedLibraryDayPart ? "bg-lavender text-white ring-lavender" : "bg-lavender/8 text-navy ring-transparent"}`}>
-                    <TaskArt title={dayParts[part].title} compact />
-                    <span className="mt-2 block text-lg font-black">{dayParts[part].title}</span>
-                    {part === selectedTemplate.defaultDayPart ? <span className="mt-1 block text-xs font-black text-white/80">Past vaak hier</span> : null}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            {weekPlanningEnabled && !requestedWeekDay ? (
-              <div className="mt-4">
-                <p className="mb-2 text-sm font-black text-navy/58">Voor welke dag?</p>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {weekDays.map((day) => (
-                    <button
-                      key={day.id}
-                      type="button"
-                      onClick={() => toggleLibraryWeekDay(day.id)}
-                      className={`min-w-[4.3rem] shrink-0 rounded-[1.2rem] px-2 py-3 text-center shadow-card ${selectedLibraryWeekDays.includes(day.id) ? "bg-mint text-white" : "bg-white text-navy/62"}`}
-                    >
-                      <span className="block text-xs font-black leading-4">{day.short}</span>
+              {!forcedDayPart ? (
+                <div className="mt-4 grid grid-cols-2 gap-2.5">
+                  {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => (
+                    <button key={part} type="button" onClick={() => setSelectedLibraryDayPart(part)} className={`rounded-[1.35rem] p-2.5 text-center shadow-card ring-2 ${part === selectedLibraryDayPart ? "bg-lavender text-white ring-lavender" : "bg-lavender/8 text-navy ring-transparent"}`}>
+                      <TaskArt title={dayParts[part].title} compact />
+                      <span className="mt-1.5 block text-base font-black">{dayParts[part].title}</span>
+                      {part === selectedTemplate.defaultDayPart ? <span className="mt-0.5 block text-[0.7rem] font-black text-white/80">Past vaak hier</span> : null}
                     </button>
                   ))}
                 </div>
-                <PrimaryButton
-                  className="mt-4 w-full"
-                  onClick={() => void add(selectedTemplate, selectedLibraryDayPart, selectedLibraryWeekDays)}
-                  disabled={selectedLibraryWeekDays.length === 0}
-                >
-                  Taak toevoegen
-                </PrimaryButton>
+              ) : null}
+              <div className="mt-4 rounded-[1.35rem] bg-lavender/8 p-3">
+                <label className="block text-sm font-black text-navy/58" htmlFor="library-task-time">Tijd toevoegen</label>
+                <input
+                  id="library-task-time"
+                  type="time"
+                  value={selectedLibraryTime}
+                  onChange={(event) => setSelectedLibraryTime(event.target.value)}
+                  className="mt-2 min-h-12 w-full rounded-2xl border border-lavender/20 bg-white px-4 font-bold outline-none focus:ring-4 focus:ring-lavender/20"
+                />
               </div>
-            ) : null}
-            <button type="button" onClick={() => setSelectedTemplate(null)} className="mt-4 min-h-12 w-full rounded-2xl bg-lavender/10 px-5 font-black text-lavender">Annuleren</button>
+              {weekPlanningEnabled && !requestedWeekDay ? (
+                <div className="mt-4">
+                  <p className="mb-2 text-sm font-black text-navy/58">Voor welke dag?</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {weekDays.map((day) => (
+                      <button
+                        key={day.id}
+                        type="button"
+                        onClick={() => toggleLibraryWeekDay(day.id)}
+                        className={`min-w-[4rem] shrink-0 rounded-[1.1rem] px-2 py-2.5 text-center shadow-card ${selectedLibraryWeekDays.includes(day.id) ? "bg-mint text-white" : "bg-white text-navy/62"}`}
+                      >
+                        <span className="block text-xs font-black leading-4">{day.short}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <div className="mt-3 grid gap-3 border-t border-lavender/10 pt-3">
+              <PrimaryButton
+                className="w-full"
+                onClick={() => void add(
+                  selectedTemplate,
+                  selectedLibraryDayPart,
+                  weekPlanningEnabled && !requestedWeekDay ? selectedLibraryWeekDays : (requestedWeekDay ? [requestedWeekDay] : undefined),
+                  selectedLibraryTime
+                )}
+                disabled={weekPlanningEnabled && !requestedWeekDay ? selectedLibraryWeekDays.length === 0 : false}
+              >
+                Taak toevoegen
+              </PrimaryButton>
+              <button type="button" onClick={() => setSelectedTemplate(null)} className="min-h-12 w-full rounded-2xl bg-lavender/10 px-5 font-black text-lavender">Annuleren</button>
+            </div>
           </section>
         </div>
       ) : null}
@@ -1681,9 +1704,9 @@ function RewardsPage() {
           <div className="growth-care-sun" aria-hidden />
           <div className="growth-care-drops" aria-hidden><span /><span /><span /></div>
           <div className="growth-care-hearts" aria-hidden><span /><span /><span /><span /></div>
+          <div className="growth-care-sparkles" aria-hidden><span /><span /><span /></div>
           <div className="growth-care-flowi" aria-hidden>
             <img src="/assets/flowi-home-mascot.png" alt="" className="growth-flowi-character" />
-            <span className="growth-watering-can" />
           </div>
           <div className="growth-care-tree">
             <span className={`growth-plant plant-${stageIndex} active`} />
