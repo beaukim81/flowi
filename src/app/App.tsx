@@ -581,8 +581,10 @@ function NeedPage() {
 function ActionPage() {
   const navigate = useNavigate();
   const { actionId } = useParams();
+  const [searchParams] = useSearchParams();
   const { selectedEmotion, selectedNeed } = useCurrentFlow();
   const isPositiveEmotion = selectedEmotion === "rustig" || selectedEmotion === "blij";
+  const isHelpNowFlow = searchParams.get("source") === "help-now";
   const action = calmStrategies.find((strategy) => strategy.id === actionId) ?? chooseStrategy(selectedEmotion, selectedNeed);
   const suggestedDuration = clampTimerSeconds(action.durationSeconds ?? 120);
   const [duration, setDuration] = useState(suggestedDuration);
@@ -622,14 +624,14 @@ function ActionPage() {
     setRunning(false);
   };
   const finishAction = async () => {
-    if (isPositiveEmotion) {
+    if (isPositiveEmotion || isHelpNowFlow) {
       await db.emotionHistory.add({
         id: id(),
         childProfileId: "default-child",
-        emotionType: selectedEmotion,
-        needType: selectedNeed ?? "praatMetOuder",
+        emotionType: selectedEmotion ?? "wilHulp",
+        needType: selectedNeed ?? action.linkedNeedTypes[0] ?? "praatMetOuder",
         actionId: action.id,
-        helpedRating: "Fijn gevoel vastgehouden",
+        helpedRating: isHelpNowFlow ? "Snelle hulp gedaan" : "Fijn gevoel vastgehouden",
         note: action.title,
         createdAt: now()
       });
@@ -693,10 +695,10 @@ function ActionPage() {
                   <span className="flowi-picture-art">
                     <ExerciseArt title="Hulpzin oefenen" compact />
                   </span>
-                  <span className="flowi-picture-label">Vraag hulp</span>
+                  <span className="flowi-picture-label">Help mij nu</span>
                 </div>
                 <div className="text-left">
-                  <h2 className="text-xl font-black text-navy">Vraag hulp</h2>
+                  <h2 className="text-xl font-black text-navy">Help mij nu</h2>
                   <p className="mt-1 text-sm font-medium leading-6 text-navy/58">Kies wat je nu wilt laten zien of zeggen.</p>
                 </div>
               </div>
@@ -720,6 +722,7 @@ function ActionPage() {
 
 function HelpNowPage() {
   const navigate = useNavigate();
+  const { setEmotion, setNeed, setAction } = useCurrentFlow();
   const fast = ["Ga naar je rustige plek", "Adem zacht", "Zeg: stop, ik heb hulp nodig", "Pak iets zachts"].map((title) => calmStrategies.find((strategy) => strategy.title === title)).filter(Boolean) as CalmStrategy[];
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
@@ -740,7 +743,12 @@ function HelpNowPage() {
             key={strategy.id}
             need={{ id: helpNowNeedForTitle(strategy.title), label: strategy.title, icon: "" }}
             label={shortExerciseTitle(strategy.title)}
-            onClick={() => navigate(`/action/${strategy.id}`)}
+            onClick={() => {
+              setEmotion("wilHulp");
+              setNeed(strategy.linkedNeedTypes[0] ?? "praatMetOuder");
+              setAction(strategy.id);
+              navigate(`/action/${strategy.id}?source=help-now`);
+            }}
           />
         ))}
       </div>
@@ -1633,18 +1641,27 @@ function PracticePage() {
             <ArrowLeft size={25} />
           </button>
         </header>
-        <section className="rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/12 p-4 text-center shadow-soft">
-          <ExerciseArt title={activeExercise.title} />
-          <h1 className="mx-auto mt-3 max-w-xs text-2xl font-black leading-8 text-navy">{shortExerciseTitle(activeExercise.title)}</h1>
-          {timerEnabled ? (
-            <>
-              <div className="mx-auto mt-4 grid h-32 w-32 place-items-center rounded-full bg-white text-4xl font-black text-lavender shadow-card ring-8 ring-lavender/10">{formatTime(remaining)}</div>
-              <div className="mt-3 h-3 rounded-full bg-lilac/18"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
-            </>
-          ) : (
-            <button type="button" onClick={() => setTimerEnabled(true)} className="mt-4 min-h-16 w-full rounded-[1.45rem] bg-white px-6 text-xl font-black text-lavender shadow-card">Timer instellen</button>
-          )}
-        </section>
+        {timerEnabled ? (
+          <section className="rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/12 p-4 text-center shadow-soft">
+            <ExerciseArt title={activeExercise.title} />
+            <h1 className="mx-auto mt-3 max-w-xs text-2xl font-black leading-8 text-navy">{shortExerciseTitle(activeExercise.title)}</h1>
+            <div className="mx-auto mt-4 grid h-32 w-32 place-items-center rounded-full bg-white text-4xl font-black text-lavender shadow-card ring-8 ring-lavender/10">{formatTime(remaining)}</div>
+            <div className="mt-3 h-3 rounded-full bg-lilac/18"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
+          </section>
+        ) : (
+          <article className="flex items-center gap-3 rounded-[1.65rem] bg-white/94 p-4 shadow-card ring-1 ring-lavender/8">
+            <section className="flex-1 rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/12 p-4 text-center shadow-soft">
+              <ExerciseArt title={activeExercise.title} />
+              <h1 className="mx-auto mt-3 max-w-xs text-2xl font-black leading-8 text-navy">{shortExerciseTitle(activeExercise.title)}</h1>
+              <button type="button" onClick={() => setTimerEnabled(true)} className="mt-4 min-h-16 w-full rounded-[1.45rem] bg-white px-6 text-xl font-black text-lavender shadow-card">Timer instellen</button>
+            </section>
+            <div className="grid gap-3" aria-label={`Acties voor ${activeExercise.title}`}>
+              <button type="button" aria-label={`${activeExercise.title} is gelukt`} onClick={() => void completeExercise(activeExercise)} className="child-task-done">
+                <Check size={30} />
+              </button>
+            </div>
+          </article>
+        )}
         {timerEnabled ? (
           <section className="mt-3 grid gap-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
             <div className="flex items-center justify-between gap-3">
@@ -1683,13 +1700,7 @@ function PracticePage() {
             <SecondaryButton onClick={() => { setRemaining(duration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
             <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start samen</>}</PrimaryButton>
           </div>
-        ) : (
-          <div className="mt-3 flex justify-center">
-            <button type="button" aria-label={`${activeExercise.title} is gelukt`} onClick={() => void completeExercise(activeExercise)} className="child-task-done">
-              <Check size={30} />
-            </button>
-          </div>
-        )}
+        ) : null}
         <section className="mt-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
           <h2 className="font-black">Zo doe je het</h2>
           <ol className="mt-2 grid gap-2">
