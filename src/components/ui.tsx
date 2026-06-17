@@ -215,54 +215,6 @@ function AnalogTaskClock({ time, size = "badge" }: { time: string; size?: "badge
   );
 }
 
-function taskClockHeading(title: string) {
-  const text = title.trim().toLowerCase();
-  if (!text) return "Zo laat is jouw activiteit";
-
-  const specialPhrases: Array<[string, string]> = [
-    ["tennis", "Zo laat ga je tennissen"],
-    ["zwemles", "Zo laat ga je zwemmen"],
-    ["voetbal", "Zo laat ga je voetballen"],
-    ["basketbal", "Zo laat ga je basketballen"],
-    ["hockey", "Zo laat ga je hockeyen"],
-    ["turnen", "Zo laat ga je turnen"],
-    ["paardrijden", "Zo laat ga je paardrijden"],
-    ["muziekles", "Zo laat ga je naar muziekles"],
-    ["pianoles", "Zo laat ga je piano spelen"],
-    ["gitaarles", "Zo laat ga je gitaar spelen"],
-    ["drumles", "Zo laat ga je drummen"],
-    ["tekenles", "Zo laat ga je tekenen"],
-    ["schilderles", "Zo laat ga je schilderen"],
-    ["bibliotheek", "Zo laat ga je naar de bibliotheek"],
-    ["school", "Zo laat ga je naar school"],
-    ["tandarts", "Zo laat ga je naar de tandarts"],
-    ["huisarts", "Zo laat ga je naar de huisarts"],
-    ["dokter", "Zo laat ga je naar de dokter"],
-    ["kapper", "Zo laat ga je naar de kapper"],
-    ["logopedie", "Zo laat ga je naar logopedie"],
-    ["fysio", "Zo laat ga je naar de fysio"],
-    ["therapie", "Zo laat ga je naar therapie"],
-    ["bioscoop", "Zo laat ga je naar de bioscoop"],
-    ["restaurant", "Zo laat ga je naar het restaurant"],
-    ["pretpark", "Zo laat ga je naar het pretpark"],
-    ["binnenspeeltuin", "Zo laat ga je naar de binnenspeeltuin"],
-    ["trampolinepark", "Zo laat ga je naar het trampolinepark"],
-    ["zwembad", "Zo laat ga je naar het zwembad"],
-    ["opa", "Zo laat ga je naar opa en oma"],
-    ["oma", "Zo laat ga je naar opa en oma"]
-  ];
-
-  const special = specialPhrases.find(([match]) => text.includes(match));
-  if (special) return special[1];
-
-  if (text.startsWith("naar ")) return `Zo laat ga je ${text}`;
-  if (text.endsWith("en")) return `Zo laat ga je ${text}`;
-  if (text.endsWith("eren")) return `Zo laat ga je ${text}`;
-  if (text.endsWith("len")) return `Zo laat ga je ${text}`;
-
-  return `Zo laat is het voor ${text}`;
-}
-
 export function EmotionCard({ emotion, avatar, onClick }: { emotion: Emotion; avatar?: Avatar; onClick: () => void }) {
   const files: Record<EmotionType, string> = {
     rustig: "rustig",
@@ -424,7 +376,6 @@ export function ChildTaskCard({ task, done, needsHelp = false, onDone, onHelp }:
             <button type="button" aria-label="Klok sluiten" onClick={() => setClockOpen(false)} className="task-clock-close">
               <X size={24} />
             </button>
-            <p className="task-clock-heading">{taskClockHeading(task.title)}</p>
             <AnalogTaskClock time={task.optionalTime} size="overlay" />
           </section>
         </div>

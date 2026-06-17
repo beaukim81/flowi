@@ -44,6 +44,7 @@ const dayPartTitle = (part: DayPart, weekDay: WeekDay | null = null) =>
   part === "naSchool" && isWeekendWeekDay(weekDay) ? "Middag" : dayParts[part].title;
 const taskRunsOnDay = (task: Task, weekDay: WeekDay | null) => !weekDay || !task.weekDays?.length || task.weekDays.includes(weekDay);
 const weekDayQuery = (weekDay: WeekDay | null) => weekDay ? `?weekDay=${weekDay}` : "";
+const returnToWithWeekDay = (path: string, weekDay: WeekDay | null) => `${path}${weekDayQuery(weekDay)}`;
 const normalizeTaskTitle = (value: string) =>
   value
     .trim()
@@ -100,6 +101,34 @@ const shortExerciseTitle = (title: string) => ({
   "Zeg: stop, ik heb hulp nodig": "Vraag hulp",
   "Pak iets zachts": "Iets zachts"
 } as Record<string, string>)[title] ?? title;
+const normalizeWeekDaySelection = (selection?: WeekDay[]) => selection?.length ? selection : weekDays.map((day) => day.id);
+const weekDaySelectionsOverlap = (left?: WeekDay[], right?: WeekDay[]) => {
+  const leftDays = normalizeWeekDaySelection(left);
+  const rightDays = normalizeWeekDaySelection(right);
+  return leftDays.some((day) => rightDays.includes(day));
+};
+const duplicateTaskDaysLabel = (days: WeekDay[]) => {
+  if (!days.length) return "deze dag";
+  if (days.length === 1) return weekDayLabel(days[0]).toLowerCase();
+  if (days.length === weekDays.length) return "meerdere dagen";
+  return days.map((day) => weekDayLabel(day).toLowerCase()).join(", ");
+};
+const findDuplicateTask = (tasks: Task[], input: { title: string; dayPart: DayPart; weekDays?: WeekDay[]; excludeTaskId?: string }) => {
+  const normalizedTitle = normalizeTaskTitle(input.title);
+  return tasks.find((task) =>
+    task.id !== input.excludeTaskId &&
+    task.dayPart === input.dayPart &&
+    normalizeTaskTitle(task.title) === normalizedTitle &&
+    weekDaySelectionsOverlap(task.weekDays, input.weekDays)
+  );
+};
+const confirmDuplicateTask = (existingTask: Task, input: { title: string; dayPart: DayPart; weekDays?: WeekDay[] }) => {
+  const inputDays = normalizeWeekDaySelection(input.weekDays);
+  const overlappingDays = normalizeWeekDaySelection(existingTask.weekDays).filter((day) => inputDays.includes(day));
+  return window.confirm(
+    `"${input.title}" staat al bij ${dayPartTitle(input.dayPart)} op ${duplicateTaskDaysLabel(overlappingDays)}. Wil je deze taak daar toch nog een keer toevoegen?`
+  );
+};
 const exerciseCaregiverTip = (exercise: PracticeExercise) => ({
   blaadjesadem: "Je kunt rustig meeademen en het tempo laag houden. Samen vertragen is hier vaak belangrijker dan precies goed ademen.",
   ballonadem: "Het helpt vaak om samen te voelen wat de buik doet. Een hand op de buik en jouw rustige voordoen is meestal al genoeg.",
@@ -356,7 +385,27 @@ const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] =
   { key: "askHelp", label: "Vraag hulp", hint: "hand, ouder" },
   { key: "wallPush", label: "Duw tegen muur", hint: "stevig duwen" }
 ];
+const parseTaskTimeValue = (value?: string) => {
+  if (!value || !/^\d{2}:\d{2}$/.test(value)) return null;
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+const sortTasksForSchedule = (tasks: Task[]) => [...tasks].sort((a, b) => {
+  const aTime = parseTaskTimeValue(a.optionalTime);
+  const bTime = parseTaskTimeValue(b.optionalTime);
+  if (aTime !== null && bTime !== null && aTime !== bTime) return aTime - bTime;
+  if (aTime !== null && bTime === null) return -1;
+  if (aTime === null && bTime !== null) return 1;
+  return (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.createdAt.localeCompare(b.createdAt);
+});
 const sortTasks = (tasks: Task[]) => [...tasks].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.createdAt.localeCompare(b.createdAt));
+const normalizeDayPartTaskOrder = async (dayPart: DayPart) => {
+  const tasks = await db.tasks.where("dayPart").equals(dayPart).toArray();
+  const orderedTasks = sortTasksForSchedule(tasks);
+  await db.transaction("rw", db.tasks, async () => {
+    await Promise.all(orderedTasks.map((task, index) => db.tasks.update(task.id, { sortOrder: index, updatedAt: now() })));
+  });
+};
 const helpReasons: { id: HelpReason; label: string; need: NeedType; tips: string[] }[] = [
   { id: "teVeel", label: "Te veel", need: "rustigePlek", tips: ["Maak de taak kleiner.", "Kies minder prikkels: zachter licht, minder geluid.", "Doe eerst 5 rustige ademhalingen."] },
   { id: "boos", label: "Boos", need: "bewegen", tips: ["Stop even met de taak.", "Geef je lijf stevig werk.", "Vraag daarna samen wat de eerste kleine stap is."] },
@@ -1185,7 +1234,7 @@ function DaySettingsPage() {
           return <DayPartCard key={part} title={dayPartTitle(part, planningWeekDay)} visualTitle={dayParts[part].title} icon={dayParts[part].icon} progress={partTasks.length ? (done / partTasks.length) * 100 : 0} to={`/day-settings/${part}${weekDayQuery(planningWeekDay)}`} />;
         })}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak maken</SecondaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?returnTo=${encodeURIComponent(returnToWithWeekDay("/day-settings", planningWeekDay))}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?returnTo=${encodeURIComponent(returnToWithWeekDay("/day-settings", planningWeekDay))}`)}>Taak maken</SecondaryButton></div>
       </div>
     </>
   );
@@ -1315,7 +1364,7 @@ function DaySettingsPartPage() {
           <TaskCard task={draggedTask} done={false} onEdit={() => navigate(`/tasks/${draggedTask.id}/edit`)} onDelete={() => deleteTask(draggedTask)} editable />
         </div>
       ) : null}
-      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=%2Fday-settings${planningWeekDay ? `&weekDay=${planningWeekDay}` : ""}`)}>Taak maken</SecondaryButton></div>
+      <div className="mt-4 grid grid-cols-2 gap-3"><PrimaryButton onClick={() => navigate(`/task-library?dayPart=${part}&returnTo=${encodeURIComponent(returnToWithWeekDay(`/day-settings/${part}`, planningWeekDay))}`)}>Taak kiezen</PrimaryButton><SecondaryButton onClick={() => navigate(`/tasks/new?dayPart=${part}&returnTo=${encodeURIComponent(returnToWithWeekDay(`/day-settings/${part}`, planningWeekDay))}`)}>Taak maken</SecondaryButton></div>
       <p className="mt-3 text-center text-xs font-bold text-navy/45">Sleep taken omhoog of omlaag om de volgorde te veranderen.</p>
       </div>
     </>
@@ -1348,14 +1397,21 @@ function TaskFormPage() {
     const currentTasks = await db.tasks.where("dayPart").equals(dayPart).toArray();
     const taskSteps = steps.split("\n").map((step) => step.trim()).filter(Boolean);
     const weekDaysForTask = weekPlanningEnabled ? (selectedWeekDays.length ? selectedWeekDays : weekDays.map((day) => day.id)) : undefined;
-    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: title || "Nieuwe taak", icon, visualKey: visualKey || undefined, fallbackStrategyId: fallbackStrategyId || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: taskSteps.length ? taskSteps : ["Klaar."], repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
+    const finalTitle = title || "Nieuwe taak";
+    const duplicateTask = findDuplicateTask(currentTasks, { title: finalTitle, dayPart, weekDays: weekDaysForTask, excludeTaskId: existing?.id });
+    if (duplicateTask && !confirmDuplicateTask(duplicateTask, { title: finalTitle, dayPart, weekDays: weekDaysForTask })) return;
+    const task: Task = { id: existing?.id ?? id(), childProfileId: "default-child", title: finalTitle, icon, visualKey: visualKey || undefined, fallbackStrategyId: fallbackStrategyId || undefined, category: "Eigen", ageGroup: "vrij", dayPart, sortOrder: existing?.sortOrder ?? currentTasks.length, steps: taskSteps.length ? taskSteps : ["Klaar."], repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, optionalTime: optionalTime || undefined, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: existing?.createdAt ?? now(), updatedAt: now() };
     await db.tasks.put(task);
-    navigate(returnTo === "/day-settings" ? `/day-settings/${dayPart}${weekDayQuery(requestedWeekDay)}` : returnTo ?? `/day-settings/${dayPart}${weekDayQuery(requestedWeekDay)}`);
+    if (existing && existing.dayPart !== dayPart) {
+      await normalizeDayPartTaskOrder(existing.dayPart);
+    }
+    await normalizeDayPartTaskOrder(dayPart);
+    navigate(returnTo ?? `/day-settings/${dayPart}${weekDayQuery(requestedWeekDay)}`);
   };
   const remove = async () => {
     if (!existing) return;
     await db.tasks.delete(existing.id);
-    navigate(`/day-settings/${existing.dayPart}`);
+    navigate(returnTo ?? `/day-settings/${existing.dayPart}${weekDayQuery(requestedWeekDay)}`);
   };
   return (
     <>
@@ -1506,11 +1562,13 @@ function TaskLibraryPage() {
     const weekDaysForTask = weekPlanningEnabled
       ? (weekDaysSelection?.length ? weekDaysSelection : undefined)
       : undefined;
+    const duplicateTask = findDuplicateTask(currentTasks, { title: template.title, dayPart: targetDayPart, weekDays: weekDaysForTask });
+    if (duplicateTask && !confirmDuplicateTask(duplicateTask, { title: template.title, dayPart: targetDayPart, weekDays: weekDaysForTask })) return;
     await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, optionalTime: optionalTimeSelection || undefined, estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
+    await normalizeDayPartTaskOrder(targetDayPart);
     setSelectedTemplate(null);
     setSelectedLibraryTime("");
-    const nextWeekDay = weekDaysForTask?.length === 1 ? weekDaysForTask[0] : null;
-    navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}${weekDayQuery(nextWeekDay)}` : returnTo ?? `/day-settings/${targetDayPart}${weekDayQuery(nextWeekDay)}`);
+    navigate(returnTo ?? `/day-settings/${targetDayPart}${weekDayQuery(requestedWeekDay)}`);
   };
   const removeOwnTemplate = async (template: TaskTemplate) => {
     const matchingTasks = ownTasks.filter((task) =>
@@ -1972,7 +2030,16 @@ function BackupPage() {
 }
 
 function PrivacyPage() {
-  return <><PageHeader title="Privacy" /><div className="rounded-[1.6rem] bg-white p-5 shadow-soft"><p className="text-base font-normal leading-6 text-navy/68">Flowi slaat gegevens alleen lokaal op dit apparaat op. Er wordt niets naar een server gestuurd. Als je appdata of sitegegevens wist, kunnen gegevens verdwijnen. Maak af en toe een backup als je gegevens wilt bewaren.</p><p className="mt-2 text-base font-normal leading-6 text-navy/58">Flowi is een hulpmiddel voor rust, dagstructuur en communicatie. Het vervangt geen professionele hulp, diagnose of behandeling. Bij ernstige zorgen of direct gevaar: neem contact op met huisarts, behandelaar of noodhulp.</p></div></>;
+  return (
+    <>
+      <PageHeader title="Privacy" />
+      <div className="rounded-[1.6rem] bg-white p-5 shadow-soft">
+        <p className="text-base font-normal leading-6 text-navy/68">Flowi gebruikt geen account en bewaart gegevens op dit apparaat. Er wordt in deze versie niets naar een eigen server verstuurd.</p>
+        <p className="mt-2 text-base font-normal leading-6 text-navy/58">Flowi vraagt in deze versie geen camera, microfoon of locatie om de app te gebruiken. Als je appgegevens of sitegegevens wist, kunnen instellingen en voortgang verdwijnen. Daarom is het verstandig om na belangrijke wijzigingen af en toe een backup te maken.</p>
+        <p className="mt-2 text-base font-normal leading-6 text-navy/58">Als je zelf een backup deelt via je eigen telefoon of berichtenapp, kies je daar zelf voor. Controleer dan zelf met wie je dat bestand deelt en waar je het bewaart.</p>
+      </div>
+    </>
+  );
 }
 
 function AboutPage() {
@@ -1983,8 +2050,8 @@ function AboutPage() {
       <section className="overflow-hidden rounded-[1.8rem] bg-gradient-to-b from-sky/18 via-white to-mint/12 p-5 shadow-soft">
         <div className="grid grid-cols-[1fr_auto] items-end gap-3">
           <div>
-            <h2 className="text-3xl font-black text-navy">Waarom Flowi?</h2>
-            <p className={`mt-2 ${bodyText}`}>Een rustige hulp voor jonge kinderen die snel vol zitten, vastlopen of extra structuur nodig hebben.</p>
+            <h2 className="text-3xl font-black text-navy">Wat is Flowi?</h2>
+            <p className={`mt-2 ${bodyText}`}>Flowi is een visueel hulpmiddel voor jonge kinderen en de volwassenen om hen heen. De app helpt om de dag overzichtelijk te maken, spanning eerder te zien en samen kleine helpende stapjes te kiezen.</p>
           </div>
           <img src="/assets/flowi-home-mascot.png" alt="" className="about-flowi-image" />
         </div>
@@ -1992,25 +2059,25 @@ function AboutPage() {
 
       <section className="mt-4 grid gap-2.5">
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Voor wie en wanneer?</h3>
+          <h3 className="text-xl font-black text-navy">Voor wie is Flowi bedoeld?</h3>
           <p className={`mt-1.5 ${bodyText}`}>Flowi past bij jonge kinderen die nog niet altijd woorden hebben voor gevoel, spanning, onrust of wat er misgaat in een taak of overgang.</p>
-          <p className={`mt-2 ${bodyText}`}>De app helpt vooral wanneer een kind baat heeft bij voorspelbaarheid, visuele keuzes, herhaling en kleine stapjes thuis, op school of in de opvang.</p>
+          <p className={`mt-2 ${bodyText}`}>De app kan helpend zijn bij dagelijkse situaties waarin een kind baat heeft bij voorspelbaarheid, visuele steun, herhaling en kleine keuzes thuis, op school of in de opvang.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Wat ziet het kind in de app?</h3>
-          <p className={`mt-1.5 ${bodyText}`}>Flowi laat vooral grote plaatjes, korte woorden en duidelijke keuzes zien. Zo hoeft een kind niet veel te lezen om toch te kunnen kiezen of meedoen.</p>
-          <p className={`mt-2 ${bodyText}`}>De kindkant draait om drie dingen: voelen wat er is, zien wat er vandaag komt en een helpend stapje kiezen als iets lastig wordt.</p>
+          <h3 className="text-xl font-black text-navy">Wat doet de app?</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Flowi werkt met grote plaatjes, korte woorden en duidelijke keuzes. Zo hoeft een kind niet veel te lezen om toch te kunnen aanwijzen wat het voelt, wat het nodig heeft of wat het al gedaan heeft.</p>
+          <p className={`mt-2 ${bodyText}`}>De app ondersteunt vooral drie dingen: dagstructuur, gevoel zichtbaar maken en samen een klein passend stapje kiezen wanneer iets lastig wordt.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Planning en rol van de volwassene</h3>
-          <p className={`mt-1.5 ${bodyText}`}>De ouder, verzorger of leerkracht zet de structuur neer. Dat kan als vast dagritme of als weekplanning als dagen echt van elkaar verschillen.</p>
-          <p className={`mt-2 ${bodyText}`}>Het kind ziet daarna alleen de rustige voorkant van die planning. Zo blijft de app overzichtelijk, terwijl de volwassene de inhoud, volgorde en verwachtingen bewaakt.</p>
+          <h3 className="text-xl font-black text-navy">Rol van ouder, verzorger of leerkracht</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Flowi is bedoeld om samen te gebruiken. De volwassene zet de structuur neer, bewaakt de inhoud en helpt het kind om te vertragen, te kiezen en weer verder te kunnen.</p>
+          <p className={`mt-2 ${bodyText}`}>Je hoeft niet te wachten tot een kind zelf woorden vindt. Ook als jij spanning opmerkt, kun je Flowi samen openen en kijken wat er speelt, wat helpend kan zijn en welk klein stapje nu past.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Gevoel, hulp en samen reguleren</h3>
-          <p className={`mt-1.5 ${bodyText}`}>Een kind kan met Flowi laten zien hoe het zich voelt, wat het nodig heeft en welke oefening nu mogelijk kan helpen.</p>
-          <p className={`mt-2 ${bodyText}`}>De oefeningen zijn bewust kort en visueel. Ze werken meestal het best als een volwassene helpt vertragen, voordoet, nabij blijft en meebeweegt met wat haalbaar is.</p>
-          <p className={`mt-2 ${bodyText}`}>Flowi is dus geen lijstje dat een kind alleen moet afwerken. Juist bij spanning, boosheid, verdriet of overprikkeling is samen reguleren vaak de veiligste en duidelijkste route.</p>
+          <h3 className="text-xl font-black text-navy">Spanning signaleren en samen kiezen</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Een kind kan met Flowi laten zien hoe het zich voelt of wat het nodig heeft. Maar Flowi kan ook gebruikt worden als een volwassene spanning, onrust of vastlopen opmerkt voordat een kind daar zelf woorden voor heeft.</p>
+          <p className={`mt-2 ${bodyText}`}>De oefeningen en keuzes in Flowi zijn bewust kort en visueel. Ze zijn bedoeld als kleine ondersteunende stapjes, niet als oplossing voor alles wat een kind voelt of meemaakt.</p>
+          <p className={`mt-2 ${bodyText}`}>Samen reguleren blijft daarbij belangrijk: Flowi helpt het gesprek en de keuze op gang, maar de volwassene blijft degene die nabij is en inschat wat nu passend is.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
           <h3 className="text-xl font-black text-navy">Wat helpt een volwassene in het moment?</h3>
@@ -2037,8 +2104,17 @@ function AboutPage() {
         <h2 className="text-2xl font-black text-navy">Wat Flowi wel en niet is</h2>
         <div className={`mt-2 grid gap-2 ${bodyText}`}>
           <p>Flowi is een hulpmiddel voor structuur, samen reguleren en kleine helpende keuzes in het moment.</p>
-          <p>Flowi is geen behandeling, geen diagnose en geen vervanging van een ouder, leerkracht of hulpverlener.</p>
+          <p>Flowi is geen medische of psychologische behandeling, geen diagnose-instrument en geen vervanging van professionele hulp.</p>
+          <p>De app doet geen uitspraken over de gezondheid van een kind en is niet bedoeld voor noodsituaties of acute crises. Bij zorgen over veiligheid, gezondheid of ontwikkeling is extra beoordeling of hulp buiten Flowi belangrijk.</p>
           <p>Blijft een kind vaak vastlopen of is er meer steun nodig dan de app kan geven, dan is dat geen mislukking van Flowi maar een teken dat extra begeleiding belangrijk is.</p>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
+        <h2 className="text-2xl font-black text-navy">Gegevens en transparantie</h2>
+        <div className={`mt-2 grid gap-2 ${bodyText}`}>
+          <p>Flowi gebruikt in deze versie geen account en bewaart gegevens op dit apparaat. Informatie over privacy en backup staat apart op de pagina&apos;s Privacy en Backup bewaren.</p>
+          <p>Als functies in de toekomst veranderen, zoals gegevens delen of extra apparaatfuncties gebruiken, dan horen die wijzigingen duidelijk uitgelegd te worden in de app en in de store-informatie.</p>
         </div>
       </section>
     </>
