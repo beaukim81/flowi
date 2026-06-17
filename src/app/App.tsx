@@ -1263,8 +1263,11 @@ function TaskLibraryPage() {
   const [category, setCategory] = useState("Alles");
   const [search, setSearch] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
+  const [selectedLibraryWeekDay, setSelectedLibraryWeekDay] = useState<WeekDay>(requestedWeekDay ?? currentWeekDay());
   const { data: templates } = useLiveData(() => db.taskTemplates.toArray(), [], []);
   const { data: ownTasks } = useLiveData(() => db.tasks.where("category").equals("Eigen").toArray(), [] as Task[], []);
+  const { data: settings } = useLiveData(() => db.settings.get("app"), undefined, []);
+  const weekPlanningEnabled = Boolean(settings?.weekPlanningEnabled);
   const standardTemplates = useMemo(() => {
     const unique = new Map<string, TaskTemplate>();
     templates.forEach((template) => {
@@ -1310,13 +1313,14 @@ function TaskLibraryPage() {
       void db.tasks.bulkDelete(cleanupIds);
     }
   }, [ownTasks]);
-  const add = async (template: TaskTemplate, dayPart?: DayPart) => {
+  const add = async (template: TaskTemplate, dayPart?: DayPart, weekDay?: WeekDay | null) => {
     const targetDayPart = dayPart ?? forcedDayPart ?? template.defaultDayPart;
     const currentTasks = await db.tasks.where("dayPart").equals(targetDayPart).toArray();
-    const weekDaysForTask = requestedWeekDay ? [requestedWeekDay] : undefined;
+    const targetWeekDay = requestedWeekDay ?? (weekPlanningEnabled ? weekDay ?? selectedLibraryWeekDay : null);
+    const weekDaysForTask = targetWeekDay ? [targetWeekDay] : undefined;
     await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
     setSelectedTemplate(null);
-    navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}${weekDayQuery(requestedWeekDay)}` : returnTo ?? `/day-settings/${targetDayPart}${weekDayQuery(requestedWeekDay)}`);
+    navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}${weekDayQuery(targetWeekDay)}` : returnTo ?? `/day-settings/${targetDayPart}${weekDayQuery(targetWeekDay)}`);
   };
   const removeOwnTemplate = async (template: TaskTemplate) => {
     const matchingTasks = ownTasks.filter((task) =>
@@ -1332,8 +1336,8 @@ function TaskLibraryPage() {
     });
   };
   const choose = (template: TaskTemplate) => {
-    if (forcedDayPart) {
-      void add(template, forcedDayPart);
+    if (forcedDayPart && (!weekPlanningEnabled || requestedWeekDay)) {
+      void add(template, forcedDayPart, requestedWeekDay);
       return;
     }
     setSelectedTemplate(template);
@@ -1385,18 +1389,39 @@ function TaskLibraryPage() {
               <TaskArt title={selectedTemplate.title} visualKey={selectedTemplate.visualKey as TaskVisualKey | undefined} compact />
               <div>
                 <h2 className="text-2xl font-black text-navy">{selectedTemplate.title}</h2>
-                <p className="text-sm font-bold text-navy/52">Kies waar deze taak in het dagritme hoort.</p>
+                <p className="text-sm font-bold text-navy/52">{forcedDayPart ? "Kies op welke dag deze taak komt." : "Kies waar deze taak in het dagritme hoort."}</p>
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => (
-                <button key={part} type="button" onClick={() => add(selectedTemplate, part)} className={`rounded-[1.45rem] p-3 text-center shadow-card ring-2 ${part === selectedTemplate.defaultDayPart ? "bg-lavender text-white ring-lavender" : "bg-lavender/8 text-navy ring-transparent"}`}>
-                  <TaskArt title={dayParts[part].title} compact />
-                  <span className="mt-2 block text-lg font-black">{dayParts[part].title}</span>
-                  {part === selectedTemplate.defaultDayPart ? <span className="mt-1 block text-xs font-black text-white/80">Past vaak hier</span> : null}
-                </button>
-              ))}
-            </div>
+            {!forcedDayPart ? (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => (
+                  <button key={part} type="button" onClick={() => add(selectedTemplate, part, requestedWeekDay ?? selectedLibraryWeekDay)} className={`rounded-[1.45rem] p-3 text-center shadow-card ring-2 ${part === selectedTemplate.defaultDayPart ? "bg-lavender text-white ring-lavender" : "bg-lavender/8 text-navy ring-transparent"}`}>
+                    <TaskArt title={dayParts[part].title} compact />
+                    <span className="mt-2 block text-lg font-black">{dayParts[part].title}</span>
+                    {part === selectedTemplate.defaultDayPart ? <span className="mt-1 block text-xs font-black text-white/80">Past vaak hier</span> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {weekPlanningEnabled && !requestedWeekDay ? (
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-black text-navy/58">Voor welke dag?</p>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {weekDays.map((day) => (
+                    <button
+                      key={day.id}
+                      type="button"
+                      onClick={() => setSelectedLibraryWeekDay(day.id)}
+                      className={`min-w-[4.3rem] shrink-0 rounded-[1.2rem] px-2 py-3 text-center shadow-card ${selectedLibraryWeekDay === day.id ? "bg-mint text-white" : "bg-white text-navy/62"}`}
+                    >
+                      <span className="block text-xs font-black leading-4">{day.short}</span>
+                      <span className="mt-1 block text-[0.72rem] font-bold leading-4">{day.label}</span>
+                    </button>
+                  ))}
+                </div>
+                {forcedDayPart ? <PrimaryButton className="mt-4 w-full" onClick={() => add(selectedTemplate, forcedDayPart, selectedLibraryWeekDay)}>Toevoegen aan {dayPartTitle(forcedDayPart, selectedLibraryWeekDay)}</PrimaryButton> : null}
+              </div>
+            ) : null}
             <button type="button" onClick={() => setSelectedTemplate(null)} className="mt-4 min-h-12 w-full rounded-2xl bg-lavender/10 px-5 font-black text-lavender">Annuleren</button>
           </section>
         </div>

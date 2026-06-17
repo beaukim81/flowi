@@ -130,6 +130,33 @@ function emotionLabel(emotion: EmotionType) {
   return labels[emotion];
 }
 
+function parseClockTime(value?: string) {
+  if (!value) return null;
+  const match = value.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (Number.isNaN(hours) || Number.isNaN(minutes) || hours > 23 || minutes > 59) return null;
+  return { hours, minutes };
+}
+
+function AnalogTaskClock({ time }: { time: string }) {
+  const parsed = parseClockTime(time);
+  if (!parsed) return null;
+  const minuteRotation = parsed.minutes * 6;
+  const hourRotation = ((parsed.hours % 12) + parsed.minutes / 60) * 30;
+  return (
+    <div className="task-clock-badge" aria-label={`Tijd ${time}`}>
+      <span className="task-clock-face" aria-hidden>
+        <span className="task-clock-hand task-clock-hour" style={{ transform: `translateX(-50%) rotate(${hourRotation}deg)` }} />
+        <span className="task-clock-hand task-clock-minute" style={{ transform: `translateX(-50%) rotate(${minuteRotation}deg)` }} />
+        <span className="task-clock-center" />
+      </span>
+      <span className="task-clock-time">{time}</span>
+    </div>
+  );
+}
+
 export function EmotionCard({ emotion, avatar, onClick }: { emotion: Emotion; avatar?: Avatar; onClick: () => void }) {
   const files: Record<EmotionType, string> = {
     rustig: "rustig",
@@ -268,6 +295,7 @@ export function ChildTaskCard({ task, done, needsHelp = false, onDone, onHelp }:
       <div className="child-task-main">
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} />
         <h3>{task.title}</h3>
+        {task.optionalTime ? <AnalogTaskClock time={task.optionalTime} /> : null}
       </div>
       <div className="child-task-actions" aria-label={`Acties voor ${task.title}`}>
         <button type="button" aria-label={done ? `${task.title} weer open zetten` : `${task.title} is gelukt`} aria-pressed={done} onClick={onDone} className="child-task-done">
