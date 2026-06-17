@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { registerSW } from "virtual:pwa-register";
-import { BookOpen, CalendarDays, Database, HeartHandshake, Minus, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, Check, Database, HeartHandshake, HelpCircle, Minus, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Trash2, X } from "lucide-react";
 import { avatarAssets } from "../data/avatars";
 import { calmStrategies } from "../data/calmStrategies";
 import { emotions, unsureEmotions } from "../data/emotions";
@@ -100,6 +100,51 @@ const shortExerciseTitle = (title: string) => ({
   "Zeg: stop, ik heb hulp nodig": "Vraag hulp",
   "Pak iets zachts": "Iets zachts"
 } as Record<string, string>)[title] ?? title;
+const exerciseCaregiverTip = (exercise: PracticeExercise) => ({
+  blaadjesadem: "Je kunt rustig meeademen en het tempo laag houden. Samen vertragen is hier vaak belangrijker dan precies goed ademen.",
+  ballonadem: "Het helpt vaak om samen te voelen wat de buik doet. Een hand op de buik en jouw rustige voordoen is meestal al genoeg.",
+  "bloem-kaars": "Veel kinderen snappen deze oefening meteen als je hem eerst even voordoet. Kort en speels werkt hier vaak het fijnst.",
+  "hand-op-hart": "Als de woorden niet passen, is dat helemaal niet erg. Alleen de hand op het hart en rustig ademen kan al helpend zijn.",
+  "zware-deken": "Kijk samen welke houding prettig voelt. Rustig benoemen wat zwaar mag worden is vaak al voldoende.",
+  "kijk-een-ding": "Je kunt samen één vast punt kiezen als dat helpt. Hoe minder er verder hoeft, hoe rustiger deze oefening meestal werkt.",
+  "vijf-dingen-zien": "Als vijf stappen veel voelt, mag het ook kleiner. Samen drie dingen zien kan net zo goed passend zijn.",
+  "muur-duwen": "Het helpt vaak als je even voordoet hoe stevig maar veilig duwen eruitziet. Je kunt stoppen zodra je merkt dat de spanning zakt.",
+  "spring-ster": "Een beetje ruimte en zacht landen helpt hier vaak goed. Deze oefening werkt vooral fijn om energie eruit te laten, zonder extra drukte te maken.",
+  "armen-schudden": "Je kunt samen groot beginnen en langzaam naar stil gaan. Juist dat rustige afbouwen maakt deze oefening vaak helpend.",
+  dierenloop: "Eén dier tegelijk is meestal al genoeg. Rustig meedoen of nadoen houdt het overzichtelijk.",
+  "eerste-stap": "Het helpt vaak als alleen stap één in beeld blijft. Zo voelt beginnen kleiner en beter te overzien.",
+  "mini-keuze": "Twee eenvoudige opties zijn hier vaak al genoeg. Minder woorden en minder keuzes geven meestal meer rust.",
+  "vraag-hulp": "Je kunt de zin samen oefenen zonder druk. Als er daarna meteen helpend gereageerd wordt, voelt hulp vragen vaak veiliger.",
+  "stop-zin": "Deze zin oefenen op een rustig moment helpt vaak voor later. Een korte, voorspelbare reactie maakt hem nog bruikbaarder.",
+  "teken-wolk": "Tekenen mag hier vooral een uitlaat zijn. Alleen meekijken als het kind dat prettig vindt is vaak al genoeg.",
+  "kleur-rust": "Rustig kleuren werkt vaak fijner met weinig materiaal tegelijk. Dan hoeft een kind niet ook nog veel te kiezen.",
+  "schildpad-pauze": "Je kunt dichtbij blijven terwijl het kind zichzelf klein maakt. Rustig weer samen omhoogkomen helpt vaak goed.",
+  "voeten-voelen": "Alleen benoemen wat nu de volgende stap is, helpt hier vaak het meest. De rust zit vooral in vertragen en voelen.",
+  "kaak-los": "Veel kinderen vinden dit makkelijker als je het zelf even voordoet. Samen nadoen kan meer helpen dan uitleggen.",
+  "robot-lappenpop": "Het verschil tussen stevig en slap mag speels blijven. Als je merkt dat aanspannen juist te veel doet, kun je rustig eerder stoppen.",
+  "handen-duwen": "Dit kan een fijne kleinere versie zijn van duwen tegen de muur. Rustig meetellen en daarna even stilte laten vallen helpt vaak goed.",
+  slakkenstap: "Soms helpt het al als jij gewoon even meeloopt in hetzelfde trage tempo. Hoe minder er verder hoeft, hoe beter deze oefening vaak landt.",
+  waterpauze: "Hier helpt vooral het samen vertragen. Het gaat niet alleen om drinken, maar om even rust maken in het moment.",
+  "geluid-zachter": "Als het lukt om de prikkel echt kleiner te maken, merk je vaak meteen verschil. Het helpt als er daarna niet te veel extra gevraagd wordt.",
+  "licht-zachter": "Samen kijken of licht of plek aangepast kan worden geeft vaak snel meer rust. Minder fel en minder visuele druk helpt veel kinderen direct.",
+  "wacht-hand": "Deze oefening werkt vaak fijn bij korte wachttijd. Duidelijk maken wanneer het wachten klaar is, geeft extra houvast.",
+  "samen-plan": "Een klein plan met nu en straks voelt vaak overzichtelijker. Zo blijft de eerste stap goed te doen.",
+  duimkeuze: "Deze oefening werkt vaak het best als er meteen rustig gereageerd wordt op wat het kind laat zien. Dan voelt die keuze ook echt veilig.",
+  "veilig-boos": "Dichtbij blijven en samen een veilige plek kiezen helpt hier vaak goed. Boze energie mag eruit, zolang dat veilig blijft voor kind, ander en omgeving.",
+  slaapadem: "Een zachte stem en weinig extra prikkels helpen hier meestal het meest. Bij moeheid werkt minder vaak beter dan meer.",
+  "regenboog-adem": "Groot en rustig voordoen maakt deze oefening vaak meteen duidelijk. Een laag tempo helpt om hem ook echt rustgevend te houden.",
+  "wiebelen-stoppen": "Samen het verschil voelen tussen bewegen en stil worden maakt deze oefening vaak sterk. Korte, duidelijke stiltes zijn meestal genoeg.",
+  "rustdoos-kiezen": "Rustig samen kiezen uit één ding tegelijk helpt vaak meer dan veel opties aanbieden. Zo blijft het overzichtelijk."
+} as Record<string, string>)[exercise.id] ?? "Blijf rustig dichtbij en houd de oefening klein en duidelijk.";
+const actionHelpOptions = (title: string) => {
+  const text = title.toLowerCase();
+  if (text.includes("knuffel") || text.includes("zachts") || text.includes("kussen")) return ["Blijf even bij mij.", "Doe het met mij samen.", "Help mij weer rustig worden."];
+  if (text.includes("adem") || text.includes("hart")) return ["Adem met mij mee.", "Doe het rustig voor.", "Blijf even dichtbij."];
+  if (text.includes("muur") || text.includes("stamp") || text.includes("spring") || text.includes("schud") || text.includes("dierenloop")) return ["Doe eerst één keer voor.", "Blijf erbij.", "Help mij weer stoppen."];
+  if (text.includes("keuze") || text.includes("samen") || text.includes("hulp nodig") || text.includes("ik weet het even niet")) return ["Kies met mij mee.", "Wijs stap één aan.", "Blijf even bij mij."];
+  if (text.includes("rustige plek") || text.includes("deken") || text.includes("licht") || text.includes("koptelefoon")) return ["Ga met mij mee.", "Blijf in de buurt.", "Maak het samen rustig."];
+  return ["Kom even bij mij.", "Doe het rustig voor.", "Blijf even bij mij."];
+};
 const shortTaskTitle = (title: string) => ({
   "Tandenpoetsen ochtend": "Tandenpoetsen",
   "Tandenpoetsen avond": "Tandenpoetsen",
@@ -115,6 +160,21 @@ const shortTaskTitle = (title: string) => ({
   "Rustige plek kiezen": "Rustige plek",
   "Planten water geven": "Planten water"
 } as Record<string, string>)[title] ?? title;
+const actionCompletionLabel = (title: string, emotion?: EmotionType) => {
+  const text = title.toLowerCase();
+  if (emotion === "rustig") {
+    if (text.includes("fijn")) return "Je wist goed wat fijn voelde.";
+    if (text.includes("rustkracht") || text.includes("water")) return "Je gaf je rust aandacht.";
+    return "Je voelde wat bij je paste.";
+  }
+  if (emotion === "blij") return "Je hield je fijne gevoel goed vast.";
+  if (text.includes("knuffel") || text.includes("zachts") || text.includes("kussen")) return "Je koos iets zachts voor jezelf.";
+  if (text.includes("adem") || text.includes("hart")) return "Je maakte ruimte om rustiger te ademen.";
+  if (text.includes("muur") || text.includes("stamp") || text.includes("spring") || text.includes("schud") || text.includes("dierenloop")) return "Je gaf je lijf een helpend stapje.";
+  if (text.includes("hulp") || text.includes("samen") || text.includes("keuze")) return "Je liet zien wat je nodig had.";
+  if (text.includes("rustige plek") || text.includes("deken") || text.includes("licht") || text.includes("koptelefoon")) return "Je koos een rustig plekje voor jezelf.";
+  return "Je koos een helpend stapje.";
+};
 
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
@@ -554,62 +614,107 @@ function ActionPage() {
     const rest = (seconds % 60).toString().padStart(2, "0");
     return `${minutes}:${rest}`;
   };
+  const helpOptions = actionHelpOptions(action.title);
   const setActionDuration = (seconds: number) => {
     const next = clampTimerSeconds(seconds);
     setDuration(next);
     setRemaining(next);
     setRunning(false);
   };
+  const finishAction = async () => {
+    if (isPositiveEmotion) {
+      await db.emotionHistory.add({
+        id: id(),
+        childProfileId: "default-child",
+        emotionType: selectedEmotion,
+        needType: selectedNeed ?? "praatMetOuder",
+        actionId: action.id,
+        helpedRating: "Fijn gevoel vastgehouden",
+        note: action.title,
+        createdAt: now()
+      });
+      await addGrowthReward(actionCompletionLabel(action.title, selectedEmotion), action.title);
+      navigate("/rewards");
+      return;
+    }
+    navigate("/reflection");
+  };
   return (
-    <section className="phone-screen action-scene p-5 text-center">
-      <PageHeader title={action.title} back />
-      <section className="flowi-picture-card flowi-picture-card-breathe mx-auto">
-        <span className="flowi-picture-art">
-          <ExerciseArt title={action.title} />
-        </span>
-        <span className="flowi-picture-label">{shortExerciseTitle(action.title)}</span>
+    <>
+      <section className="phone-screen action-scene p-5 text-center">
+        <PageHeader title={action.title} back />
+        <article className="mx-auto flex items-center gap-3 rounded-[1.65rem] bg-white/94 p-4 shadow-card ring-1 ring-lavender/8">
+          <section className="flowi-picture-card flowi-picture-card-breathe flex-1">
+            <span className="flowi-picture-art">
+              <ExerciseArt title={action.title} />
+            </span>
+            <span className="flowi-picture-label">{shortExerciseTitle(action.title)}</span>
+          </section>
+          <div className="grid gap-3" aria-label={`Acties voor ${action.title}`}>
+            <button type="button" aria-label={`${action.title} is gelukt`} onClick={() => void finishAction()} className="child-task-done">
+              <Check size={30} />
+            </button>
+            <button type="button" aria-label={`Hulp bij ${action.title}`} onClick={() => setHelpOpen(true)} className="child-task-help">
+              <HelpCircle size={28} />
+            </button>
+          </div>
+        </article>
+        <p className="mx-auto mt-5 max-w-sm text-sm font-bold leading-6 text-navy/65">{action.childText}</p>
+        {timerOpen ? (
+          <section className="mt-5 rounded-[1.55rem] bg-white/92 p-4 shadow-card">
+            <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-lavender/10 text-4xl font-black text-lavender ring-8 ring-lavender/8">{formatTime(remaining)}</div>
+            <div className="timer-slider-card mt-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-black text-navy/55">Kort</span>
+                <span className="rounded-full bg-lavender/10 px-4 py-1.5 text-lg font-black text-lavender">{duration / 60} min</span>
+                <span className="text-sm font-black text-navy/55">Rustig</span>
+              </div>
+              <input aria-label="Timer tijd" className="timer-slider mt-4" type="range" min={1} max={5} step={1} value={duration / 60} onChange={(event) => setActionDuration(Number(event.target.value) * 60)} />
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <SecondaryButton onClick={() => { setRemaining(duration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
+              <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start</>}</PrimaryButton>
+            </div>
+          </section>
+        ) : (
+          <button type="button" onClick={() => setTimerOpen(true)} className="mt-5 min-h-12 w-full rounded-[1.35rem] bg-white px-5 font-extrabold text-lavender shadow-card">Timer gebruiken</button>
+        )}
+        <div className="mt-4 grid gap-2">
+          <SecondaryButton onClick={() => navigate("/need")}>Iets anders kiezen</SecondaryButton>
+        </div>
       </section>
-      <p className="mx-auto mt-5 max-w-sm text-sm font-bold leading-6 text-navy/65">{action.childText}</p>
-      {timerOpen ? (
-        <section className="mt-5 rounded-[1.55rem] bg-white/92 p-4 shadow-card">
-          <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-lavender/10 text-4xl font-black text-lavender ring-8 ring-lavender/8">{formatTime(remaining)}</div>
-          <div className="timer-slider-card mt-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-black text-navy/55">Kort</span>
-              <span className="rounded-full bg-lavender/10 px-4 py-1.5 text-lg font-black text-lavender">{duration / 60} min</span>
-              <span className="text-sm font-black text-navy/55">Rustig</span>
-            </div>
-            <input aria-label="Timer tijd" className="timer-slider mt-4" type="range" min={1} max={5} step={1} value={duration / 60} onChange={(event) => setActionDuration(Number(event.target.value) * 60)} />
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <SecondaryButton onClick={() => { setRemaining(duration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
-            <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start</>}</PrimaryButton>
-          </div>
-        </section>
-      ) : (
-        <button type="button" onClick={() => setTimerOpen(true)} className="mt-5 min-h-12 w-full rounded-[1.35rem] bg-white px-5 font-extrabold text-lavender shadow-card">Timer gebruiken</button>
-      )}
+
       {helpOpen ? (
-        <section className="mt-4 rounded-[1.55rem] bg-white/94 p-4 text-left shadow-card">
-          <div className="flex items-center gap-3">
-            <AvatarMascot emotion="inDeWar" size="small" showCaption={false} />
-            <div>
-              <h2 className="font-black text-navy">Vraag hulp</h2>
+        <div className="fixed inset-0 z-50 grid place-items-end bg-navy/28 p-3 backdrop-blur-sm sm:place-items-center" onClick={() => setHelpOpen(false)}>
+          <section className="w-full max-w-md rounded-[2rem] bg-white/96 p-4 shadow-[0_24px_52px_rgba(50,44,108,.24)] ring-1 ring-lavender/12" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flowi-picture-card flowi-picture-card-breathe w-[8rem] shrink-0">
+                  <span className="flowi-picture-art">
+                    <ExerciseArt title="Hulpzin oefenen" compact />
+                  </span>
+                  <span className="flowi-picture-label">Vraag hulp</span>
+                </div>
+                <div className="text-left">
+                  <h2 className="text-xl font-black text-navy">Vraag hulp</h2>
+                  <p className="mt-1 text-sm font-medium leading-6 text-navy/58">Kies wat je nu wilt laten zien of zeggen.</p>
+                </div>
+              </div>
+              <button type="button" aria-label="Hulp sluiten" onClick={() => setHelpOpen(false)} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-lavender/10 text-lavender">
+                <X size={22} />
+              </button>
             </div>
-          </div>
-          <div className="mt-3 grid gap-2">
-            {["Kom even bij mij zitten.", "Wil je samen een kleine stap kiezen?", "Wil je het eerst voordoen?"].map((line) => (
-              <div key={line} className="rounded-2xl bg-lavender/8 p-3 text-sm font-black text-navy/68">{line}</div>
-            ))}
-          </div>
-        </section>
+            <div className="mt-4 grid gap-2.5">
+              {helpOptions.map((line) => (
+                <button key={line} type="button" className="rounded-[1.35rem] bg-gradient-to-b from-lavender/10 to-sky/10 px-4 py-3 text-left text-base font-black leading-6 text-navy shadow-[inset_0_1px_0_rgba(255,255,255,.72)]">
+                  {line}
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
       ) : null}
-      <PrimaryButton className="mt-5 w-full" onClick={() => navigate(isPositiveEmotion ? "/day" : "/reflection")}>{isPositiveEmotion ? "Klaar" : "Ik ben klaar"}</PrimaryButton>
-      <div className="mt-4 grid gap-2">
-        <SecondaryButton onClick={() => navigate("/need")}>Iets anders kiezen</SecondaryButton>
-        <button className="font-extrabold text-lavender" onClick={() => setHelpOpen((value) => !value)}>{helpOpen ? "Hulpkaart sluiten" : "Vraag hulp"}</button>
-      </div>
-    </section>
+    </>
   );
 }
 
@@ -648,9 +753,10 @@ function ReflectionPage() {
   const navigate = useNavigate();
   const { selectedEmotion = "weetIkNiet", selectedNeed = "praatMetOuder", selectedActionId = calmStrategies[0].id } = useCurrentFlow();
   const [note, setNote] = useState("");
+  const action = calmStrategies.find((strategy) => strategy.id === selectedActionId) ?? calmStrategies[0];
   const save = async (rating: string) => {
     await db.emotionHistory.add({ id: id(), childProfileId: "default-child", emotionType: selectedEmotion, needType: selectedNeed, actionId: selectedActionId, helpedRating: rating, note, createdAt: now() });
-    await db.rewards.add({ id: id(), childProfileId: "default-child", label: "Goed geprobeerd", icon: "\uD83D\uDC9C", reason: "reflectie ingevuld", earnedAt: now() });
+    await db.rewards.add({ id: id(), childProfileId: "default-child", label: actionCompletionLabel(action.title, selectedEmotion), icon: "\uD83D\uDC9C", reason: action.title, earnedAt: now() });
     navigate("/rewards");
   };
   const reflectionChoices: { label: string; sublabel: string; emotion: EmotionType }[] = [
@@ -1318,6 +1424,7 @@ function RewardsPage() {
   const weeklyGoal = 8;
   const progress = Math.min(100, (weekGrowthMoments.length / weeklyGoal) * 100);
   const weekMoments = Array.from({ length: weeklyGoal }, (_, index) => index < weekGrowthMoments.length);
+  const latestRewardToday = todaysRewards.length ? todaysRewards[todaysRewards.length - 1] : undefined;
   const flowiPhrases = [
     "Elke week kan Flowi's boom groeien.",
     "Proberen telt. Ook als het nog lastig voelt.",
@@ -1325,7 +1432,7 @@ function RewardsPage() {
     "Alles wat je probeert telt mee.",
     "Flowi ziet dat je oefent."
   ];
-  const phrase = flowiPhrases[weekGrowthMoments.length % flowiPhrases.length];
+  const phrase = latestRewardToday?.label ?? flowiPhrases[weekGrowthMoments.length % flowiPhrases.length];
   const latestGrowthIndex = weekGrowthMoments.length - 1;
   const careMode = latestGrowthIndex < 0 ? "rest" : latestGrowthIndex % 2 === 0 ? "water" : "sun";
   return (
@@ -1520,57 +1627,75 @@ function PracticePage() {
   if (activeExercise) {
     const progress = duration ? ((duration - remaining) / duration) * 100 : 0;
     return (
-      <div className="phone-screen px-4 pb-5 pt-4">
-        <PageHeader title={activeExercise.title} subtitle={activeExercise.category} />
-        <section className="rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/12 p-5 text-center shadow-soft">
+      <div className="phone-screen px-4 pb-5 pt-3">
+        <header className="mb-3 flex items-center">
+          <button aria-label="Terug naar oefeningen" className="grid h-14 w-14 place-items-center rounded-[1.25rem] border border-white bg-white/90 shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/30" onClick={() => setActiveExercise(null)}>
+            <ArrowLeft size={25} />
+          </button>
+        </header>
+        <section className="rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/12 p-4 text-center shadow-soft">
           <ExerciseArt title={activeExercise.title} />
-          <p className="mx-auto mt-4 max-w-xs text-sm font-bold leading-6 text-navy/60">{activeExercise.description}</p>
+          <h1 className="mx-auto mt-3 max-w-xs text-2xl font-black leading-8 text-navy">{shortExerciseTitle(activeExercise.title)}</h1>
           {timerEnabled ? (
             <>
-              <div className="mx-auto mt-5 grid h-32 w-32 place-items-center rounded-full bg-white text-4xl font-black text-lavender shadow-card ring-8 ring-lavender/10">{formatTime(remaining)}</div>
-              <div className="mt-4 h-3 rounded-full bg-lilac/18"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
+              <div className="mx-auto mt-4 grid h-32 w-32 place-items-center rounded-full bg-white text-4xl font-black text-lavender shadow-card ring-8 ring-lavender/10">{formatTime(remaining)}</div>
+              <div className="mt-3 h-3 rounded-full bg-lilac/18"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
             </>
           ) : (
-            <button type="button" onClick={() => setTimerEnabled(true)} className="mt-5 min-h-16 w-full rounded-[1.45rem] bg-white px-6 text-xl font-black text-lavender shadow-card">Timer instellen</button>
+            <button type="button" onClick={() => setTimerEnabled(true)} className="mt-4 min-h-16 w-full rounded-[1.45rem] bg-white px-6 text-xl font-black text-lavender shadow-card">Timer instellen</button>
           )}
         </section>
-        <section className="mt-4 grid gap-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-lg font-black">Timer</span>
-            <button type="button" onClick={() => { setTimerEnabled((value) => !value); setRunning(false); }} className={`min-h-12 rounded-2xl px-5 text-base font-black ${timerEnabled ? "bg-lavender text-white" : "bg-lavender/10 text-lavender"}`}>{timerEnabled ? "Aan" : "Uit"}</button>
-          </div>
-          <div className="timer-slider-card">
+        {timerEnabled ? (
+          <section className="mt-3 grid gap-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-lg font-black">Timer</span>
+              <button type="button" onClick={() => { setTimerEnabled(false); setRunning(false); }} className="min-h-12 rounded-2xl bg-lavender px-5 text-base font-black text-white">Aan</button>
+            </div>
+            <div className="timer-slider-card">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-black text-navy/55">Kort</span>
+                <span className="rounded-full bg-lavender/10 px-4 py-1.5 text-lg font-black text-lavender">{duration / 60} min</span>
+                <span className="text-sm font-black text-navy/55">Rustig</span>
+              </div>
+              <input aria-label="Timer tijd" className="timer-slider mt-4" type="range" min={1} max={5} step={1} value={duration / 60} onChange={(event) => { setTimerEnabled(true); setExerciseDuration(Number(event.target.value) * 60); }} />
+            </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-black text-navy/55">Kort</span>
-              <span className="rounded-full bg-lavender/10 px-4 py-1.5 text-lg font-black text-lavender">{duration / 60} min</span>
-              <span className="text-sm font-black text-navy/55">Rustig</span>
+              <span className="font-black">Keer</span>
+              <div className="flex items-center gap-2">
+                <button aria-label="Minder vaak" className="grid h-10 w-10 place-items-center rounded-2xl bg-mint/10 text-mint" onClick={() => setRounds((value) => Math.max(1, value - 1))}><Minus size={18} /></button>
+                <span className="min-w-16 text-center font-black">{rounds}x</span>
+                <button aria-label="Vaker" className="grid h-10 w-10 place-items-center rounded-2xl bg-mint/10 text-mint" onClick={() => setRounds((value) => Math.min(20, value + 1))}><Plus size={18} /></button>
+              </div>
             </div>
-            <input aria-label="Timer tijd" className="timer-slider mt-4" type="range" min={1} max={5} step={1} value={duration / 60} onChange={(event) => { setTimerEnabled(true); setExerciseDuration(Number(event.target.value) * 60); }} />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-black">Keer</span>
-            <div className="flex items-center gap-2">
-              <button aria-label="Minder vaak" className="grid h-10 w-10 place-items-center rounded-2xl bg-mint/10 text-mint" onClick={() => setRounds((value) => Math.max(1, value - 1))}><Minus size={18} /></button>
-              <span className="min-w-16 text-center font-black">{rounds}x</span>
-              <button aria-label="Vaker" className="grid h-10 w-10 place-items-center rounded-2xl bg-mint/10 text-mint" onClick={() => setRounds((value) => Math.min(20, value + 1))}><Plus size={18} /></button>
+          </section>
+        ) : null}
+        <section className="mt-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card ring-1 ring-lavender/10">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-lavender/10 text-lavender"><ShieldCheck size={20} /></div>
+            <div>
+              <h2 className="text-base font-black text-navy">Voor ouder, verzorger of leerkracht</h2>
+              <p className="mt-1 text-sm font-medium leading-6 text-navy/58">{exerciseCaregiverTip(activeExercise)}</p>
             </div>
           </div>
-        </section>
-        <section className="mt-4 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
-          <h2 className="font-black">Stapjes</h2>
-          <ol className="mt-3 grid gap-2">
-            {activeExercise.steps.map((step, index) => <li key={step} className="flex gap-3 rounded-2xl bg-lavender/8 p-3 text-sm font-bold text-navy/68"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-lavender shadow-card">{index + 1}</span>{step}</li>)}
-          </ol>
         </section>
         {timerEnabled ? (
-          <div className="mt-4 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid grid-cols-3 gap-2">
             <SecondaryButton onClick={() => { setRemaining(duration); setRunning(false); }}><RotateCcw className="mx-auto" size={20} /></SecondaryButton>
-            <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start</>}</PrimaryButton>
+            <PrimaryButton className="col-span-2" onClick={() => setRunning((value) => !value)}>{running ? <><Pause className="mr-2 inline" size={18} /> Pauze</> : <><Play className="mr-2 inline" size={18} /> Start samen</>}</PrimaryButton>
           </div>
         ) : (
-          <PrimaryButton className="mt-4 w-full" onClick={() => void completeExercise(activeExercise)}>Klaar</PrimaryButton>
+          <div className="mt-3 flex justify-center">
+            <button type="button" aria-label={`${activeExercise.title} is gelukt`} onClick={() => void completeExercise(activeExercise)} className="child-task-done">
+              <Check size={30} />
+            </button>
+          </div>
         )}
-        <button className="mt-4 w-full text-center text-sm font-black text-lavender" onClick={() => setActiveExercise(null)}>Terug naar oefeningen</button>
+        <section className="mt-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
+          <h2 className="font-black">Zo doe je het</h2>
+          <ol className="mt-2 grid gap-2">
+            {activeExercise.steps.map((step, index) => <li key={step} className="flex gap-3 rounded-2xl bg-lavender/8 p-3 text-sm font-medium leading-6 text-navy/68"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-lavender shadow-card">{index + 1}</span>{step}</li>)}
+          </ol>
+        </section>
       </div>
     );
   }
@@ -1578,6 +1703,10 @@ function PracticePage() {
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Oefeningen" subtitle="Rustkracht oefenen met Flowi." back={false} />
+      <section className="mb-4 rounded-[1.55rem] bg-gradient-to-b from-sky/18 via-white to-mint/12 p-4 shadow-soft">
+        <h2 className="text-lg font-black text-navy">Samen oefenen werkt het best</h2>
+        <p className="mt-1.5 text-sm font-medium leading-6 text-navy/58">Deze oefeningen zijn bedoeld om samen te doen met een ouder, verzorger of leerkracht. Het kind kiest, de volwassene helpt rustig mee.</p>
+      </section>
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (
           <button key={item} onClick={() => setCategory(item)} className={`min-h-12 shrink-0 rounded-2xl px-5 text-base font-black ${item === category ? "bg-lavender text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
@@ -1719,26 +1848,30 @@ function AboutPage() {
 
       <section className="mt-4 grid gap-2.5">
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Voor wie?</h3>
-          <p className={`mt-1.5 ${bodyText}`}>Flowi is bedoeld voor kinderen die nog niet altijd kunnen zeggen wat ze voelen of nodig hebben.</p>
+          <h3 className="text-xl font-black text-navy">Voor wie is Flowi?</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Flowi is bedoeld voor jonge kinderen die nog niet altijd goed kunnen uitleggen wat ze voelen, nodig hebben of wat er misgaat.</p>
+          <p className={`mt-2 ${bodyText}`}>De app past vooral bij kinderen die baat hebben bij voorspelbaarheid, visuele ondersteuning, kleine keuzes en een rustige opbouw van de dag.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
           <h3 className="text-xl font-black text-navy">Hoe helpt Flowi?</h3>
-          <p className={`mt-1.5 ${bodyText}`}>Met grote plaatjes, eenvoudige keuzes en korte oefeningen. Zo kan een kind aanwijzen, kiezen en weer een klein stapje verder.</p>
+          <p className={`mt-1.5 ${bodyText}`}>Flowi werkt met grote plaatjes, korte woorden en kleine stapjes. Zo hoeft een kind niet veel te lezen om toch te kunnen kiezen, aangeven of meedoen.</p>
+          <p className={`mt-2 ${bodyText}`}>De app helpt bij drie dingen: voelen wat er speelt, zien wat er vandaag komt en kiezen wat kan helpen als iets moeilijk wordt.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Wat doet de ouder?</h3>
-          <p className={`mt-1.5 ${bodyText}`}>De ouder stelt de dagindeling in. Het kind ziet daarna vooral wat er komt en kan taken afvinken of hulp vragen.</p>
+          <h3 className="text-xl font-black text-navy">Dagindeling en rol van de ouder</h3>
+          <p className={`mt-1.5 ${bodyText}`}>De ouder of verzorger stelt de planning in. Dat kan als vast dagritme of als weekplanning wanneer dagen echt van elkaar verschillen.</p>
+          <p className={`mt-2 ${bodyText}`}>Het kind krijgt daarna vooral een rustige weergave van de dag te zien. Zo blijft de kindkant simpel, terwijl de volwassene de structuur bewaakt.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
-          <h3 className="text-xl font-black text-navy">Dagritme of weekplanning?</h3>
-          <p className={`mt-1.5 ${bodyText}`}>Gebruik hetzelfde dagritme als de meeste dagen op elkaar lijken. Dat is vaak het rustigst.</p>
-          <p className={`mt-2 ${bodyText}`}>Zet weekplanning aan als dagen echt verschillen, bijvoorbeeld sport op dinsdag, BSO op donderdag of een ander weekendritme.</p>
+          <h3 className="text-xl font-black text-navy">Gevoel, hulp en oefeningen</h3>
+          <p className={`mt-1.5 ${bodyText}`}>Een kind kan met Flowi aangeven hoe het zich voelt, wat het nodig heeft en welke kleine stap nu helpend kan zijn.</p>
+          <p className={`mt-2 ${bodyText}`}>De oefeningen zijn bewust kort en visueel. Ze werken het best samen met een ouder, verzorger of leerkracht die helpt vertragen, voordoen en dichtbij blijven.</p>
+          <p className={`mt-2 ${bodyText}`}>Bij spanning, boosheid of verdriet is samen reguleren meestal duidelijker en veiliger dan een kind alles alleen laten oplossen.</p>
         </div>
         <div className="rounded-[1.55rem] bg-white/94 p-4 shadow-card">
           <h3 className="text-xl font-black text-navy">Wie is Flowi?</h3>
-          <p className={`mt-1.5 ${bodyText}`}>Flowi is zacht, geduldig en duidelijk. Hij helpt zonder te duwen, viert kleine stapjes en blijft rustig als iets niet meteen lukt.</p>
-          <p className={`mt-2 ${bodyText}`}>Hij praat kort en vriendelijk. De meeste keuzes zijn visueel, zodat kinderen ook zonder veel lezen mee kunnen doen.</p>
+          <p className={`mt-1.5 ${bodyText}`}>Flowi is een rustig maatje in de app: zacht, duidelijk en geduldig. Hij helpt zonder druk te zetten en maakt grote dingen kleiner.</p>
+          <p className={`mt-2 ${bodyText}`}>Daarom gebruikt de app zo min mogelijk tekst en zo veel mogelijk herkenbare beelden en voorspelbare keuzes.</p>
         </div>
       </section>
 
@@ -1748,6 +1881,15 @@ function AboutPage() {
           <p>De groeiboom is een zachte aanmoediging. Het is geen scorebord.</p>
           <p>Na oefenen of reflecteren kan Flowi de boom water geven. Extra momenten kunnen het zonnetje laten schijnen.</p>
           <p>Taken afvinken staat los van de boom. Zo blijft groei gericht op oefenen met rust en gevoel.</p>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft ring-1 ring-lavender/10">
+        <h2 className="text-2xl font-black text-navy">Wat Flowi wel en niet is</h2>
+        <div className={`mt-2 grid gap-2 ${bodyText}`}>
+          <p>Flowi is een hulpmiddel voor structuur, co-regulatie en kleine helpende keuzes in het moment.</p>
+          <p>Flowi is geen behandeling, geen diagnose en geen vervanging van een ouder, leerkracht of hulpverlener.</p>
+          <p>Als een kind vast blijft lopen, veel spanning houdt of meer nodig heeft dan de app kan bieden, is extra begeleiding buiten Flowi belangrijk.</p>
         </div>
       </section>
 
