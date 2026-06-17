@@ -13,7 +13,7 @@ import { seedDatabase } from "../db/seed";
 import { useLiveData } from "../hooks/useLiveData";
 import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
-import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Task, TaskTemplate, WeekDay } from "../types/schema";
+import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Reward, Task, TaskTemplate, WeekDay } from "../types/schema";
 import { AppShell, AvatarMascot, ChildTaskCard, DayPartCard, EmotionCard, ExerciseArt, icons, NeedCard, PageHeader, ParentCard, PrimaryButton, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
 import type { TaskVisualKey } from "../utils/taskVisuals";
 
@@ -176,6 +176,69 @@ const actionCompletionLabel = (title: string, emotion?: EmotionType) => {
   return "Je koos een helpend stapje.";
 };
 
+function growthResponseForReward(reward?: Reward) {
+  if (!reward) {
+    return {
+      title: "Flowi wacht bij jouw boom.",
+      subtitle: "Elke kleine stap helpt jouw boom groeien.",
+      careMode: "heart" as const
+    };
+  }
+
+  const reason = reward.reason.toLowerCase();
+  const label = reward.label.toLowerCase();
+  const combined = `${label} ${reason}`;
+
+  if (combined.includes("adem") || combined.includes("rust") || combined.includes("zacht")) {
+    return {
+      title: "Flowi zag dat jij rust vond.",
+      subtitle: "Je boom krijgt rustig water om verder te groeien.",
+      careMode: "water" as const
+    };
+  }
+  if (combined.includes("hulp") || combined.includes("samen") || combined.includes("woorden")) {
+    return {
+      title: "Flowi zag dat jij liet zien wat je nodig had.",
+      subtitle: "Je boom krijgt lieve hartjes omdat jij hulp durfde vragen.",
+      careMode: "heart" as const
+    };
+  }
+  if (combined.includes("boos") || combined.includes("muur") || combined.includes("stamp") || combined.includes("springen") || combined.includes("bewoog")) {
+    return {
+      title: "Flowi zag dat jij je grote gevoel een veilige plek gaf.",
+      subtitle: "Je boom krijgt water na jouw sterke stap.",
+      careMode: "water" as const
+    };
+  }
+  if (combined.includes("tek") || combined.includes("kleur") || combined.includes("gevoel")) {
+    return {
+      title: "Flowi zag jouw gevoel naar buiten komen.",
+      subtitle: "Je boom krijgt hartjes omdat jij liet zien wat er in je zat.",
+      careMode: "heart" as const
+    };
+  }
+  if (combined.includes("koos") || combined.includes("begon") || combined.includes("kleine keuze")) {
+    return {
+      title: "Flowi zag dat jij een eerste stap zette.",
+      subtitle: "De zon schijnt even op jouw boom omdat jij bent begonnen.",
+      careMode: "sun" as const
+    };
+  }
+  if (combined.includes("fijn") || combined.includes("blij") || combined.includes("rustkracht")) {
+    return {
+      title: "Flowi zag iets fijns groeien in jou.",
+      subtitle: "Je boom krijgt warme zon en groeit rustig verder.",
+      careMode: "sun" as const
+    };
+  }
+
+  return {
+    title: reward.label,
+    subtitle: "Jouw boom groeit door wat jij net hebt gedaan.",
+    careMode: (["water", "sun", "heart"] as const)[Math.abs(reward.earnedAt.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % 3]
+  };
+}
+
 const today = () => new Date().toISOString().slice(0, 10);
 const id = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
@@ -294,14 +357,121 @@ const helpReasons: { id: HelpReason; label: string; need: NeedType; tips: string
   { id: "inDeWar", label: "In de war", need: "praatMetOuder", tips: ["Vraag je ouder: geef mij twee keuzes.", "Laat iemand de taak voordoen.", "Doe samen alleen de eerste stap."] }
 ];
 
+function helpOverlayText(reason: HelpReason) {
+  switch (reason) {
+    case "boos":
+      return "Dit kan nu helpen als je boos bent.";
+    case "moe":
+      return "Dit kan nu helpen als je moe bent.";
+    case "inDeWar":
+      return "Dit kan nu helpen als je in de war bent.";
+    case "teVeel":
+    default:
+      return "Dit kan nu helpen als het even te veel is.";
+  }
+}
+
+type HelpTaskContext =
+  | "selfCare"
+  | "eatDrink"
+  | "school"
+  | "social"
+  | "active"
+  | "bedtime"
+  | "household"
+  | "appointment"
+  | "transition"
+  | "screen"
+  | "creative"
+  | "unknown";
+
+const strategyByTitle = (title: string) => calmStrategies.find((strategy) => strategy.title === title);
+const firstMatchingStrategy = (titles: string[]) => titles.map((title) => strategyByTitle(title)).find(Boolean);
+
+function inferTaskContext(task: Task): HelpTaskContext {
+  const title = normalizeTaskTitle(task.title);
+  const visualKey = task.visualKey ?? "";
+
+  if (["screenOff", "gameTime", "phoneTime"].includes(visualKey) || title.includes("scherm") || title.includes("tablet")) return "screen";
+  if (["medicine", "dentist", "doctor", "speechTherapy", "physio", "therapy", "hairdresser", "parentAppointment", "waitingRoom"].includes(visualKey) || ["tandarts", "huisarts", "dokter", "logopedie", "fysio", "therapie", "kapper", "afspraak"].some((word) => title.includes(word))) return "appointment";
+  if (["school", "packBag", "unpackBag", "lunchbox", "drinkBottle", "schoolBagCheck", "homework", "reading", "agenda", "weekPlan", "bsoCare", "schoolTrip", "studyDay", "test", "presentation", "sportsDay", "schoolParty"].includes(visualKey) || ["school", "huiswerk", "lezen", "tas", "bso", "toets", "spreekbeurt", "rapport"].some((word) => title.includes(word))) return "school";
+  if (["hair", "faceWash", "teeth", "shower", "pajamas", "sleep", "toilet", "sunscreen", "dress", "shoesOn", "coatOn", "shoesOff", "coatHang"].includes(visualKey) || ["tanden", "wassen", "douchen", "pyjama", "slapen", "wc", "aankleden", "jas", "schoenen", "medicijn"].some((word) => title.includes(word))) return "selfCare";
+  if (["breakfast", "drinkWater", "snack", "fruit", "dinner", "lunchPrep"].includes(visualKey) || ["eten", "drinken", "fruit", "ontbijt", "snack", "avond eten", "lunch"].some((word) => title.includes(word))) return "eatDrink";
+  if (["playdate", "friendVisit", "playAtFriend", "sleepover", "birthdayParty", "familyParty", "grandparents", "visitorsHome", "familyVisit", "babysitter", "momTime", "dadTime", "siblingTime", "bonusParentTime", "boardGame", "readTogether", "cookTogether", "tidyTogether", "toMom", "toDad"].includes(visualKey) || ["vriend", "logeren", "feest", "opa", "oma", "bezoek", "mama", "papa", "broer", "zus", "samen"].some((word) => title.includes(word))) return "social";
+  if (["sports", "swimming", "bike", "moveBreak", "outsidePlayGiraffe", "outsidePlay", "soccerSport", "basketballSport", "volleyball", "handball", "fieldHockey", "tennisSport", "badmintonSport", "athletics", "gymnastics", "freerunningSport", "horseRiding", "waterPoloSport", "rugbySport", "korfballSport", "baseballSport", "selfDefenseSport", "dance", "scouting", "climbing", "playground", "park", "pool", "amusementPark", "indoorPlay", "trampolinePark"].includes(visualKey) || ["sport", "zwem", "fiets", "rennen", "buiten", "klimmen", "dans", "scouting"].some((word) => title.includes(word))) return "active";
+  if (["waterPlants", "petFood", "setTable", "clearTable", "dishwasher", "laundry", "roomClean", "toysClean"].includes(visualKey) || ["opruimen", "tafel", "vaatwasser", "wasmand", "planten", "huisdier"].some((word) => title.includes(word))) return "household";
+  if (["creative", "craftGiraffe", "musicLesson", "drawingLesson", "paintingLesson", "craftClub", "singingLesson", "pianoLesson", "guitarLesson", "drumLesson", "libraryActivity", "readingClub"].includes(visualKey) || ["tekenen", "knutselen", "muziek", "bibliotheek", "schilder", "piano", "gitaar", "drum"].some((word) => title.includes(word))) return "creative";
+  if (["pajamas", "sleep", "breatheBed", "dimLight", "calmCard"].includes(visualKey) || ["bed", "bedtijd", "pyjama", "licht zachter", "knuffel pakken"].some((word) => title.includes(word))) return "bedtime";
+  if (["wake", "curtains", "makeBed", "coatHang", "shoesOff", "packBag", "unpackBag", "carRide", "cityTrip", "garage", "packagePickup"].includes(visualKey) || ["vertrek", "thuiskomen", "naar", "mee", "ophalen"].some((word) => title.includes(word))) return "transition";
+  return "unknown";
+}
+
 function fallbackStrategyForTask(task: Task, reason: HelpReason) {
   const parentChoice = task.fallbackStrategyId ? calmStrategies.find((strategy) => strategy.id === task.fallbackStrategyId) : undefined;
   if (parentChoice) return parentChoice;
-  const title = task.title.toLowerCase();
-  if (title.includes("tablet") || title.includes("scherm")) {
-    if (reason === "boos") return calmStrategies.find((strategy) => strategy.title === "Zeg: stop, ik heb hulp nodig") ?? chooseStrategy(reason, "praatMetOuder");
-    return calmStrategies.find((strategy) => strategy.title === "Maak het licht zachter") ?? chooseStrategy(reason, "rustigePlek");
-  }
+  const context = inferTaskContext(task);
+
+  const suggestionsByReason: Record<HelpReason, Partial<Record<HelpTaskContext, string[]>>> = {
+    teVeel: {
+      screen: ["Maak het licht zachter", "Ga naar je rustige plek", "Zet je koptelefoon op"],
+      school: ["Maak één kleine keuze", "Ga naar je rustige plek", "Kies samen"],
+      selfCare: ["Maak één kleine keuze", "Ga naar je rustige plek", "Adem zacht"],
+      eatDrink: ["Maak één kleine keuze", "Ga naar je rustige plek", "Adem zacht"],
+      social: ["Ga naar je rustige plek", "Zet je koptelefoon op", "Kies samen"],
+      active: ["Ga naar je rustige plek", "Zet je koptelefoon op", "Kijk naar één ding"],
+      appointment: ["Kies samen", "Ga naar je rustige plek", "Zet je koptelefoon op"],
+      household: ["Maak één kleine keuze", "Ga naar je rustige plek", "Kijk naar één ding"],
+      creative: ["Ga naar je rustige plek", "Kijk naar één ding", "Adem zacht"],
+      bedtime: ["Maak het licht zachter", "Ga naar je rustige plek", "Adem zacht"],
+      transition: ["Ga naar je rustige plek", "Maak één kleine keuze", "Kies samen"],
+      unknown: ["Ga naar je rustige plek", "Maak het licht zachter", "Adem zacht"]
+    },
+    boos: {
+      social: ["Zeg: stop, ik heb hulp nodig", "Duw tegen de muur", "Knijp in een kussen"],
+      appointment: ["Zeg: stop, ik heb hulp nodig", "Knijp in een kussen", "Duw tegen de muur"],
+      school: ["Duw tegen de muur", "Stamp 10 keer", "Zeg: stop, ik heb hulp nodig"],
+      selfCare: ["Duw tegen de muur", "Knijp in een kussen", "Stamp 10 keer"],
+      eatDrink: ["Knijp in een kussen", "Duw tegen de muur", "Adem als een draak"],
+      active: ["Duw tegen de muur", "Stamp 10 keer", "Adem als een draak"],
+      household: ["Duw tegen de muur", "Knijp in een kussen", "Stamp 10 keer"],
+      creative: ["Knijp in een kussen", "Adem als een draak", "Zeg: stop, ik heb hulp nodig"],
+      bedtime: ["Knijp in een kussen", "Adem als een draak", "Zeg: stop, ik heb hulp nodig"],
+      transition: ["Duw tegen de muur", "Zeg: stop, ik heb hulp nodig", "Knijp in een kussen"],
+      unknown: ["Duw tegen de muur", "Knijp in een kussen", "Adem als een draak"]
+    },
+    moe: {
+      screen: ["Maak je lijf zwaar", "Maak het licht zachter", "Even niets"],
+      school: ["Kies samen", "Maak je lijf zwaar", "Zoek een rustig plekje"],
+      selfCare: ["Maak je lijf zwaar", "Zoek een rustig plekje", "Kies samen"],
+      eatDrink: ["Maak je lijf zwaar", "Zoek een rustig plekje", "Even niets"],
+      social: ["Vraag een knuffel", "Maak je lijf zwaar", "Kies dichtbij of ruimte"],
+      active: ["Maak je lijf zwaar", "Zoek een rustig plekje", "Even niets"],
+      appointment: ["Kies samen", "Vraag een knuffel", "Maak je lijf zwaar"],
+      household: ["Maak je lijf zwaar", "Kies samen", "Zoek een rustig plekje"],
+      creative: ["Zoek een rustig plekje", "Maak je lijf zwaar", "Even niets"],
+      bedtime: ["Maak het licht zachter", "Maak je lijf zwaar", "Adem zacht"],
+      transition: ["Maak je lijf zwaar", "Kies samen", "Zoek een rustig plekje"],
+      unknown: ["Maak je lijf zwaar", "Zoek een rustig plekje", "Even niets"]
+    },
+    inDeWar: {
+      school: ["Kies samen", "Maak één kleine keuze", "Zeg: ik weet het even niet"],
+      selfCare: ["Kies samen", "Maak één kleine keuze", "Zeg: ik weet het even niet"],
+      eatDrink: ["Maak één kleine keuze", "Kies samen", "Zeg: ik weet het even niet"],
+      social: ["Zeg: ik weet het even niet", "Kies samen", "Vraag een knuffel"],
+      active: ["Kies samen", "Maak één kleine keuze", "Adem zacht"],
+      appointment: ["Zeg: ik weet het even niet", "Kies samen", "Vraag een knuffel"],
+      household: ["Maak één kleine keuze", "Kies samen", "Zeg: ik weet het even niet"],
+      creative: ["Teken je warboel", "Kies samen", "Maak één kleine keuze"],
+      bedtime: ["Kies samen", "Maak één kleine keuze", "Adem zacht"],
+      transition: ["Kies samen", "Zeg: ik weet het even niet", "Maak één kleine keuze"],
+      screen: ["Kies samen", "Maak één kleine keuze", "Ga naar je rustige plek"],
+      unknown: ["Kies samen", "Maak één kleine keuze", "Zeg: ik weet het even niet"]
+    }
+  };
+
+  const exactSuggestion = firstMatchingStrategy(suggestionsByReason[reason][context] ?? []);
+  if (exactSuggestion) return exactSuggestion;
+
   const helpReason = helpReasons.find((item) => item.id === reason) ?? helpReasons[0];
   return chooseStrategy(reason, helpReason.need);
 }
@@ -832,19 +1002,34 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
             />
           ))}
         </div>
-        {selectedHelp && strategy ? (
-          <div className="mt-4 rounded-[1.35rem] bg-lavender/8 p-3 text-center">
-            <p className="text-sm font-black text-navy">Flowi stelt dit voor</p>
-            <ExerciseArt title={strategy.title} compact />
-            <button type="button" onClick={() => navigate(`/action/${strategy.id}`)} className="mt-3 min-h-11 w-full rounded-2xl bg-gradient-to-b from-[#8fd8e8] to-[#4eb1c9] px-4 text-sm font-black text-white shadow-[0_12px_22px_rgba(78,177,201,.24)]">
-              Doe: {strategy.title}
-            </button>
-            <ul className="mt-3 grid gap-1.5 text-left">
-              {selectedHelp.tips.map((tip) => <li key={tip} className="text-sm font-bold leading-5 text-navy/60">{"\u2022"} {tip}</li>)}
-            </ul>
-          </div>
-        ) : null}
       </section>
+      {selectedHelp && strategy ? (
+        <div className="fixed inset-0 z-[60] grid place-items-end bg-navy/28 px-3 pb-24 pt-6 backdrop-blur-sm sm:place-items-center sm:p-3" onClick={() => setReason(null)}>
+          <section className="help-suggestion-overlay w-full max-w-md rounded-[2rem] p-4 shadow-[0_24px_52px_rgba(50,44,108,.24)] ring-1 ring-lavender/12" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="text-left">
+                <h2 className="text-xl font-black text-navy">Flowi helpt!</h2>
+                <p className="mt-1 text-sm font-semibold leading-6 text-navy/74">{helpOverlayText(selectedHelp.id)}</p>
+              </div>
+              <button type="button" aria-label="Voorstel sluiten" onClick={() => setReason(null)} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/66 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.78)]">
+                {"\u00D7"}
+              </button>
+            </div>
+            <button
+              type="button"
+              className="help-suggestion-cta mt-4 block w-full rounded-[1.9rem] text-left transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30"
+              onClick={() => navigate(`/action/${strategy.id}`)}
+            >
+              <div className="flowi-picture-card help-suggestion-card min-h-[16rem]">
+                <span className="flowi-picture-art">
+                  <ExerciseArt title={strategy.title} compact />
+                </span>
+                <span className="flowi-picture-label">{shortExerciseTitle(strategy.title)}</span>
+              </div>
+            </button>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1263,7 +1448,8 @@ function TaskLibraryPage() {
   const [category, setCategory] = useState("Alles");
   const [search, setSearch] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
-  const [selectedLibraryWeekDay, setSelectedLibraryWeekDay] = useState<WeekDay>(requestedWeekDay ?? currentWeekDay());
+  const [selectedLibraryDayPart, setSelectedLibraryDayPart] = useState<DayPart>(forcedDayPart ?? "ochtend");
+  const [selectedLibraryWeekDays, setSelectedLibraryWeekDays] = useState<WeekDay[]>(requestedWeekDay ? [requestedWeekDay] : []);
   const { data: templates } = useLiveData(() => db.taskTemplates.toArray(), [], []);
   const { data: ownTasks } = useLiveData(() => db.tasks.where("category").equals("Eigen").toArray(), [] as Task[], []);
   const { data: settings } = useLiveData(() => db.settings.get("app"), undefined, []);
@@ -1313,14 +1499,18 @@ function TaskLibraryPage() {
       void db.tasks.bulkDelete(cleanupIds);
     }
   }, [ownTasks]);
-  const add = async (template: TaskTemplate, dayPart?: DayPart, weekDay?: WeekDay | null) => {
+  const add = async (template: TaskTemplate, dayPart?: DayPart, weekDaysSelection?: WeekDay[] | null) => {
     const targetDayPart = dayPart ?? forcedDayPart ?? template.defaultDayPart;
     const currentTasks = await db.tasks.where("dayPart").equals(targetDayPart).toArray();
-    const targetWeekDay = requestedWeekDay ?? (weekPlanningEnabled ? weekDay ?? selectedLibraryWeekDay : null);
-    const weekDaysForTask = targetWeekDay ? [targetWeekDay] : undefined;
+    const weekDaysForTask = requestedWeekDay
+      ? [requestedWeekDay]
+      : weekPlanningEnabled
+        ? (weekDaysSelection?.length ? weekDaysSelection : undefined)
+        : undefined;
     await db.tasks.add({ id: id(), childProfileId: "default-child", title: template.title, icon: template.icon, visualKey: template.visualKey, category: template.category, ageGroup: template.ageGroup, dayPart: targetDayPart, sortOrder: currentTasks.length, steps: template.suggestedSteps, repeatPattern: weekDaysForTask ? "aangepast" : "elkeDag", weekDays: weekDaysForTask, estimatedMinutes: template.estimatedMinutes, rewardEnabled: true, requiresHelp: false, isDefault: false, isEnabled: true, createdAt: now(), updatedAt: now() });
     setSelectedTemplate(null);
-    navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}${weekDayQuery(targetWeekDay)}` : returnTo ?? `/day-settings/${targetDayPart}${weekDayQuery(targetWeekDay)}`);
+    const nextWeekDay = weekDaysForTask?.length === 1 ? weekDaysForTask[0] : null;
+    navigate(returnTo === "/day-settings" ? `/day-settings/${targetDayPart}${weekDayQuery(nextWeekDay)}` : returnTo ?? `/day-settings/${targetDayPart}${weekDayQuery(nextWeekDay)}`);
   };
   const removeOwnTemplate = async (template: TaskTemplate) => {
     const matchingTasks = ownTasks.filter((task) =>
@@ -1337,10 +1527,15 @@ function TaskLibraryPage() {
   };
   const choose = (template: TaskTemplate) => {
     if (forcedDayPart && (!weekPlanningEnabled || requestedWeekDay)) {
-      void add(template, forcedDayPart, requestedWeekDay);
+      void add(template, forcedDayPart, requestedWeekDay ? [requestedWeekDay] : undefined);
       return;
     }
+    setSelectedLibraryDayPart(forcedDayPart ?? template.defaultDayPart);
+    setSelectedLibraryWeekDays(requestedWeekDay ? [requestedWeekDay] : []);
     setSelectedTemplate(template);
+  };
+  const toggleLibraryWeekDay = (weekDay: WeekDay) => {
+    setSelectedLibraryWeekDays((current) => current.includes(weekDay) ? current.filter((day) => day !== weekDay) : [...current, weekDay]);
   };
   return (
     <>
@@ -1395,7 +1590,7 @@ function TaskLibraryPage() {
             {!forcedDayPart ? (
               <div className="mt-4 grid grid-cols-2 gap-3">
                 {(["ochtend", "naSchool", "avond", "bedtijd"] as DayPart[]).map((part) => (
-                  <button key={part} type="button" onClick={() => add(selectedTemplate, part, requestedWeekDay ?? selectedLibraryWeekDay)} className={`rounded-[1.45rem] p-3 text-center shadow-card ring-2 ${part === selectedTemplate.defaultDayPart ? "bg-lavender text-white ring-lavender" : "bg-lavender/8 text-navy ring-transparent"}`}>
+                  <button key={part} type="button" onClick={() => weekPlanningEnabled && !requestedWeekDay ? setSelectedLibraryDayPart(part) : void add(selectedTemplate, part, requestedWeekDay ? [requestedWeekDay] : undefined)} className={`rounded-[1.45rem] p-3 text-center shadow-card ring-2 ${part === selectedLibraryDayPart ? "bg-lavender text-white ring-lavender" : "bg-lavender/8 text-navy ring-transparent"}`}>
                     <TaskArt title={dayParts[part].title} compact />
                     <span className="mt-2 block text-lg font-black">{dayParts[part].title}</span>
                     {part === selectedTemplate.defaultDayPart ? <span className="mt-1 block text-xs font-black text-white/80">Past vaak hier</span> : null}
@@ -1411,15 +1606,20 @@ function TaskLibraryPage() {
                     <button
                       key={day.id}
                       type="button"
-                      onClick={() => setSelectedLibraryWeekDay(day.id)}
-                      className={`min-w-[4.3rem] shrink-0 rounded-[1.2rem] px-2 py-3 text-center shadow-card ${selectedLibraryWeekDay === day.id ? "bg-mint text-white" : "bg-white text-navy/62"}`}
+                      onClick={() => toggleLibraryWeekDay(day.id)}
+                      className={`min-w-[4.3rem] shrink-0 rounded-[1.2rem] px-2 py-3 text-center shadow-card ${selectedLibraryWeekDays.includes(day.id) ? "bg-mint text-white" : "bg-white text-navy/62"}`}
                     >
                       <span className="block text-xs font-black leading-4">{day.short}</span>
-                      <span className="mt-1 block text-[0.72rem] font-bold leading-4">{day.label}</span>
                     </button>
                   ))}
                 </div>
-                {forcedDayPart ? <PrimaryButton className="mt-4 w-full" onClick={() => add(selectedTemplate, forcedDayPart, selectedLibraryWeekDay)}>Toevoegen aan {dayPartTitle(forcedDayPart, selectedLibraryWeekDay)}</PrimaryButton> : null}
+                <PrimaryButton
+                  className="mt-4 w-full"
+                  onClick={() => void add(selectedTemplate, selectedLibraryDayPart, selectedLibraryWeekDays)}
+                  disabled={selectedLibraryWeekDays.length === 0}
+                >
+                  Taak toevoegen
+                </PrimaryButton>
               </div>
             ) : null}
             <button type="button" onClick={() => setSelectedTemplate(null)} className="mt-4 min-h-12 w-full rounded-2xl bg-lavender/10 px-5 font-black text-lavender">Annuleren</button>
@@ -1448,43 +1648,34 @@ function RewardsPage() {
     return true;
   });
   const todaysRewards = weekGrowthMoments.filter((reward) => reward.earnedAt.slice(0, 10) === today());
-  const dailyWaterLimit = dailyGrowthLimit;
-  const todaysWaterDrops = todaysRewards.filter((_, index) => index % 2 === 0).length;
-  const waterDrops = weekGrowthMoments.filter((_, index) => index % 2 === 0).length;
-  const sunshineMoments = weekGrowthMoments.filter((_, index) => index % 2 === 1).length;
   const treeStages = ["Zaadje", "Sprietje", "Plantje", "Boompje", "Rustboom"];
   const stageIndex = Math.min(treeStages.length - 1, weekGrowthMoments.length === 0 ? 0 : Math.ceil(weekGrowthMoments.length / 2));
-  const weeklyGoal = 8;
-  const progress = Math.min(100, (weekGrowthMoments.length / weeklyGoal) * 100);
-  const weekMoments = Array.from({ length: weeklyGoal }, (_, index) => index < weekGrowthMoments.length);
-  const latestRewardToday = todaysRewards.length ? todaysRewards[todaysRewards.length - 1] : undefined;
-  const flowiPhrases = [
-    "Elke week kan Flowi's boom groeien.",
-    "Proberen telt. Ook als het nog lastig voelt.",
-    "Vandaag hoef je niet alles te kunnen.",
-    "Alles wat je probeert telt mee.",
-    "Flowi ziet dat je oefent."
-  ];
-  const phrase = latestRewardToday?.label ?? flowiPhrases[weekGrowthMoments.length % flowiPhrases.length];
-  const latestGrowthIndex = weekGrowthMoments.length - 1;
-  const careMode = latestGrowthIndex < 0 ? "rest" : latestGrowthIndex % 2 === 0 ? "water" : "sun";
+  const treeDropTops = ["12.9rem", "12.1rem", "11.25rem", "10.35rem", "9.4rem"];
+  const heartDropTops = ["9.7rem", "9.15rem", "8.5rem", "7.75rem", "7.05rem"];
+  const latestReward = growthRewards[0];
+  const latestWeekReward = weekGrowthMoments[weekGrowthMoments.length - 1];
+  const growthMessage = growthResponseForReward(latestReward ?? latestWeekReward);
+  const careMode = growthMessage.careMode;
   return (
-    <div className="phone-screen growth-garden px-4 pb-5 pt-4">
-      <PageHeader title="Mijn groei" subtitle="Flowi's rustboom." back={false} />
+    <div className="phone-screen growth-garden px-4 pb-5 pt-2">
       <section className={`growth-hero growth-focus-scene growth-focus-${careMode} relative overflow-hidden rounded-[1.9rem] p-5 shadow-soft`}>
         <div className="cloud cloud-a" />
         <div className="leaf-float leaf-b" />
         <div className="relative z-10">
           <div className="text-xs font-black uppercase tracking-[0.16em] text-lavender">Deze week</div>
           <h2 className="mt-1 text-3xl font-black text-navy">{treeStages[stageIndex]}</h2>
-          <p className="mt-2 max-w-[15rem] text-sm font-bold leading-6 text-navy/58">{phrase}</p>
+          <p className="mt-2 max-w-[17rem] text-base font-black leading-6 text-navy">{growthMessage.title}</p>
+          <p className="mt-2 max-w-[16rem] text-sm font-semibold leading-6 text-navy/62">{growthMessage.subtitle}</p>
         </div>
 
-        <div className="growth-care-stage relative z-10 mt-5" aria-label="Flowi verzorgt de rustboom">
+        <div
+          className="growth-care-stage relative z-10 mt-5"
+          aria-label="Flowi verzorgt de rustboom"
+          style={{ ["--drop-top" as string]: treeDropTops[stageIndex], ["--heart-top" as string]: heartDropTops[stageIndex] }}
+        >
           <div className="growth-care-sun" aria-hidden />
-          <div className="growth-sun-string" aria-hidden />
-          <div className="growth-sun-handle" aria-hidden />
           <div className="growth-care-drops" aria-hidden><span /><span /><span /></div>
+          <div className="growth-care-hearts" aria-hidden><span /><span /><span /><span /></div>
           <div className="growth-care-flowi" aria-hidden>
             <img src="/assets/flowi-home-mascot.png" alt="" className="growth-flowi-character" />
             <span className="growth-watering-can" />
@@ -1492,106 +1683,6 @@ function RewardsPage() {
           <div className="growth-care-tree">
             <span className={`growth-plant plant-${stageIndex} active`} />
           </div>
-        </div>
-      </section>
-    </div>
-  );
-  const recentRewards = weekRewards.slice(0, 4);
-  return (
-    <div className="phone-screen growth-garden px-4 pb-5 pt-4">
-      <PageHeader title="Mijn groei" subtitle="Deze week met Flowi." back={false} />
-      <section className="growth-hero relative overflow-hidden rounded-[1.9rem] p-5 shadow-soft">
-        <div className="cloud cloud-a" />
-        <div className="leaf-float leaf-b" />
-        <div className="relative z-10 grid grid-cols-[1fr_auto] items-end gap-3">
-          <div>
-            <div className="text-xs font-black uppercase tracking-[0.16em] text-lavender">Flowi's rustboom</div>
-            <h2 className="mt-1 text-3xl font-black text-navy">{treeStages[stageIndex]}</h2>
-            <p className="mt-2 max-w-[12rem] text-sm font-bold leading-6 text-navy/58">{phrase}</p>
-          </div>
-          <AvatarMascot size="medium" emotion="rustig" />
-        </div>
-
-        <div className="growth-tree-scene relative z-10 mt-5 flex items-end justify-between rounded-[1.5rem] bg-white/76 p-4 shadow-card">
-          {treeStages.map((stage, index) => (
-            <div key={stage} className="grid justify-items-center gap-1">
-              <span className={`growth-plant plant-${index} ${index <= stageIndex ? "active" : ""}`} />
-              <span className={`h-2 w-2 rounded-full ${index <= stageIndex ? "bg-mint" : "bg-lilac/25"}`} />
-            </div>
-          ))}
-        </div>
-        <div className="relative z-10 mt-4 h-3 rounded-full bg-white/70"><div className="h-3 rounded-full bg-gradient-to-r from-mint via-honey to-lavender" style={{ width: `${progress}%` }} /></div>
-        <p className="relative z-10 mt-2 text-center text-xs font-black text-navy/48">{waterDrops} waterdruppels voor de boom deze week</p>
-      </section>
-
-      <section className="mt-4 rounded-[1.6rem] bg-white/92 p-4 shadow-card">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-black text-navy">Deze week</h3>
-          <span className="rounded-full bg-lavender/10 px-3 py-1 text-xs font-black text-lavender">reset maandag</span>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {weekMoments.map((grown, index) => (
-            <div key={index} className={`week-seed grid min-h-16 place-items-center rounded-[1.15rem] text-center text-xs font-black ${grown ? "grown" : ""}`}>
-              <span>{grown ? "Groei" : "Rust"}</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-xs font-bold leading-5 text-navy/50">Flowi geeft de boom per dag maximaal 2 waterdruppels. Extra stapjes worden zonnestraaltjes.</p>
-      </section>
-
-      <section className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
-          <div className="text-3xl">{"\uD83D\uDCA7"}</div>
-          <p className="mt-2 text-sm font-black text-navy">{todaysWaterDrops} van {dailyWaterLimit}</p>
-          <p className="text-xs font-bold text-navy/48">water vandaag</p>
-        </div>
-        <div className="rounded-[1.45rem] bg-white/92 p-4 text-center shadow-card">
-          <div className="text-3xl">{"\u2600\uFE0F"}</div>
-          <p className="mt-2 text-sm font-black text-navy">{sunshineMoments}</p>
-          <p className="text-xs font-bold text-navy/48">zonnestraaltjes</p>
-        </div>
-      </section>
-
-      <section className="mt-4">
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <h3 className="font-black text-navy">Vandaag</h3>
-            <p className="text-xs font-bold text-navy/48">Kleine momenten van proberen.</p>
-          </div>
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-lavender shadow-card">{todaysRewards.length}</span>
-        </div>
-        {todaysRewards.length ? (
-          <div className="grid gap-2">
-            {todaysRewards.slice(0, 3).map((reward) => (
-              <div key={reward.id} className="flex items-center gap-3 rounded-[1.35rem] bg-white/92 p-3 shadow-card">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-honey/18 text-xl">{reward.icon}</span>
-                <div>
-                  <h4 className="text-sm font-black text-navy">{reward.label}</h4>
-                  <p className="text-xs font-bold text-navy/48">{reward.reason}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-[1.5rem] bg-white/88 p-4 text-center shadow-card">
-            <AvatarMascot size="small" emotion="rustig" />
-            <p className="mt-3 font-black text-navy">Vandaag mag klein beginnen.</p>
-            <p className="text-sm font-bold text-navy/52">Je kunt altijd opnieuw beginnen.</p>
-          </div>
-        )}
-      </section>
-
-      <section className="mt-5">
-        <h3 className="mb-3 font-black text-navy">Laatste groeimomenten</h3>
-        <div className="grid gap-2">
-          {recentRewards.length ? recentRewards.map((reward) => (
-            <div key={reward.id} className="flex items-center justify-between rounded-[1.25rem] bg-white/86 px-4 py-3 text-sm font-black text-navy shadow-card">
-              <span>{reward.label}</span>
-              <span className="text-xl">{reward.icon}</span>
-            </div>
-          )) : (
-            <div className="rounded-[1.25rem] bg-white/86 px-4 py-3 text-sm font-bold text-navy/52 shadow-card">Doe een oefening of rond een taak af. Dan groeit hier iets mee.</div>
-          )}
         </div>
       </section>
     </div>

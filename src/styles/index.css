@@ -949,6 +949,15 @@ input, textarea, select {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
 }
 
+.task-clock-face-large {
+  width: 10.8rem;
+  height: 10.8rem;
+  border-width: 6px;
+  box-shadow:
+    0 1rem 2rem rgba(71, 63, 137, .12),
+    inset 0 1px 0 rgba(255,255,255,.82);
+}
+
 .task-clock-hand {
   position: absolute;
   left: 50%;
@@ -969,6 +978,16 @@ input, textarea, select {
   background: #2f4eaf;
 }
 
+.task-clock-face-large .task-clock-hour {
+  width: .46rem;
+  height: 3rem;
+}
+
+.task-clock-face-large .task-clock-minute {
+  width: .34rem;
+  height: 4.1rem;
+}
+
 .task-clock-center {
   position: absolute;
   inset: 50% auto auto 50%;
@@ -980,11 +999,43 @@ input, textarea, select {
   box-shadow: 0 0 0 2px rgba(255,255,255,.92);
 }
 
+.task-clock-face-large .task-clock-center {
+  width: .85rem;
+  height: .85rem;
+  box-shadow: 0 0 0 4px rgba(255,255,255,.92);
+}
+
+.task-clock-number {
+  position: absolute;
+  color: #6e58d7;
+  font-size: .66rem;
+  font-weight: 900;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+.task-clock-number-large {
+  font-size: 1.35rem;
+}
+
 .task-clock-time {
   color: #7857df;
   font-size: .98rem;
   font-weight: 900;
   line-height: 1;
+}
+
+.task-clock-time-large {
+  color: #7857df;
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.task-clock-overlay-card {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
 }
 
 .child-task-status {
@@ -1012,7 +1063,8 @@ input, textarea, select {
 }
 
 .child-task-done,
-.child-task-help {
+.child-task-help,
+.child-task-clock-button {
   position: relative;
   display: grid;
   width: 3.85rem;
@@ -1059,13 +1111,73 @@ input, textarea, select {
   animation: help-button-ring 2.4s ease-in-out infinite;
 }
 
+.child-task-clock-button {
+  background: linear-gradient(180deg, #ffe7a6, #ffc86d);
+  box-shadow: 0 14px 26px rgba(255, 185, 95, .28), inset 0 1px 0 rgba(255,255,255,.5);
+  color: #8b5b12;
+}
+
+.child-task-clock-button::after {
+  content: "";
+  position: absolute;
+  inset: -.35rem;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 190, 110, .24);
+  animation: help-button-ring 2.4s ease-in-out infinite;
+}
+
 .child-task-done svg,
-.child-task-help svg {
+.child-task-help svg,
+.child-task-clock-button svg {
   position: relative;
   z-index: 1;
   width: 2rem;
   height: 2rem;
   stroke-width: 3;
+}
+
+.task-clock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(21, 30, 85, .24);
+  backdrop-filter: blur(8px);
+}
+
+.task-clock-panel {
+  position: relative;
+  width: min(100%, 20rem);
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,.42), transparent 34%),
+    linear-gradient(180deg, rgba(236, 244, 255, .98), rgba(231, 239, 255, .95));
+  padding: 1.35rem 1.2rem 1.4rem;
+  box-shadow: 0 24px 52px rgba(50,44,108,.24);
+}
+
+.task-clock-close {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  display: grid;
+  width: 2.85rem;
+  height: 2.85rem;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,.82);
+  color: #7857df;
+}
+
+.task-clock-heading {
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #151e55;
+  font-size: 1.3rem;
+  font-weight: 900;
 }
 
 @keyframes done-button-breathe {
@@ -2235,6 +2347,34 @@ input, textarea, select {
 .flowi-picture-card:nth-child(4n) { background: linear-gradient(160deg, #ffd8bd, #fff2e8); }
 .flowi-picture-card-breathe { background: linear-gradient(160deg, #d6f3f7, #f7ffff); }
 
+.help-suggestion-overlay {
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,.44), transparent 36%),
+    linear-gradient(180deg, rgba(237, 244, 255, .98), rgba(230, 240, 255, .96));
+}
+
+.help-suggestion-cta {
+  position: relative;
+}
+
+.help-suggestion-card {
+  background: linear-gradient(165deg, #ffd789, #ffb86b 56%, #ff9f7c);
+  box-shadow:
+    0 16px 34px rgba(255, 157, 97, .28),
+    inset 0 1px 0 rgba(255,255,255,.82);
+}
+
+.help-suggestion-card::before {
+  background:
+    radial-gradient(circle at 24% 12%, rgba(255,255,255,.88), transparent 34%),
+    linear-gradient(120deg, transparent 18%, rgba(255,255,255,.3) 38%, transparent 58%);
+  animation: help-suggestion-shine 3.6s ease-in-out infinite;
+}
+
+.help-suggestion-card .flowi-picture-label {
+  background: rgba(255, 255, 255, 0.94);
+}
+
 .flowi-picture-art {
   position: relative;
   z-index: 1;
@@ -2273,6 +2413,17 @@ input, textarea, select {
   line-height: 1.05;
   text-align: center;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
+}
+
+@keyframes help-suggestion-shine {
+  0%, 100% {
+    opacity: .78;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(4px);
+  }
 }
 
 .task-library-card,
@@ -2482,15 +2633,15 @@ input, textarea, select {
 }
 
 .growth-focus-scene {
-  min-height: 31rem;
+  min-height: 35.25rem;
 }
 
 .growth-care-stage {
-  min-height: 19.5rem;
+  min-height: 22.5rem;
   --tree-x: min(15.5rem, 66vw);
-  --flowi-water-x: min(4.6rem, 15vw);
-  --flowi-sun-x: min(8.7rem, 31vw);
   --sun-x: min(17.2rem, 72vw);
+  --drop-top: 11rem;
+  --heart-top: 8rem;
   border-radius: 0;
   background:
     radial-gradient(circle at 72% 12%, rgba(255,255,255,.78), transparent 5rem),
@@ -2501,13 +2652,13 @@ input, textarea, select {
 
 .growth-care-flowi {
   position: absolute;
-  left: -.2rem;
-  bottom: -.8rem;
+  left: 2.45rem;
+  bottom: -.2rem;
   z-index: 4;
-  width: min(12.25rem, 48vw);
+  width: min(12rem, 45vw);
   transform: translate3d(0, 0, 0) rotate(0deg);
   transform-origin: bottom left;
-  animation: flowi-water-film 5.2s ease-in-out infinite;
+  animation: none;
 }
 
 .growth-care-flowi::after {
@@ -2529,7 +2680,7 @@ input, textarea, select {
   height: auto;
   filter: drop-shadow(0 1.1rem 1rem rgba(132, 96, 24, .18));
   pointer-events: none;
-  transform: scaleX(-1);
+  transform: scaleX(-1) scale(1.02);
   transform-origin: center bottom;
 }
 
@@ -2544,8 +2695,8 @@ input, textarea, select {
 
 .growth-watering-can {
   position: absolute;
-  right: -1.85rem;
-  top: 42%;
+  right: -2.45rem;
+  top: 43%;
   z-index: 6;
   width: 3.3rem;
   height: 2rem;
@@ -2554,22 +2705,22 @@ input, textarea, select {
   box-shadow:
     inset .28rem .24rem 0 rgba(255,255,255,.42),
     0 .55rem 1rem rgba(72, 63, 137, .12);
-  transform: rotate(-14deg);
+  transform: rotate(-38deg);
   transform-origin: 20% 80%;
-  animation: flowi-water-can 5.2s ease-in-out infinite;
+  animation: none;
 }
 
 .growth-watering-can::before {
   content: "";
   position: absolute;
-  right: -1.45rem;
-  top: .38rem;
-  width: 1.65rem;
-  height: .5rem;
+  right: -1.28rem;
+  top: .82rem;
+  width: 1.4rem;
+  height: .42rem;
   border-radius: 999px;
   border-top: .28rem solid #5ebfd5;
   border-right: .22rem solid #5ebfd5;
-  transform: rotate(-4deg);
+  transform: rotate(12deg);
 }
 
 .growth-watering-can::after {
@@ -2586,12 +2737,59 @@ input, textarea, select {
 
 .growth-care-tree {
   position: absolute;
-  right: .95rem;
-  bottom: 1.1rem;
+  right: .55rem;
+  bottom: 1.15rem;
   z-index: 3;
-  transform: scale(1.8);
+  transform: scale(2.08);
   transform-origin: bottom right;
 }
+
+.growth-care-hearts {
+  position: absolute;
+  left: calc(var(--tree-x) - .45rem);
+  top: var(--heart-top);
+  z-index: 5;
+  width: 4.6rem;
+  height: 8rem;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.growth-care-hearts span {
+  position: absolute;
+  display: block;
+  width: .95rem;
+  height: .95rem;
+  background: linear-gradient(180deg, #ff8fb3, #ff658f);
+  transform: rotate(-45deg);
+  border-radius: .24rem;
+  box-shadow: 0 .45rem .9rem rgba(255,101,143,.2);
+}
+
+.growth-care-hearts span::before,
+.growth-care-hearts span::after {
+  content: "";
+  position: absolute;
+  width: .95rem;
+  height: .95rem;
+  border-radius: 50%;
+  background: inherit;
+}
+
+.growth-care-hearts span::before {
+  top: -.48rem;
+  left: 0;
+}
+
+.growth-care-hearts span::after {
+  top: 0;
+  left: .48rem;
+}
+
+.growth-care-hearts span:nth-child(1) { left: .2rem; top: .1rem; animation-delay: 0s; }
+.growth-care-hearts span:nth-child(2) { left: 1.15rem; top: .55rem; animation-delay: .45s; }
+.growth-care-hearts span:nth-child(3) { left: 2.3rem; top: 0rem; animation-delay: .9s; }
+.growth-care-hearts span:nth-child(4) { left: 3.2rem; top: .8rem; animation-delay: 1.25s; }
 
 .growth-care-sun {
   position: absolute;
@@ -2612,61 +2810,15 @@ input, textarea, select {
   animation: growth-sunshine 3.8s ease-in-out infinite;
 }
 
-.growth-sun-string {
-  position: absolute;
-  left: calc(var(--sun-x) + 1.92rem);
-  top: 4.35rem;
-  z-index: 2;
-  width: .16rem;
-  height: 7.2rem;
-  border-radius: 999px;
-  background: rgba(24, 36, 91, .22);
-  transform-origin: top center;
-}
-
-.growth-sun-string::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -.55rem;
-  width: .8rem;
-  height: .8rem;
-  border-radius: 50%;
-  background: #8a6df1;
-  transform: translateX(-50%);
-  box-shadow: 0 .35rem .8rem rgba(72, 63, 137, .12);
-}
-
-.growth-sun-handle {
-  position: absolute;
-  left: calc(var(--sun-x) + 1.52rem);
-  top: 11.3rem;
-  z-index: 6;
-  width: 1rem;
-  height: 1rem;
-  border: .16rem solid rgba(255,255,255,.88);
-  border-radius: 999px;
-  background: linear-gradient(180deg, #b69cff, #7857df);
-  box-shadow: 0 .45rem .9rem rgba(72, 63, 137, .16);
-}
-
-.growth-focus-sun .growth-sun-string {
-  animation: pull-sun-string 4.6s ease-in-out infinite;
-}
-
-.growth-focus-sun .growth-sun-handle {
-  animation: pull-sun-handle 4.6s ease-in-out infinite;
-}
-
 .growth-care-drops {
   position: absolute;
-  left: calc(var(--tree-x) - 2.4rem);
-  top: 10.1rem;
+  left: calc(var(--tree-x) - 2.95rem);
+  top: var(--drop-top);
   z-index: 5;
   display: flex;
-  gap: .55rem;
+  gap: .18rem;
   opacity: 0;
-  transform: rotate(-18deg);
+  transform: none;
 }
 
 .growth-care-drops span {
@@ -2679,25 +2831,17 @@ input, textarea, select {
 }
 
 .growth-care-drops span:nth-child(2) {
-  margin-top: .8rem;
+  margin-top: .45rem;
 }
 
 .growth-care-drops span:nth-child(3) {
-  margin-top: 1.55rem;
+  margin-top: .9rem;
 }
 
 .growth-focus-water .growth-care-drops,
 .growth-focus-sun .growth-care-drops {
   opacity: 1;
   animation: water-drops-fall 2.45s ease-in-out infinite;
-}
-
-.growth-focus-sun .growth-care-flowi {
-  animation: flowi-sun-film 5.8s ease-in-out infinite;
-}
-
-.growth-focus-sun .growth-flowi-character {
-  animation: flowi-little-steps 5.8s ease-in-out infinite;
 }
 
 .growth-focus-sun .growth-watering-can,
@@ -2712,21 +2856,13 @@ input, textarea, select {
   animation: none;
 }
 
-.growth-focus-water .growth-sun-handle,
-.growth-focus-rest .growth-sun-handle {
-  opacity: .55;
+.growth-focus-heart .growth-care-hearts {
+  opacity: 1;
+  animation: none;
 }
 
-.growth-focus-rest .growth-care-flowi {
-  animation: tiny-bounce 3.4s ease-in-out infinite;
-}
-
-@keyframes flowi-water-film {
-  0%, 100% { transform: translate3d(.1rem, 0, 0) rotate(0deg); }
-  16% { transform: translate3d(calc(var(--flowi-water-x) * .38), -.06rem, 0) rotate(-1.2deg); }
-  30% { transform: translate3d(calc(var(--flowi-water-x) * .72), .03rem, 0) rotate(1deg); }
-  44%, 70% { transform: translate3d(var(--flowi-water-x), .08rem, 0) rotate(3.5deg); }
-  84% { transform: translate3d(calc(var(--flowi-water-x) * .46), -.04rem, 0) rotate(-.8deg); }
+.growth-focus-heart .growth-care-hearts span {
+  animation: growth-heart-fall 2.8s ease-in-out infinite;
 }
 
 @keyframes flowi-water-can {
@@ -2737,10 +2873,10 @@ input, textarea, select {
 }
 
 @keyframes water-drops-fall {
-  0%, 34% { transform: translate(-1.1rem, -.9rem) rotate(-18deg); opacity: 0; }
+  0%, 28% { transform: translate(.15rem, -2.4rem) rotate(0deg); opacity: 0; }
   43% { opacity: 1; }
   78% { opacity: 1; }
-  100% { transform: translate(.9rem, 2.55rem) rotate(-18deg); opacity: 0; }
+  100% { transform: translate(.45rem, 3.55rem) rotate(0deg); opacity: 0; }
 }
 
 @keyframes growth-sunshine {
@@ -2756,33 +2892,6 @@ input, textarea, select {
       0 0 0 1rem rgba(255,198,91,.2),
       0 0 3rem rgba(255,198,91,.62);
   }
-}
-
-@keyframes pull-sun-string {
-  0%, 100% { transform: rotate(0deg) translateY(0); }
-  42%, 58% { transform: rotate(-3deg) translateY(1.1rem); }
-  72% { transform: rotate(3deg) translateY(.25rem); }
-}
-
-@keyframes pull-sun-handle {
-  0%, 100% { transform: translateY(0) scale(1); }
-  42%, 58% { transform: translateY(1.1rem) scale(.94); }
-  72% { transform: translateY(.25rem) scale(1.03); }
-}
-
-@keyframes flowi-sun-film {
-  0%, 100% { transform: translate3d(-.2rem, 0, 0) rotate(0deg); }
-  18% { transform: translate3d(calc(var(--flowi-sun-x) * .38), -.08rem, 0) rotate(-1.4deg); }
-  34% { transform: translate3d(calc(var(--flowi-sun-x) * .74), 0, 0) rotate(1.2deg); }
-  46%, 70% { transform: translate3d(var(--flowi-sun-x), 0, 0) rotate(-2.6deg); }
-  78% { transform: translate3d(calc(var(--flowi-sun-x) * .42), -.04rem, 0) rotate(.8deg); }
-}
-
-@keyframes flowi-little-steps {
-  0%, 100% { transform: scaleX(-1) rotate(0deg); }
-  18% { transform: scaleX(-1) rotate(-1.6deg); }
-  36% { transform: scaleX(-1) rotate(1.4deg); }
-  46%, 63% { transform: scaleX(-1) rotate(-3deg); }
 }
 
 .week-seed {
@@ -2859,6 +2968,36 @@ input, textarea, select {
 .plant-4 {
   width: 3rem;
   height: 4.2rem;
+}
+
+.plant-4::before {
+  height: 70%;
+}
+
+.plant-4::after {
+  width: 2.35rem;
+  height: 1.55rem;
+  box-shadow:
+    0.62rem 0.38rem 0 -0.08rem #7cc76b,
+    0.35rem -0.55rem 0 -0.28rem #ff8f5a,
+    -0.58rem -0.25rem 0 -0.28rem #ffbe5c;
+}
+
+@keyframes growth-heart-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-1.4rem) rotate(-45deg) scale(.72);
+  }
+  18% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(4.6rem) rotate(-45deg) scale(1.06);
+  }
 }
 
 .plant-4::before {

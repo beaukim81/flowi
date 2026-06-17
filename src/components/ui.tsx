@@ -1,5 +1,5 @@
-import { ArrowLeft, Check, ChevronRight, Download, GripVertical, Heart, HelpCircle, Home, Leaf, MoreHorizontal, Pencil, Plus, Settings, Sparkles, Trash2, Upload, UserRound } from "lucide-react";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { ArrowLeft, Check, ChevronRight, Clock3, Download, GripVertical, Heart, HelpCircle, Home, Leaf, MoreHorizontal, Pencil, Plus, Settings, Sparkles, Trash2, Upload, UserRound, X } from "lucide-react";
+import { useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import type { Avatar, Emotion, EmotionType, Need, NeedType, Task } from "../types/schema";
 import { getTaskVisualKey, type TaskVisualKey } from "../utils/taskVisuals";
@@ -140,21 +140,90 @@ function parseClockTime(value?: string) {
   return { hours, minutes };
 }
 
-function AnalogTaskClock({ time }: { time: string }) {
+function AnalogTaskClock({ time, size = "badge" }: { time: string; size?: "badge" | "overlay" }) {
   const parsed = parseClockTime(time);
   if (!parsed) return null;
   const minuteRotation = parsed.minutes * 6;
   const hourRotation = ((parsed.hours % 12) + parsed.minutes / 60) * 30;
+  const radius = size === "overlay" ? 40 : 41;
+  const numbers = Array.from({ length: 12 }, (_, index) => {
+    const hour = index + 1;
+    const angle = ((hour * 30) - 90) * (Math.PI / 180);
+    return {
+      label: String(hour),
+      style: {
+        left: `${50 + Math.cos(angle) * radius}%`,
+        top: `${50 + Math.sin(angle) * radius}%`
+      }
+    };
+  });
   return (
-    <div className="task-clock-badge" aria-label={`Tijd ${time}`}>
-      <span className="task-clock-face" aria-hidden>
+    <div className={size === "overlay" ? "task-clock-overlay-card" : "task-clock-badge"} aria-label={`Tijd ${time}`}>
+      <span className={`task-clock-face ${size === "overlay" ? "task-clock-face-large" : ""}`} aria-hidden>
+        {numbers.map((number) => (
+          <span
+            key={number.label}
+            className={`task-clock-number ${size === "overlay" ? "task-clock-number-large" : ""}`}
+            style={{ left: number.style.left, top: number.style.top }}
+          >
+            {number.label}
+          </span>
+        ))}
         <span className="task-clock-hand task-clock-hour" style={{ transform: `translateX(-50%) rotate(${hourRotation}deg)` }} />
         <span className="task-clock-hand task-clock-minute" style={{ transform: `translateX(-50%) rotate(${minuteRotation}deg)` }} />
         <span className="task-clock-center" />
       </span>
-      <span className="task-clock-time">{time}</span>
+      <span className={size === "overlay" ? "task-clock-time-large" : "task-clock-time"}>{time}</span>
     </div>
   );
+}
+
+function taskClockHeading(title: string) {
+  const text = title.trim().toLowerCase();
+  if (!text) return "Zo laat is jouw activiteit";
+
+  const specialPhrases: Array<[string, string]> = [
+    ["tennis", "Zo laat ga je tennissen"],
+    ["zwemles", "Zo laat ga je zwemmen"],
+    ["voetbal", "Zo laat ga je voetballen"],
+    ["basketbal", "Zo laat ga je basketballen"],
+    ["hockey", "Zo laat ga je hockeyen"],
+    ["turnen", "Zo laat ga je turnen"],
+    ["paardrijden", "Zo laat ga je paardrijden"],
+    ["muziekles", "Zo laat ga je naar muziekles"],
+    ["pianoles", "Zo laat ga je piano spelen"],
+    ["gitaarles", "Zo laat ga je gitaar spelen"],
+    ["drumles", "Zo laat ga je drummen"],
+    ["tekenles", "Zo laat ga je tekenen"],
+    ["schilderles", "Zo laat ga je schilderen"],
+    ["bibliotheek", "Zo laat ga je naar de bibliotheek"],
+    ["school", "Zo laat ga je naar school"],
+    ["tandarts", "Zo laat ga je naar de tandarts"],
+    ["huisarts", "Zo laat ga je naar de huisarts"],
+    ["dokter", "Zo laat ga je naar de dokter"],
+    ["kapper", "Zo laat ga je naar de kapper"],
+    ["logopedie", "Zo laat ga je naar logopedie"],
+    ["fysio", "Zo laat ga je naar de fysio"],
+    ["therapie", "Zo laat ga je naar therapie"],
+    ["bioscoop", "Zo laat ga je naar de bioscoop"],
+    ["restaurant", "Zo laat ga je naar het restaurant"],
+    ["pretpark", "Zo laat ga je naar het pretpark"],
+    ["binnenspeeltuin", "Zo laat ga je naar de binnenspeeltuin"],
+    ["trampolinepark", "Zo laat ga je naar het trampolinepark"],
+    ["zwembad", "Zo laat ga je naar het zwembad"],
+    ["opa", "Zo laat ga je naar opa en oma"],
+    ["oma", "Zo laat ga je naar opa en oma"]
+  ];
+
+  const special = specialPhrases.find(([match]) => text.includes(match));
+  if (special) return special[1];
+
+  if (text.startsWith("naar ")) return `Zo laat ga je ${text}`;
+  if (text.endsWith("en")) return `Zo laat ga je ${text}`;
+  if (text.endsWith("eren")) return `Zo laat ga je ${text}`;
+  if (text.endsWith("len")) return `Zo laat ga je ${text}`;
+
+  return `Zo laat is het voor ${text}`;
 }
 
 export function EmotionCard({ emotion, avatar, onClick }: { emotion: Emotion; avatar?: Avatar; onClick: () => void }) {
@@ -290,12 +359,12 @@ export function DayPartCard({ title, progress, to, visualTitle }: { title: strin
 }
 
 export function ChildTaskCard({ task, done, needsHelp = false, onDone, onHelp }: { task: Task; done: boolean; needsHelp?: boolean; onDone: () => void; onHelp?: () => void }) {
+  const [clockOpen, setClockOpen] = useState(false);
   return (
     <article className={`child-task-card ${done ? "is-done" : needsHelp ? "needs-help" : ""}`}>
       <div className="child-task-main">
         <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} />
         <h3>{task.title}</h3>
-        {task.optionalTime ? <AnalogTaskClock time={task.optionalTime} /> : null}
       </div>
       <div className="child-task-actions" aria-label={`Acties voor ${task.title}`}>
         <button type="button" aria-label={done ? `${task.title} weer open zetten` : `${task.title} is gelukt`} aria-pressed={done} onClick={onDone} className="child-task-done">
@@ -306,7 +375,23 @@ export function ChildTaskCard({ task, done, needsHelp = false, onDone, onHelp }:
             <HelpCircle size={28} />
           </button>
         ) : null}
+        {task.optionalTime ? (
+          <button type="button" aria-label={`Bekijk klok voor ${task.title}`} onClick={() => setClockOpen(true)} className="child-task-clock-button">
+            <Clock3 size={26} />
+          </button>
+        ) : null}
       </div>
+      {clockOpen && task.optionalTime ? (
+        <div className="task-clock-overlay" onClick={() => setClockOpen(false)}>
+          <section className="task-clock-panel" onClick={(event) => event.stopPropagation()}>
+            <button type="button" aria-label="Klok sluiten" onClick={() => setClockOpen(false)} className="task-clock-close">
+              <X size={24} />
+            </button>
+            <p className="task-clock-heading">{taskClockHeading(task.title)}</p>
+            <AnalogTaskClock time={task.optionalTime} size="overlay" />
+          </section>
+        </div>
+      ) : null}
     </article>
   );
 }
