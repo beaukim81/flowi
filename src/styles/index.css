@@ -2642,6 +2642,7 @@ input, textarea, select {
   --sun-x: min(17.2rem, 72vw);
   --drop-top: 11rem;
   --heart-top: 8rem;
+  --care-fall-left: calc(var(--tree-x) + .4rem);
   border-radius: 0;
   background:
     radial-gradient(circle at 72% 12%, rgba(255,255,255,.78), transparent 5rem),
@@ -2746,10 +2747,10 @@ input, textarea, select {
 
 .growth-care-hearts {
   position: absolute;
-  left: calc(var(--tree-x) - .45rem);
+  left: var(--care-fall-left);
   top: var(--heart-top);
   z-index: 5;
-  width: 4.6rem;
+  width: 1.2rem;
   height: 8rem;
   opacity: 0;
   pointer-events: none;
@@ -2786,10 +2787,10 @@ input, textarea, select {
   left: .48rem;
 }
 
-.growth-care-hearts span:nth-child(1) { left: .2rem; top: .1rem; animation-delay: 0s; }
-.growth-care-hearts span:nth-child(2) { left: 1.15rem; top: .55rem; animation-delay: .45s; }
-.growth-care-hearts span:nth-child(3) { left: 2.3rem; top: 0rem; animation-delay: .9s; }
-.growth-care-hearts span:nth-child(4) { left: 3.2rem; top: .8rem; animation-delay: 1.25s; }
+.growth-care-hearts span:nth-child(1) { left: -.28rem; top: .1rem; animation-delay: 0s; }
+.growth-care-hearts span:nth-child(2) { left: .12rem; top: .55rem; animation-delay: .45s; }
+.growth-care-hearts span:nth-child(3) { left: -.18rem; top: 0rem; animation-delay: .9s; }
+.growth-care-hearts span:nth-child(4) { left: .18rem; top: .8rem; animation-delay: 1.25s; }
 
 .growth-care-sun {
   position: absolute;
@@ -2805,14 +2806,56 @@ input, textarea, select {
     0 0 2.4rem rgba(255,198,91,.5);
 }
 
+.growth-care-sun::before {
+  content: "";
+  position: absolute;
+  inset: -1.2rem;
+  border-radius: 50%;
+  opacity: 0;
+  background:
+    conic-gradient(from 0deg,
+      rgba(255,198,91,.0) 0deg 12deg,
+      rgba(255,198,91,.65) 12deg 18deg,
+      rgba(255,198,91,.0) 18deg 42deg,
+      rgba(255,198,91,.65) 42deg 48deg,
+      rgba(255,198,91,.0) 48deg 72deg,
+      rgba(255,198,91,.65) 72deg 78deg,
+      rgba(255,198,91,.0) 78deg 102deg,
+      rgba(255,198,91,.65) 102deg 108deg,
+      rgba(255,198,91,.0) 108deg 132deg,
+      rgba(255,198,91,.65) 132deg 138deg,
+      rgba(255,198,91,.0) 138deg 162deg,
+      rgba(255,198,91,.65) 162deg 168deg,
+      rgba(255,198,91,.0) 168deg 192deg,
+      rgba(255,198,91,.65) 192deg 198deg,
+      rgba(255,198,91,.0) 198deg 222deg,
+      rgba(255,198,91,.65) 222deg 228deg,
+      rgba(255,198,91,.0) 228deg 252deg,
+      rgba(255,198,91,.65) 252deg 258deg,
+      rgba(255,198,91,.0) 258deg 282deg,
+      rgba(255,198,91,.65) 282deg 288deg,
+      rgba(255,198,91,.0) 288deg 312deg,
+      rgba(255,198,91,.65) 312deg 318deg,
+      rgba(255,198,91,.0) 318deg 342deg,
+      rgba(255,198,91,.65) 342deg 348deg,
+      rgba(255,198,91,.0) 348deg 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 58%, #000 59% 74%, transparent 75%);
+  mask: radial-gradient(circle, transparent 0 58%, #000 59% 74%, transparent 75%);
+}
+
 .growth-focus-sun .growth-care-sun {
   opacity: 1;
   animation: growth-sunshine 3.8s ease-in-out infinite;
 }
 
+.growth-focus-sun .growth-care-sun::before {
+  opacity: .95;
+  animation: growth-sun-rays 3.8s ease-in-out infinite;
+}
+
 .growth-care-drops {
   position: absolute;
-  left: calc(var(--tree-x) - 2.95rem);
+  left: var(--care-fall-left);
   top: var(--drop-top);
   z-index: 5;
   display: flex;
@@ -2831,11 +2874,11 @@ input, textarea, select {
 }
 
 .growth-care-drops span:nth-child(2) {
-  margin-top: .45rem;
+  margin-top: .32rem;
 }
 
 .growth-care-drops span:nth-child(3) {
-  margin-top: .9rem;
+  margin-top: .64rem;
 }
 
 .growth-focus-water .growth-care-drops,
@@ -2891,6 +2934,17 @@ input, textarea, select {
     box-shadow:
       0 0 0 1rem rgba(255,198,91,.2),
       0 0 3rem rgba(255,198,91,.62);
+  }
+}
+
+@keyframes growth-sun-rays {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: .78;
+  }
+  50% {
+    transform: scale(1.08) rotate(8deg);
+    opacity: 1;
   }
 }
 

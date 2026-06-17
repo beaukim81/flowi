@@ -1652,6 +1652,7 @@ function RewardsPage() {
   const stageIndex = Math.min(treeStages.length - 1, weekGrowthMoments.length === 0 ? 0 : Math.ceil(weekGrowthMoments.length / 2));
   const treeDropTops = ["12.9rem", "12.1rem", "11.25rem", "10.35rem", "9.4rem"];
   const heartDropTops = ["9.7rem", "9.15rem", "8.5rem", "7.75rem", "7.05rem"];
+  const careFallLefts = ["calc(var(--tree-x) + .15rem)", "calc(var(--tree-x) + .25rem)", "calc(var(--tree-x) + .35rem)", "calc(var(--tree-x) + .45rem)", "calc(var(--tree-x) + .55rem)"];
   const latestReward = growthRewards[0];
   const latestWeekReward = weekGrowthMoments[weekGrowthMoments.length - 1];
   const growthMessage = growthResponseForReward(latestReward ?? latestWeekReward);
@@ -1671,7 +1672,11 @@ function RewardsPage() {
         <div
           className="growth-care-stage relative z-10 mt-5"
           aria-label="Flowi verzorgt de rustboom"
-          style={{ ["--drop-top" as string]: treeDropTops[stageIndex], ["--heart-top" as string]: heartDropTops[stageIndex] }}
+          style={{
+            ["--drop-top" as string]: treeDropTops[stageIndex],
+            ["--heart-top" as string]: heartDropTops[stageIndex],
+            ["--care-fall-left" as string]: careFallLefts[stageIndex]
+          }}
         >
           <div className="growth-care-sun" aria-hidden />
           <div className="growth-care-drops" aria-hidden><span /><span /><span /></div>
