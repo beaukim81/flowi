@@ -652,31 +652,15 @@ function helpNowNeedForTitle(title: string): NeedType {
 }
 
 function HomePage() {
-  const navigate = useNavigate();
   return (
     <section className="phone-screen home-scene relative overflow-hidden px-5 pb-4 pt-5">
       <div className="cloud cloud-a" />
       <div className="cloud cloud-b" />
       <div className="home-content relative z-10">
         <div className="flowi-logo mb-1">Flowi<span>{"\u2665"}</span></div>
-        <div className="home-main-stage">
-        <div className="home-choice-pill" aria-hidden>Waar wil je beginnen?</div>
-        <div className="home-mascot-wrap relative" aria-label="Flowi helpt jou">
-          <img src="/assets/flowi-home-mascot.png" alt="" className="home-mascot-free" />
-        </div>
-        <div className="home-visual-actions" aria-label="Kies wat je wilt doen">
-          <button type="button" onClick={() => navigate("/check-in")} className="home-visual-card home-visual-feel" aria-label="Wat voel je?">
-            <span className="home-visual-art" aria-hidden />
-            <span className="home-visual-label">Wat voel je?</span>
-          </button>
-          <button type="button" onClick={() => navigate("/day")} className="home-visual-card home-visual-day" aria-label="Taken doen">
-            <span className="home-visual-art" aria-hidden />
-            <span className="home-visual-label">Taken doen</span>
-          </button>
-          <button type="button" onClick={() => navigate("/help-now")} className="home-visual-card home-visual-help" aria-label="Help mij nu">
-            <span className="home-visual-art" aria-hidden />
-            <span className="home-visual-label">Help mij nu</span>
-          </button>
+        <div className="home-main-stage home-main-stage-solo">
+        <div className="home-mascot-wrap home-mascot-wrap-solo relative" aria-label="Flowi helpt jou">
+          <img src="/assets/flowi-home-mascot.png" alt="" className="home-mascot-free home-mascot-free-solo" />
         </div>
         </div>
       </div>
@@ -1914,7 +1898,7 @@ function AvatarPage() {
 function ParentsPage() {
   return (
     <>
-      <PageHeader title="Voor ouders" subtitle="Alles blijft op dit apparaat bewaard." back={false} />
+      <PageHeader title="Voor ouders" subtitle="Alles blijft op dit apparaat bewaard." backTo="/" />
       <section className="mb-4 rounded-[1.55rem] bg-gradient-to-b from-lavender/12 via-white to-sky/12 p-4 shadow-card">
         <div className="flex items-center gap-3">
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-lavender/12 text-lavender"><Database size={24} /></div>
@@ -1925,9 +1909,10 @@ function ParentsPage() {
         </div>
       </section>
       <div className="grid gap-3">
+        <ParentCard icon={<Database />} title="Backup bewaren" text="Backup maken en terugzetten." to="/backup" />
         <ParentCard icon={<CalendarDays />} title="Dagindeling" text="Taken beheren en routines maken." to="/day-settings" />
         <ParentCard icon={<BookOpen />} title="Takenbibliotheek" text="Taken zoeken en toevoegen." to="/task-library" />
-        <ParentCard icon={<Database />} title="Over Flowi & backup" text="Uitleg over de app en gegevens bewaren." to="/about" />
+        <ParentCard icon={<Database />} title="Over Flowi" text="Uitleg over de app en hoe die bedoeld is." to="/about" />
         <ParentCard icon={<HeartHandshake />} title="Privacy" text="Lokale opslag en veiligheid." to="/privacy" />
       </div>
     </>
@@ -1949,6 +1934,7 @@ function SettingsPage() {
 
 function BackupPage() {
   const [message, setMessage] = useState("");
+  const [open, setOpen] = useState(false);
   const download = async () => {
     const backup = await exportBackup();
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
@@ -1965,13 +1951,32 @@ function BackupPage() {
   };
   return (
     <>
-      <PageHeader title="Backup" subtitle="Bewaar je lokale gegevens." />
-      <div className="grid gap-3 rounded-[1.6rem] bg-white p-4 shadow-soft">
-        <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={18} />Backup maken</PrimaryButton>
-        <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={18} />Backup terugzetten<input type="file" accept={backupFileAccept} className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
-        <p className="text-sm font-bold text-navy/55">Alles blijft lokaal op dit apparaat.</p>
-        {message ? <p className="font-black text-mint">{message}</p> : null}
-      </div>
+      <PageHeader title="Backup bewaren" subtitle="Bewaar je lokale gegevens rustig op tijd." />
+      <section className="rounded-[1.6rem] bg-gradient-to-b from-lavender/12 via-white to-sky/12 p-4 shadow-soft">
+        <div className="flex items-center gap-3">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-lavender/12 text-lavender"><Database size={24} /></div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-black text-navy">Backup bewaren</h2>
+            <p className="text-sm font-bold leading-5 text-navy/52">Maak af en toe een backup, vooral na het instellen van routines. Zo kun je alles later zelf weer terugzetten.</p>
+          </div>
+        </div>
+      </section>
+      <section className="mt-4 rounded-[1.6rem] bg-white p-4 shadow-soft">
+        <button type="button" onClick={() => setOpen((value) => !value)} className="flex w-full items-center justify-between gap-3 rounded-[1.4rem] bg-lavender/8 px-4 py-4 text-left">
+          <div>
+            <h3 className="text-lg font-black text-navy">Backupknoppen</h3>
+            <p className="mt-1 text-sm font-medium leading-5 text-navy/55">{open ? "Tik om weer in te klappen." : "Tik om backup maken of terugzetten te openen."}</p>
+          </div>
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white text-lavender shadow-card">{open ? <Minus size={18} /> : <Plus size={18} />}</span>
+        </button>
+        {open ? (
+          <div className="mt-3 grid gap-3">
+            <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={18} />Backup maken</PrimaryButton>
+            <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={18} />Backup terugzetten<input type="file" accept={backupFileAccept} className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
+          </div>
+        ) : null}
+        {message ? <p className="mt-3 font-black text-mint">{message}</p> : null}
+      </section>
     </>
   );
 }
@@ -1981,22 +1986,7 @@ function PrivacyPage() {
 }
 
 function AboutPage() {
-  const [message, setMessage] = useState("");
   const bodyText = "text-base font-normal leading-6 text-navy/58";
-  const download = async () => {
-    const backup = await exportBackup();
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `flowi-backup-${today()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setMessage("Backup gemaakt.");
-  };
-  const upload = async (file?: File) => {
-    await restoreBackupFile(file, setMessage);
-  };
   return (
     <>
       <PageHeader title="Over Flowi" subtitle="Voor ouders en verzorgers." />
@@ -2061,16 +2051,6 @@ function AboutPage() {
           <p>Blijft een kind vaak vastlopen of is er meer steun nodig dan de app kan geven, dan is dat geen mislukking van Flowi maar een teken dat extra begeleiding belangrijk is.</p>
         </div>
       </section>
-
-      <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
-        <h2 className="text-2xl font-black text-navy">Gegevens en backup</h2>
-        <p className={`mt-2 ${bodyText}`}>Flowi gebruikt geen account. Gegevens blijven op dit apparaat. Met een backup kun je ze later zelf terugzetten.</p>
-        <div className="mt-4 grid gap-3">
-          <PrimaryButton onClick={download}><icons.Download className="mr-2 inline" size={20} />Backup maken</PrimaryButton>
-          <label className="flex min-h-14 cursor-pointer items-center justify-center rounded-[1.45rem] bg-gradient-to-b from-[#b69cff] via-[#9473f5] to-[#7857df] px-6 text-lg font-black text-white shadow-[0_14px_24px_rgba(120,87,223,.28)] transition active:scale-[.98] focus-within:ring-4 focus-within:ring-lavender/30"><icons.Upload className="mr-2 inline" size={20} />Backup terugzetten<input type="file" accept={backupFileAccept} className="sr-only" onChange={(event) => upload(event.target.files?.[0])} /></label>
-          {message ? <p className="font-black text-mint">{message}</p> : null}
-        </div>
-      </section>
     </>
   );
 }
@@ -2099,7 +2079,7 @@ function AppRoutes() {
         <Route path="/avatar" element={<AvatarPage />} />
         <Route path="/parents" element={<ParentsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/backup" element={<Navigate to="/about" />} />
+        <Route path="/backup" element={<BackupPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>

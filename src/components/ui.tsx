@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, ChevronRight, Clock3, Download, GripVertical, Heart, HelpCircle, Home, Leaf, MoreHorizontal, Pencil, Plus, Settings, Sparkles, Trash2, Upload, UserRound, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, ChevronRight, Clock3, Download, GripVertical, Heart, HelpCircle, Leaf, Pencil, Plus, Settings, Sparkles, Trash2, Upload, UserRound, X } from "lucide-react";
 import { useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import type { Avatar, Emotion, EmotionType, Need, NeedType, Task } from "../types/schema";
@@ -8,6 +8,9 @@ import { isKnownTaskVisualKey } from "../utils/taskVisuals";
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isFixedScreen = location.pathname === "/" || location.pathname === "/rewards";
+  const isParentArea = ["/parents", "/settings", "/about", "/privacy", "/day-settings", "/task-library", "/tasks", "/avatar"].some((prefix) => location.pathname.startsWith(prefix));
+  const showParentShortcut = !location.pathname.startsWith("/parents") && !location.pathname.startsWith("/settings");
+  const showBottomNav = !isParentArea;
   return (
     <div className={`flowi-bg portrait-locked text-navy ${isFixedScreen ? "fixed-shell" : "scroll-shell"}`}>
       <div className="portrait-guard" aria-hidden>
@@ -17,24 +20,58 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="mt-2 text-lg font-bold leading-7 text-navy/62">Flowi werkt rustig en duidelijk als je tablet of telefoon rechtop staat.</p>
         </section>
       </div>
-      <main className={`app-content mx-auto w-full max-w-full px-0 pt-0 sm:max-w-5xl sm:px-6 lg:max-w-6xl ${isFixedScreen ? "fixed-main pb-0 sm:pt-0" : "scroll-main pb-32 sm:pt-6"}`}>{children}</main>
-      <BottomNav />
+      {showParentShortcut ? (
+        <NavLink
+          to="/parents"
+          aria-label="Voor ouders"
+          className={({ isActive }) => `parent-shortcut ${isActive ? "parent-shortcut-active" : ""}`}
+        >
+          <Settings aria-hidden size={22} strokeWidth={2.4} />
+        </NavLink>
+      ) : null}
+      <main className={`app-content mx-auto w-full max-w-full px-0 pt-0 sm:max-w-5xl sm:px-6 lg:max-w-6xl ${isFixedScreen ? "fixed-main pb-0 sm:pt-0" : showBottomNav ? "scroll-main pb-32 sm:pt-6" : "scroll-main pb-8 sm:pt-6"}`}>{children}</main>
+      {showBottomNav ? <BottomNav /> : null}
     </div>
   );
 }
 
 function BottomNav() {
   const items = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/rewards", label: "Groei", icon: Heart },
-    { to: "/practice", label: "Oefeningen", icon: Sparkles },
-    { to: "/parents", label: "Meer", icon: MoreHorizontal }
+    {
+      to: "/check-in",
+      match: ["/check-in", "/need", "/reflection"],
+      label: "Wat voel je",
+      icon: Heart,
+      activeClass: "bg-gradient-to-b from-sky/32 to-sky/10 text-sky-700 shadow-[inset_0_1px_0_rgba(255,255,255,.84)]"
+    },
+    {
+      to: "/day",
+      match: ["/day"],
+      label: "Taken",
+      icon: CalendarDays,
+      activeClass: "bg-gradient-to-b from-[#ffe3aa] to-[#fff5d9] text-[#b7791f] shadow-[inset_0_1px_0_rgba(255,255,255,.84)]"
+    },
+    {
+      to: "/help-now",
+      match: ["/help-now", "/action"],
+      label: "Help mij nu",
+      icon: HelpCircle,
+      activeClass: "bg-gradient-to-b from-[#e6dbff] to-[#f7f2ff] text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.84)]"
+    }
   ];
+  const location = useLocation();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 w-full max-w-full overflow-hidden border-t border-white/80 bg-white/90 px-2 py-2.5 shadow-[0_-14px_40px_rgba(62,59,130,.12)] backdrop-blur-2xl sm:px-3">
-      <div className="mx-auto grid w-full max-w-lg grid-cols-4 gap-1.5 sm:max-w-4xl">
+      <div className="mx-auto grid w-full max-w-lg grid-cols-3 gap-1.5 sm:max-w-4xl">
         {items.map((item) => (
-          <NavLink key={item.to} to={item.to} className={({ isActive }) => `flex min-h-16 min-w-0 flex-col items-center justify-center rounded-[1.25rem] px-1 text-[0.8rem] font-black leading-tight transition sm:rounded-[1.45rem] sm:text-sm ${isActive ? "bg-gradient-to-b from-lilac/28 to-lavender/12 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.8)]" : "text-navy/55"}`}>
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={() => {
+              const isActive = item.match.some((prefix) => location.pathname.startsWith(prefix));
+              return `flex min-h-16 min-w-0 flex-col items-center justify-center rounded-[1.25rem] px-1 text-[0.8rem] font-black leading-tight transition sm:rounded-[1.45rem] sm:text-sm ${isActive ? item.activeClass : "text-navy/55"}`;
+            }}
+          >
             <item.icon aria-hidden size={24} strokeWidth={2.5} />
             <span className="truncate">{item.label}</span>
           </NavLink>
