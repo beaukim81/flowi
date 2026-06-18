@@ -45,6 +45,8 @@ const dayPartTitle = (part: DayPart, weekDay: WeekDay | null = null) =>
 const taskRunsOnDay = (task: Task, weekDay: WeekDay | null) => !weekDay || !task.weekDays?.length || task.weekDays.includes(weekDay);
 const weekDayQuery = (weekDay: WeekDay | null) => weekDay ? `?weekDay=${weekDay}` : "";
 const returnToWithWeekDay = (path: string, weekDay: WeekDay | null) => `${path}${weekDayQuery(weekDay)}`;
+const parentUnlockKey = "flowi:parentUnlockedAt";
+const parentUnlockWindowMs = 15 * 60 * 1000;
 const normalizeTaskTitle = (value: string) =>
   value
     .trim()
@@ -167,12 +169,12 @@ const exerciseCaregiverTip = (exercise: PracticeExercise) => ({
 } as Record<string, string>)[exercise.id] ?? "Blijf rustig dichtbij en houd de oefening klein en duidelijk.";
 const actionHelpOptions = (title: string) => {
   const text = title.toLowerCase();
-  if (text.includes("knuffel") || text.includes("zachts") || text.includes("kussen")) return ["Blijf even bij mij.", "Doe het met mij samen.", "Help mij weer rustig worden."];
-  if (text.includes("adem") || text.includes("hart")) return ["Adem met mij mee.", "Doe het rustig voor.", "Blijf even dichtbij."];
-  if (text.includes("muur") || text.includes("stamp") || text.includes("spring") || text.includes("schud") || text.includes("dierenloop")) return ["Doe eerst één keer voor.", "Blijf erbij.", "Help mij weer stoppen."];
-  if (text.includes("keuze") || text.includes("samen") || text.includes("hulp nodig") || text.includes("ik weet het even niet")) return ["Kies met mij mee.", "Wijs stap één aan.", "Blijf even bij mij."];
-  if (text.includes("rustige plek") || text.includes("deken") || text.includes("licht") || text.includes("koptelefoon")) return ["Ga met mij mee.", "Blijf in de buurt.", "Maak het samen rustig."];
-  return ["Kom even bij mij.", "Doe het rustig voor.", "Blijf even bij mij."];
+  if (text.includes("knuffel") || text.includes("zachts") || text.includes("kussen")) return ["Blijf even bij mij", "Doe het met mij samen", "Help mij weer rustig worden"];
+  if (text.includes("adem") || text.includes("hart")) return ["Adem met mij mee", "Doe het rustig voor", "Blijf even dichtbij"];
+  if (text.includes("muur") || text.includes("stamp") || text.includes("spring") || text.includes("schud") || text.includes("dierenloop")) return ["Doe eerst één keer voor", "Blijf erbij", "Help mij weer stoppen"];
+  if (text.includes("keuze") || text.includes("samen") || text.includes("hulp nodig") || text.includes("ik weet het even niet")) return ["Kies met mij mee", "Wijs stap één aan", "Blijf even bij mij"];
+  if (text.includes("rustige plek") || text.includes("deken") || text.includes("licht") || text.includes("koptelefoon")) return ["Ga met mij mee", "Blijf in de buurt", "Maak het samen rustig"];
+  return ["Kom even bij mij", "Doe het rustig voor", "Blijf even bij mij"];
 };
 const shortTaskTitle = (title: string) => ({
   "Tandenpoetsen ochtend": "Tandenpoetsen",
@@ -281,6 +283,32 @@ const now = () => new Date().toISOString();
 const addGrowthReward = (label: string, reason: string) => db.rewards.add({ id: id(), childProfileId: "default-child", label, icon: "*", reason, earnedAt: now() });
 const clampTimerSeconds = (seconds: number) => Math.min(300, Math.max(60, Math.round(seconds / 60) * 60));
 const backupFileAccept = ".json,application/json,text/plain,application/octet-stream";
+type ParentGateQuestion = { first: number; second: number; operator: "+" | "-"; answer: number };
+const makeParentGateQuestion = (): ParentGateQuestion => {
+  if (Math.random() < 0.7) {
+    const first = Math.floor(Math.random() * 5) + 2;
+    const second = Math.floor(Math.random() * 4) + 1;
+    return { first, second, operator: "+", answer: first + second };
+  }
+
+  const first = Math.floor(Math.random() * 5) + 4;
+  const second = Math.floor(Math.random() * Math.min(first - 1, 4)) + 1;
+  return { first, second, operator: "-", answer: first - second };
+};
+const readParentUnlock = () => {
+  const stored = Number(sessionStorage.getItem(parentUnlockKey) ?? "0");
+  return Number.isFinite(stored) && Date.now() - stored < parentUnlockWindowMs;
+};
+const unlockParentMode = () => sessionStorage.setItem(parentUnlockKey, String(Date.now()));
+const requestPersistentStorage = async () => {
+  if (!("storage" in navigator) || !navigator.storage?.persist) return false;
+  try {
+    return await navigator.storage.persist();
+  } catch {
+    return false;
+  }
+};
+
 const restoreBackupFile = async (file: File | undefined, setMessage: (message: string) => void) => {
   if (!file) return;
   if (!confirm("Hiermee vervang je de huidige gegevens op dit apparaat.")) return;
@@ -292,6 +320,27 @@ const restoreBackupFile = async (file: File | undefined, setMessage: (message: s
     setMessage("Dit bestand kon Flowi niet lezen. Kies een Flowi-backupbestand.");
   }
 };
+
+async function savePositiveMoment(emotion: EmotionType, reason: string, actionId?: string) {
+  const fallbackNeed: NeedType = emotion === "blij" ? "creatief" : "ademen";
+  const action = actionId
+    ? calmStrategies.find((strategy) => strategy.id === actionId)
+    : chooseStrategy(emotion, fallbackNeed);
+  await db.emotionHistory.add({
+    id: id(),
+    childProfileId: "default-child",
+    emotionType: emotion,
+    needType: fallbackNeed,
+    actionId: action?.id ?? calmStrategies[0].id,
+    helpedRating: "Fijn gevoel vastgehouden",
+    note: reason,
+    createdAt: now()
+  });
+  await addGrowthReward(
+    emotion === "blij" ? "Ik liet een fijn gevoel groeien" : "Ik voelde rust in mijn lijf",
+    reason
+  );
+}
 const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
 if (isLocalPreview && "serviceWorker" in navigator) {
@@ -545,8 +594,6 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
     emotion === "overprikkeld" ? "teVeel" :
     emotion === "druk" ? "superDruk" :
     emotion;
-  const exactMatch = calmStrategies.find((strategy) => (!normalizedEmotion || strategy.linkedEmotionTypes.includes(normalizedEmotion)) && (!need || strategy.linkedNeedTypes.includes(need)));
-  if (exactMatch) return exactMatch;
 
   const findStrategyByTitles = (titles: string[]) =>
     titles.map((title) => calmStrategies.find((strategy) => strategy.title === title)).find(Boolean);
@@ -565,7 +612,8 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
       knuffel: ["Vraag een knuffel", "Pak iets zachts"],
       ademen: ["Hand op je hart"],
       creatief: ["Teken je wolk"],
-      praatMetOuder: ["Kies dichtbij of ruimte"]
+      praatMetOuder: ["Kies dichtbij of ruimte", "Vraag een knuffel"],
+      rustigePlek: ["Zoek een rustig plekje", "Kruip onder een deken"]
     },
     boos: {
       bewegen: ["Duw tegen de muur", "Stamp 10 keer", "Draag iets zwaars"],
@@ -577,7 +625,7 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
       ademen: ["Hand op je hart", "Adem zacht"],
       rustigePlek: ["Ga naar je rustige plek", "Zoek een rustig plekje"],
       knuffel: ["Pak iets zachts", "Vraag een knuffel"],
-      praatMetOuder: ["Kies samen", "Zeg: stop, ik heb hulp nodig"]
+      praatMetOuder: ["Kies samen", "Hand op je hart", "Zeg: stop, ik heb hulp nodig"]
     },
     teVeel: {
       koptelefoon: ["Zet je koptelefoon op"],
@@ -598,10 +646,11 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
       bewegen: ["Spring 10 keer", "Schud je armen los", "Doe een dierenloop"]
     },
     moe: {
-      rustigePlek: ["Zoek een rustig plekje", "Maak het licht zachter"],
+      rustigePlek: ["Zoek een rustig plekje", "Maak je lijf zwaar", "Maak het licht zachter"],
       evenAlleen: ["Even niets"],
       ademen: ["Adem zacht"],
-      praatMetOuder: ["Kies samen"]
+      praatMetOuder: ["Kies samen", "Vraag een knuffel"],
+      knuffel: ["Vraag een knuffel", "Pak iets zachts"]
     },
     inDeWar: {
       praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet"],
@@ -615,7 +664,7 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
       ademen: ["Adem zacht"]
     },
     durfNiet: {
-      praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet"],
+      praatMetOuder: ["Kies samen", "Hand op je hart", "Zeg: ik weet het even niet"],
       knuffel: ["Vraag een knuffel", "Pak iets zachts"],
       rustigePlek: ["Ga naar je rustige plek"],
       ademen: ["Hand op je hart", "Adem zacht"]
@@ -633,7 +682,7 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
   };
 
   const directEmotionNeedMatch = emotion && need
-    ? findStrategyByTitles(preferredByEmotionAndNeed[emotion]?.[need] ?? [])
+    ? findStrategyByTitles(preferredByEmotionAndNeed[normalizedEmotion ?? emotion]?.[need] ?? [])
     : undefined;
   if (directEmotionNeedMatch) return directEmotionNeedMatch;
 
@@ -666,14 +715,17 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
     weetIkNiet: ["Maak één kleine keuze", "Kies samen", "Adem zacht"]
   };
 
-  const emotionPreferred = emotion ? findStrategyByTitles(emotionOnlyFallbacks[emotion] ?? []) : undefined;
+  const emotionPreferred = normalizedEmotion ? findStrategyByTitles(emotionOnlyFallbacks[normalizedEmotion] ?? []) : undefined;
   if (emotionPreferred) return emotionPreferred;
 
   const preferred = need ? findStrategyByTitles(preferredByNeed[need]) : undefined;
   if (preferred) return preferred;
 
+  const exactMatch = calmStrategies.find((strategy) => (!normalizedEmotion || strategy.linkedEmotionTypes.includes(normalizedEmotion)) && (!need || strategy.linkedNeedTypes.includes(need)));
+  if (exactMatch) return exactMatch;
+
   return calmStrategies.find((strategy) => need ? strategy.linkedNeedTypes.includes(need) : false)
-    ?? calmStrategies.find((strategy) => emotion ? strategy.linkedEmotionTypes.includes(emotion) : false)
+    ?? calmStrategies.find((strategy) => normalizedEmotion ? strategy.linkedEmotionTypes.includes(normalizedEmotion) : false)
     ?? calmStrategies[0];
 }
 
@@ -725,7 +777,7 @@ function CheckInPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Hoe voel je je nu?" subtitle="Kies wat het beste past." />
+      <PageHeader title="Hoe voel je je nu?" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {emotions.map((emotion) => (
           <EmotionCard key={emotion.id} emotion={emotion} avatar={avatar} onClick={() => { setEmotion(emotion.id); navigate(emotion.id === "weetIkNiet" ? "/check-in/weet-ik-niet" : "/need"); }} />
@@ -741,7 +793,7 @@ function UnsureEmotionPage() {
   const { setEmotion } = useCurrentFlow();
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Je koos: weet ik niet" subtitle="Wat past misschien?" />
+      <PageHeader title="Je koos: weet ik niet" />
       <div className="grid grid-cols-2 gap-3">
         {unsureEmotions.map((emotion) => (
           <EmotionCard key={emotion.id} emotion={emotion} onClick={() => { setEmotion(emotion.id); navigate("/need"); }} />
@@ -756,25 +808,44 @@ function NeedPage() {
   const { selectedEmotion, setNeed, setAction } = useCurrentFlow();
   const { data: profile } = useProfile();
   const isPositiveEmotion = selectedEmotion === "rustig" || selectedEmotion === "blij";
-  const filteredNeeds = isPositiveEmotion
-    ? needs.filter((need) => ["ademen", "creatief"].includes(need.id))
-    : selectedEmotion === "wilHulp"
-    ? needs.filter((need) => ["praatMetOuder", "knuffel"].includes(need.id))
-    : selectedEmotion === "durfNiet" || selectedEmotion === "spannend"
-      ? needs.filter((need) => ["praatMetOuder", "ademen", "rustigePlek", "knuffel"].includes(need.id))
-      : selectedEmotion === "snapNiet" || selectedEmotion === "weetIkNiet"
-        ? needs.filter((need) => ["praatMetOuder", "creatief", "ademen", "rustigePlek"].includes(need.id))
-        : needs;
-  const caregiver = profile?.caregiverName || profile?.caregiverLabel || "ouder";
+  const guidedNeedsByEmotion: Partial<Record<EmotionType, NeedType[]>> = {
+    rustig: ["ademen", "creatief"],
+    blij: ["creatief", "ademen", "praatMetOuder"],
+    verdrietig: ["knuffel", "praatMetOuder", "creatief", "rustigePlek"],
+    boos: ["bewegen", "praatMetOuder", "knuffel", "ademen"],
+    spannend: ["praatMetOuder", "ademen", "rustigePlek", "knuffel"],
+    overprikkeld: ["rustigePlek", "koptelefoon", "evenAlleen", "ademen"],
+    teVeel: ["rustigePlek", "koptelefoon", "evenAlleen", "ademen"],
+    druk: ["bewegen", "ademen", "praatMetOuder"],
+    superDruk: ["bewegen", "ademen", "praatMetOuder"],
+    moe: ["rustigePlek", "evenAlleen", "knuffel", "praatMetOuder"],
+    snapNiet: ["praatMetOuder", "rustigePlek", "creatief", "ademen"],
+    inDeWar: ["praatMetOuder", "rustigePlek", "creatief", "ademen"],
+    durfNiet: ["praatMetOuder", "knuffel", "ademen", "rustigePlek"],
+    wilHulp: ["praatMetOuder", "knuffel"],
+    weetIkNiet: ["praatMetOuder", "rustigePlek", "ademen", "creatief"]
+  };
+  const preferredNeeds = selectedEmotion ? guidedNeedsByEmotion[selectedEmotion] : undefined;
+  const filteredNeeds = preferredNeeds?.length ? needs.filter((need) => preferredNeeds.includes(need.id)) : needs;
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={isPositiveEmotion ? "Wat wil je nu doen?" : "Wat heb je nu nodig?"} subtitle={isPositiveEmotion ? "Je mag dit fijne gevoel even houden of rustig verdergaan." : "Kies wat jou kan helpen."} />
+      <PageHeader title={isPositiveEmotion ? "Wat wil je nu doen?" : "Wat heb je nu nodig?"} />
+      {isPositiveEmotion ? (
+        <section className="mb-4 rounded-[1.55rem] bg-gradient-to-b from-mint/16 via-white to-sky/12 p-4 shadow-card">
+          <h2 className="text-lg font-black text-navy">Dit voelt al goed</h2>
+          <div className="mt-3 grid gap-2">
+            <PrimaryButton onClick={() => void savePositiveMoment(selectedEmotion ?? "rustig", "Fijn gevoel even vastgehouden").then(() => navigate("/rewards"))}>
+              Klaar
+            </PrimaryButton>
+            <SecondaryButton onClick={() => navigate("/")}>Naar Flowi</SecondaryButton>
+          </div>
+        </section>
+      ) : null}
       <div className="grid grid-cols-2 gap-3">
         {filteredNeeds.map((need) => (
           <NeedCard
             key={need.id}
             need={need}
-            label={need.id === "praatMetOuder" ? `Praat met ${caregiver}` : need.label}
             onClick={() => {
               const strategy = chooseStrategy(selectedEmotion, need.id);
               setNeed(need.id);
@@ -784,7 +855,6 @@ function NeedPage() {
           />
         ))}
       </div>
-      {isPositiveEmotion ? <SecondaryButton className="mt-4 w-full" onClick={() => navigate("/day")}>Ga verder met mijn dag</SecondaryButton> : null}
     </div>
   );
 }
@@ -855,7 +925,11 @@ function ActionPage() {
   return (
     <>
       <section className="phone-screen action-scene p-5 text-center">
-        <PageHeader title={action.title} back />
+        <header className="mb-5 flex items-center">
+          <button aria-label="Terug" className="grid h-14 w-14 place-items-center rounded-[1.25rem] border border-white bg-white/90 shadow-card focus:outline-none focus:ring-4 focus:ring-lavender/30" onClick={() => navigate(-1)}>
+            <ArrowLeft size={25} />
+          </button>
+        </header>
         <article className="mx-auto flex items-center gap-3 rounded-[1.65rem] bg-white/94 p-4 shadow-card ring-1 ring-lavender/8">
           <section className="flowi-picture-card flowi-picture-card-breathe flex-1">
             <span className="flowi-picture-art">
@@ -872,7 +946,6 @@ function ActionPage() {
             </button>
           </div>
         </article>
-        <p className="mx-auto mt-5 max-w-sm text-sm font-bold leading-6 text-navy/65">{action.childText}</p>
         {timerOpen ? (
           <section className="mt-5 rounded-[1.55rem] bg-white/92 p-4 shadow-card">
             <div className="mx-auto grid h-28 w-28 place-items-center rounded-full bg-lavender/10 text-4xl font-black text-lavender ring-8 ring-lavender/8">{formatTime(remaining)}</div>
@@ -901,25 +974,20 @@ function ActionPage() {
         <div className="fixed inset-0 z-50 grid place-items-end bg-navy/28 p-3 backdrop-blur-sm sm:place-items-center" onClick={() => setHelpOpen(false)}>
           <section className="help-suggestion-overlay w-full max-w-md rounded-[2rem] p-4 shadow-[0_24px_52px_rgba(50,44,108,.24)] ring-1 ring-lavender/12" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flowi-picture-card help-suggestion-card w-[8rem] shrink-0">
-                  <span className="flowi-picture-art">
-                    <ExerciseArt title="Hulpzin oefenen" compact />
-                  </span>
-                  <span className="flowi-picture-label">Vraag hulp</span>
-                </div>
-                <div className="text-left">
-                  <h2 className="text-xl font-black text-navy">Zo kun je hulp vragen</h2>
-                  <p className="mt-1 text-sm font-semibold leading-6 text-navy/74">Kies wat je wilt laten zien of zeggen.</p>
-                </div>
+              <div className="text-left">
+                <h2 className="text-xl font-black text-navy">Zo kun je hulp vragen</h2>
+                <p className="mt-1 text-sm font-semibold leading-6 text-navy/74">Kies wat je wilt zeggen of laten zien</p>
               </div>
               <button type="button" aria-label="Hulp sluiten" onClick={() => setHelpOpen(false)} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/66 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.78)]">
                 <X size={22} />
               </button>
             </div>
+            <div className="help-overlay-art mt-4">
+              <ExerciseArt title="Vraag een knuffel" compact />
+            </div>
             <div className="mt-4 grid gap-2.5">
               {helpOptions.map((line) => (
-                <button key={line} type="button" className="rounded-[1.35rem] bg-white/88 px-4 py-3 text-left text-base font-black leading-6 text-navy shadow-[0_10px_22px_rgba(61,58,130,.08),inset_0_1px_0_rgba(255,255,255,.74)]">
+                <button key={line} type="button" onClick={() => setHelpOpen(false)} className="rounded-[1.35rem] bg-white/88 px-4 py-3 text-left text-base font-black leading-6 text-navy shadow-[0_10px_22px_rgba(61,58,130,.08),inset_0_1px_0_rgba(255,255,255,.74)] transition active:scale-[.98]">
                   {line}
                 </button>
               ))}
@@ -937,13 +1005,12 @@ function HelpNowPage() {
   const fast = ["Ga naar je rustige plek", "Adem zacht", "Zeg: stop, ik heb hulp nodig", "Pak iets zachts"].map((title) => calmStrategies.find((strategy) => strategy.title === title)).filter(Boolean) as CalmStrategy[];
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Help mij nu" subtitle="Kies \u00E9\u00E9n rustig stapje." />
+      <PageHeader title="Help mij nu" />
       <section className="relative mb-4 overflow-hidden rounded-[1.9rem] bg-gradient-to-b from-sky/18 via-white to-mint/14 p-5 shadow-soft">
         <div className="cloud cloud-a" />
         <div className="relative z-10 grid grid-cols-[1fr_auto] items-end gap-2">
           <div>
             <h2 className="text-2xl font-black text-navy">Flowi blijft bij je</h2>
-            <p className="mt-2 text-sm font-bold leading-6 text-navy/58">Je hoeft niet alles tegelijk. Kies wat nu kan.</p>
           </div>
           <span className="help-now-hero-art" aria-hidden />
         </div>
@@ -987,7 +1054,7 @@ function ReflectionPage() {
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-        <PageHeader title="Wat hielp jou?" subtitle="Kies wat nu het beste past." />
+        <PageHeader title="Wat hielp jou?" />
         <div className="grid grid-cols-2 gap-3">
           {reflectionChoices.map((choice) => (
             <EmotionCard
@@ -1000,21 +1067,60 @@ function ReflectionPage() {
       </div>
     </>
   );
+}
+
+function ParentGate({ children }: { children: React.ReactNode }) {
+  const [answer, setAnswer] = useState("");
+  const [unlocked, setUnlocked] = useState(readParentUnlock());
+  const [error, setError] = useState("");
+  const [question, setQuestion] = useState<ParentGateQuestion>(() => makeParentGateQuestion());
+
+  if (unlocked) return <>{children}</>;
+
+  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (Number(answer) === question.answer) {
+      unlockParentMode();
+      setUnlocked(true);
+      setError("");
+      return;
+    }
+    setError("Dat klopt nog niet. Probeer het nog een keer.");
+    setAnswer("");
+    setQuestion(makeParentGateQuestion());
+  };
+
   return (
-    <>
-      <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Wat hielp jou?" />
-      <div className="grid gap-3">
-        {["Het voelde mij rustiger", "Het werd een beetje beter", "Nog niet", "Het werd moeilijker"].map((rating, index) => (
-          <button key={rating} onClick={() => save(rating)} className="flex items-center gap-3 rounded-[1.4rem] bg-white p-4 text-left font-black shadow-card"><span className="text-3xl">{["\uD83D\uDE42", "\uD83D\uDE0A", "\uD83D\uDE10", "\uD83D\uDE41"][index]}</span>{rating}</button>
-        ))}
-        <label className="rounded-[1.4rem] bg-white p-4 shadow-card">
-          <span className="font-black">Iets anders? Vertel het.</span>
-          <textarea value={note} onChange={(event) => setNote(event.target.value)} className="mt-3 min-h-24 w-full rounded-2xl border border-lavender/20 p-3 outline-none focus:ring-4 focus:ring-lavender/20" placeholder="Wil je iets tekenen of opschrijven?" />
-        </label>
-      </div>
-      </div>
-    </>
+    <div className="phone-screen px-4 pb-5 pt-4">
+      <PageHeader title="Voor volwassenen" subtitle="Even een korte check voordat je iets aanpast." backTo="/" />
+      <section className="rounded-[1.8rem] bg-gradient-to-b from-lavender/12 via-white to-sky/12 p-5 shadow-soft">
+        <div className="flex items-start gap-3">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-lavender/12 text-lavender">
+            <ShieldCheck size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-navy">Ouderpoort</h2>
+            <p className="mt-1.5 text-base leading-6 text-navy/62">Zo voorkomen we dat een kind per ongeluk in instellingen of planning iets verandert.</p>
+          </div>
+        </div>
+        <form className="mt-4 grid gap-3" onSubmit={submit}>
+          <label className="rounded-[1.5rem] bg-white/92 p-4 shadow-card">
+            <span className="block text-sm font-black uppercase tracking-[0.18em] text-lavender/70">Kleine som</span>
+            <span className="mt-2 block text-2xl font-black text-navy">{question.first} {question.operator} {question.second} = ?</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={answer}
+              onChange={(event) => setAnswer(event.target.value)}
+              className="mt-3 min-h-14 w-full rounded-[1.2rem] border border-lavender/18 bg-cream px-4 text-xl font-black text-navy outline-none focus:ring-4 focus:ring-lavender/20"
+              placeholder="Typ het antwoord"
+            />
+          </label>
+          {error ? <p className="px-1 text-sm font-bold text-coral">{error}</p> : null}
+          <PrimaryButton type="submit">Verder naar instellingen</PrimaryButton>
+        </form>
+      </section>
+    </div>
   );
 }
 
@@ -1030,7 +1136,6 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
           <TaskArt title={task.title} visualKey={task.visualKey as TaskVisualKey | undefined} compact />
           <div className="min-w-0 flex-1">
             <h2 className="font-black text-navy">Wat lukt er niet?</h2>
-            <p className="text-sm font-bold text-navy/55">Eerste mini-stap: {task.steps[0] ?? "Begin klein."}</p>
           </div>
           <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center rounded-2xl bg-lavender/10 font-black text-lavender" aria-label="Sluiten">{"\u00D7"}</button>
         </div>
@@ -1050,7 +1155,6 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
             <div className="flex items-start justify-between gap-3">
               <div className="text-left">
                 <h2 className="text-xl font-black text-navy">Flowi helpt!</h2>
-                <p className="mt-1 text-sm font-semibold leading-6 text-navy/74">{helpOverlayText(selectedHelp.id)}</p>
               </div>
               <button type="button" aria-label="Voorstel sluiten" onClick={() => setReason(null)} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/66 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.78)]">
                 {"\u00D7"}
@@ -1848,7 +1952,7 @@ function PracticePage() {
             <section className="flex-1 rounded-[1.8rem] bg-gradient-to-b from-sky/16 via-white to-lavender/12 p-4 text-center shadow-soft">
               <ExerciseArt title={activeExercise.title} />
               <h1 className="mx-auto mt-3 max-w-xs text-2xl font-black leading-8 text-navy">{shortExerciseTitle(activeExercise.title)}</h1>
-              <button type="button" onClick={() => setTimerEnabled(true)} className="mt-4 min-h-16 w-full rounded-[1.45rem] bg-white px-6 text-xl font-black text-lavender shadow-card">Timer instellen</button>
+              <button type="button" onClick={() => setTimerEnabled(true)} className="mt-4 min-h-16 w-full rounded-[1.45rem] bg-white px-6 text-xl font-black text-lavender shadow-card">Timer</button>
             </section>
             <div className="grid gap-3" aria-label={`Acties voor ${activeExercise.title}`}>
               <button type="button" aria-label={`${activeExercise.title} is gelukt`} onClick={() => void completeExercise(activeExercise)} className="child-task-done">
@@ -1885,7 +1989,7 @@ function PracticePage() {
           <div className="flex items-start gap-3">
             <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-lavender/10 text-lavender"><ShieldCheck size={20} /></div>
             <div>
-              <h2 className="text-base font-black text-navy">Voor ouder, verzorger of leerkracht</h2>
+              <h2 className="text-base font-black text-navy">Voor groot mens</h2>
               <p className="mt-1 text-sm font-medium leading-6 text-navy/58">{exerciseCaregiverTip(activeExercise)}</p>
             </div>
           </div>
@@ -1897,7 +2001,7 @@ function PracticePage() {
           </div>
         ) : null}
         <section className="mt-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
-          <h2 className="font-black">Zo doe je het</h2>
+          <h2 className="font-black">Doe maar zo</h2>
           <ol className="mt-2 grid gap-2">
             {activeExercise.steps.map((step, index) => <li key={step} className="flex gap-3 rounded-2xl bg-lavender/8 p-3 text-sm font-medium leading-6 text-navy/68"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-lavender shadow-card">{index + 1}</span>{step}</li>)}
           </ol>
@@ -1908,11 +2012,7 @@ function PracticePage() {
 
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title="Oefeningen" subtitle="Rustkracht oefenen met Flowi." back={false} />
-      <section className="mb-4 rounded-[1.55rem] bg-gradient-to-b from-sky/18 via-white to-mint/12 p-4 shadow-soft">
-        <h2 className="text-lg font-black text-navy">Samen oefenen werkt het best</h2>
-        <p className="mt-1.5 text-sm font-medium leading-6 text-navy/58">Deze oefeningen zijn bedoeld om samen te doen met een ouder, verzorger of leerkracht. Het kind kiest, de volwassene helpt rustig mee.</p>
-      </section>
+      <PageHeader title="Oefeningen" back={false} />
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (
           <button key={item} onClick={() => setCategory(item)} className={`min-h-12 shrink-0 rounded-2xl px-5 text-base font-black ${item === category ? "bg-lavender text-white" : "bg-white text-navy/62 shadow-card"}`}>{item}</button>
@@ -2014,7 +2114,7 @@ function BackupPage() {
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-lavender/12 text-lavender"><Database size={24} /></div>
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-black text-navy">Backup bewaren</h2>
-            <p className="text-sm font-bold leading-5 text-navy/52">Maak af en toe een backup, vooral na het instellen van routines. Zo kun je alles later zelf weer terugzetten.</p>
+            <p className="text-sm font-bold leading-5 text-navy/52">Flowi werkt ook offline. Alles blijft lokaal op dit apparaat staan, behalve als appgegevens bewust gewist of vervangen worden. Maak daarom af en toe een backup.</p>
           </div>
         </div>
       </section>
@@ -2035,8 +2135,17 @@ function PrivacyPage() {
       <PageHeader title="Privacy" />
       <div className="rounded-[1.6rem] bg-white p-5 shadow-soft">
         <p className="text-base font-normal leading-6 text-navy/68">Flowi gebruikt geen account en bewaart gegevens op dit apparaat. Er wordt in deze versie niets naar een eigen server verstuurd.</p>
-        <p className="mt-2 text-base font-normal leading-6 text-navy/58">Flowi vraagt in deze versie geen camera, microfoon of locatie om de app te gebruiken. Als je appgegevens of sitegegevens wist, kunnen instellingen en voortgang verdwijnen. Daarom is het verstandig om na belangrijke wijzigingen af en toe een backup te maken.</p>
+        <p className="mt-2 text-base font-normal leading-6 text-navy/58">Flowi is bedoeld om ook zonder internet te blijven werken. Aangevinkte taken, ingestelde routines en groeimomenten blijven lokaal bewaard en horen niet ineens te verdwijnen zodra een toestel weer online komt.</p>
+        <p className="mt-2 text-base font-normal leading-6 text-navy/58">Flowi vraagt in deze versie geen camera, microfoon of locatie om de app te gebruiken. Als je appgegevens of sitegegevens wist, kunnen instellingen en voortgang wel verdwijnen. Daarom is het verstandig om na belangrijke wijzigingen af en toe een backup te maken.</p>
         <p className="mt-2 text-base font-normal leading-6 text-navy/58">Als je zelf een backup deelt via je eigen telefoon of berichtenapp, kies je daar zelf voor. Controleer dan zelf met wie je dat bestand deelt en waar je het bewaart.</p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <a href="/privacy-policy.html" target="_blank" rel="noreferrer" className="flex min-h-14 items-center justify-center rounded-[1.45rem] border border-lavender/14 bg-white/92 px-6 text-lg font-black text-navy shadow-card">
+            Publieke privacy policy
+          </a>
+          <a href="/child-safety.html" target="_blank" rel="noreferrer" className="flex min-h-14 items-center justify-center rounded-[1.45rem] border border-lavender/14 bg-white/92 px-6 text-lg font-black text-navy shadow-card">
+            Kind & veiligheid
+          </a>
+        </div>
       </div>
     </>
   );
@@ -2113,8 +2222,17 @@ function AboutPage() {
       <section className="mt-4 rounded-[1.8rem] bg-white/94 p-5 shadow-soft">
         <h2 className="text-2xl font-black text-navy">Gegevens en transparantie</h2>
         <div className={`mt-2 grid gap-2 ${bodyText}`}>
-          <p>Flowi gebruikt in deze versie geen account en bewaart gegevens op dit apparaat. Informatie over privacy en backup staat apart op de pagina&apos;s Privacy en Backup bewaren.</p>
+          <p>Flowi gebruikt in deze versie geen account en bewaart gegevens op dit apparaat. De app is bedoeld om ook offline bruikbaar te blijven, zodat routines, vinkjes en groeimomenten lokaal bewaard blijven.</p>
+          <p>Een internetverbinding is in deze versie niet nodig om de basis van Flowi te gebruiken. Gegevens verdwijnen niet zomaar door opnieuw online komen, maar kunnen wel verloren gaan als appgegevens gewist worden of een backup bewust wordt overschreven.</p>
           <p>Als functies in de toekomst veranderen, zoals gegevens delen of extra apparaatfuncties gebruiken, dan horen die wijzigingen duidelijk uitgelegd te worden in de app en in de store-informatie.</p>
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <a href="/privacy-policy.html" target="_blank" rel="noreferrer" className="flex min-h-14 items-center justify-center rounded-[1.45rem] border border-lavender/14 bg-white/92 px-6 text-lg font-black text-navy shadow-card">
+            Privacy policy openen
+          </a>
+          <a href="/child-safety.html" target="_blank" rel="noreferrer" className="flex min-h-14 items-center justify-center rounded-[1.45rem] border border-lavender/14 bg-white/92 px-6 text-lg font-black text-navy shadow-card">
+            Kind & veiligheid openen
+          </a>
         </div>
       </section>
     </>
@@ -2134,20 +2252,20 @@ function AppRoutes() {
         <Route path="/reflection" element={<ReflectionPage />} />
         <Route path="/day" element={<DayPage />} />
         <Route path="/day/:dayPart" element={<DayPartPage />} />
-        <Route path="/day-settings" element={<DaySettingsPage />} />
-        <Route path="/day-settings/:dayPart" element={<DaySettingsPartPage />} />
+        <Route path="/day-settings" element={<ParentGate><DaySettingsPage /></ParentGate>} />
+        <Route path="/day-settings/:dayPart" element={<ParentGate><DaySettingsPartPage /></ParentGate>} />
         <Route path="/tasks" element={<Navigate to="/day" />} />
-        <Route path="/tasks/new" element={<TaskFormPage />} />
-        <Route path="/tasks/:taskId/edit" element={<TaskFormPage />} />
-        <Route path="/task-library" element={<TaskLibraryPage />} />
+        <Route path="/tasks/new" element={<ParentGate><TaskFormPage /></ParentGate>} />
+        <Route path="/tasks/:taskId/edit" element={<ParentGate><TaskFormPage /></ParentGate>} />
+        <Route path="/task-library" element={<ParentGate><TaskLibraryPage /></ParentGate>} />
         <Route path="/rewards" element={<RewardsPage />} />
         <Route path="/practice" element={<PracticePage />} />
         <Route path="/avatar" element={<AvatarPage />} />
-        <Route path="/parents" element={<ParentsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/backup" element={<BackupPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/about" element={<AboutPage />} />
+        <Route path="/parents" element={<ParentGate><ParentsPage /></ParentGate>} />
+        <Route path="/settings" element={<ParentGate><SettingsPage /></ParentGate>} />
+        <Route path="/backup" element={<ParentGate><BackupPage /></ParentGate>} />
+        <Route path="/privacy" element={<ParentGate><PrivacyPage /></ParentGate>} />
+        <Route path="/about" element={<ParentGate><AboutPage /></ParentGate>} />
       </Routes>
     </AppShell>
   );
@@ -2156,6 +2274,7 @@ function AppRoutes() {
 function Bootstrap() {
   const [ready, setReady] = useState(false);
   useEffect(() => { seedDatabase().finally(() => setReady(true)); }, []);
+  useEffect(() => { void requestPersistentStorage(); }, []);
   useEffect(() => {
     const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: string) => Promise<void> };
     void orientation.lock?.("portrait-primary").catch(() => undefined);
