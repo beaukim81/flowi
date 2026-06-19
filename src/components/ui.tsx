@@ -248,6 +248,17 @@ function needVisualKey(need: NeedType) {
 }
 
 export function NeedArt({ need }: { need: NeedType }) {
+  if (need === "knuffel") {
+    return (
+      <span className="need-art need-art-hug" aria-hidden>
+        <img
+          src="/assets/needs/flowi-need-hug-v5.png?v=need-hug-final-20260618e"
+          alt=""
+          className="need-art-image"
+        />
+      </span>
+    );
+  }
   return <span className={`need-art need-art-${needVisualKey(need)}`} aria-hidden />;
 }
 
@@ -329,6 +340,17 @@ function exerciseVisualKey(title: string) {
 }
 
 export function ExerciseArt({ title, compact = false }: { title: string; compact?: boolean }) {
+  if (title.toLowerCase().includes("knuffel")) {
+    return (
+      <span className={`exercise-art exercise-art-custom ${compact ? "compact" : ""}`} aria-hidden>
+        <img
+          src="/assets/needs/flowi-need-hug-v5.png?v=need-hug-final-20260618e"
+          alt=""
+          className="card-art-image"
+        />
+      </span>
+    );
+  }
   return <span className={`exercise-art exercise-art-${exerciseVisualKey(title)} ${compact ? "compact" : ""}`} aria-hidden />;
 }
 

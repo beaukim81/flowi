@@ -11,28 +11,21 @@ Dit is de laatste lijst om Flowi echt klaar te zetten voor Google Play.
 - local-first opslag
 - offline bruikbaar
 
-## Nog invullen door Kim
+## Vastgezet voor publicatie
 
-Deze gegevens heb ik nog van je nodig om het echt netjes af te ronden:
+- Publieke aanbieder: `Flowi by Kim`
+- Publiek support e-mailadres: `mailz4kim@gmail.com`
+- Developer account:
+  - nog aan te maken
+  - valt daardoor onder de nieuwere Play Console-regels voor persoonlijke accounts
 
-1. Publieke naam van de aanbieder
-   - Voorbeeld: `Kim [achternaam]`
-   - Of een studio-/bedrijfsnaam
+## Nog open keuzes
 
-2. Publiek contact e-mailadres
-   - Voor privacybeleid
-   - Voor Play Store-vermelding
-
-3. Optionele website of supportpagina
-   - Mag ook leeg blijven als je alleen e-mail wilt gebruiken
-
-4. Wil je Flowi publiceren als:
-   - een persoonlijke ontwikkelaar
-   - of namens een bedrijf / merknaam
-
-5. Is jouw Google Play developer account:
-   - aangemaakt na 13 november 2023
-   - of ouder dan die datum
+1. Optionele website of supportpagina
+   - mag leeg blijven als je voorlopig alleen e-mail wilt gebruiken
+2. Wil je later alsnog publiceren onder:
+   - alleen `Flowi by Kim`
+   - of een toekomstige studio-/bedrijfsnaam
 
 ## In Play Console invullen
 
@@ -65,7 +58,7 @@ Voor upload naar Google Play moet nog:
 
 ## Belangrijke opmerking
 
-Als jouw Play developer account een persoonlijk account is dat na 13 november 2023 is aangemaakt, vraagt Google meestal eerst:
+Omdat jouw Play developer account nog gemaakt moet worden en dus onder de nieuwere regels valt, vraagt Google meestal eerst:
 
 - een closed test
 - met minimaal 12 testers

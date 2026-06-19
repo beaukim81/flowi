@@ -69,6 +69,7 @@ export function getTaskVisualKey(title: string, fallback: TaskVisualKey = "rest"
   if (has(text, ["bioscoop"])) return "cinema";
   if (has(text, ["bowling"])) return "bowling";
   if (has(text, ["arcade", "speelhal"])) return "arcade";
+  if (has(text, ["binnen spelen"])) return "legoClub";
   if (has(text, ["speeltuin"])) return "playground";
   if (has(text, ["naar park"])) return "park";
   if (has(text, ["bibliotheek"])) return "libraryActivity";

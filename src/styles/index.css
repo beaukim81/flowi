@@ -1413,6 +1413,30 @@ input, textarea, select {
   background-size: 400% 200%;
 }
 
+.need-art-hug {
+  background-image: none;
+  background-color: #fff6f0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.need-art-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.card-art-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
 .exercise-art {
   display: block;
   width: 8.4rem;
@@ -1427,6 +1451,14 @@ input, textarea, select {
   box-shadow:
     0 12px 24px rgba(72, 63, 137, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.exercise-art-custom {
+  background-image: none;
+  background-color: #fff6f0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
 .exercise-choice-card .exercise-art {
@@ -2487,6 +2519,19 @@ input, textarea, select {
   background: rgba(255, 255, 255, 0.94);
 }
 
+.help-overlay-art {
+  display: grid;
+  place-items: center;
+}
+
+.help-overlay-art .exercise-art {
+  width: min(12rem, 100%);
+  max-width: 12rem;
+  border: 0;
+  border-radius: 1.45rem;
+  box-shadow: none;
+}
+
 .flowi-picture-art {
   position: relative;
   z-index: 1;
@@ -2694,7 +2739,7 @@ input, textarea, select {
   border-radius: 1.65rem;
 }
 
-.need-art-hug { background-position: 0% 0%; }
+.need-art-hug { background-position: center; }
 .need-art-quiet { background-position: 33.333% 0%; }
 .need-art-move { background-position: 66.666% 0%; }
 .need-art-alone { background-position: 100% 0%; }

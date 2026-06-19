@@ -45,6 +45,7 @@ const templates: TemplateSeed[] = [
   { title: "Koptelefoon rust", category: "Rust", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak je koptelefoon.", "Zet hem op.", "Rust 5 minuten."] },
   { title: "Naar de BSO", category: "Na school", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Pak je tas.", "Ga mee naar de opvang.", "Kies rustig een plek."] },
   { title: "Buiten spelen", category: "Bewegen", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "naSchool", steps: ["Doe jas of schoenen aan.", "Speel buiten.", "Kom terug als het tijd is."] },
+  { title: "Binnen spelen", category: "Creatief", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "naSchool", steps: ["Kies iets om mee te spelen.", "Speel rustig binnen.", "Ruim daarna samen op."] },
   { title: "Beweegpauze", category: "Bewegen", ageGroups: ["6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Spring 10 keer.", "Schud je armen.", "Adem uit."] },
   { title: "Sporten", category: "Bewegen", ageGroups: ["4-5", "6-7", "8-9", "10-12"], dayPart: "naSchool", steps: ["Trek sportspullen aan.", "Doe mee met de training.", "Drink daarna wat water."], minutes: 45 },
   { title: "Zwemles", category: "Bewegen", ageGroups: ["4-5", "6-7", "8-9"], dayPart: "naSchool", steps: ["Pak je zwemspullen.", "Luister naar de juf of meester.", "Droog je af na het zwemmen."], minutes: 45 },
