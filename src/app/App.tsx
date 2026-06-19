@@ -532,8 +532,8 @@ function fallbackStrategyForTask(task: Task, reason: HelpReason) {
       unknown: ["Ga naar je rustige plek", "Maak het licht zachter", "Adem zacht"]
     },
     boos: {
-      social: ["Zeg: stop, ik heb hulp nodig", "Duw tegen de muur", "Knijp in een kussen"],
-      appointment: ["Zeg: stop, ik heb hulp nodig", "Knijp in een kussen", "Duw tegen de muur"],
+      social: ["Kies samen", "Zeg: stop, ik heb hulp nodig", "Knijp in een kussen"],
+      appointment: ["Kies samen", "Zeg: stop, ik heb hulp nodig", "Knijp in een kussen"],
       school: ["Duw tegen de muur", "Stamp 10 keer", "Zeg: stop, ik heb hulp nodig"],
       selfCare: ["Duw tegen de muur", "Knijp in een kussen", "Stamp 10 keer"],
       eatDrink: ["Knijp in een kussen", "Duw tegen de muur", "Adem als een draak"],
@@ -541,7 +541,7 @@ function fallbackStrategyForTask(task: Task, reason: HelpReason) {
       household: ["Duw tegen de muur", "Knijp in een kussen", "Stamp 10 keer"],
       creative: ["Knijp in een kussen", "Adem als een draak", "Zeg: stop, ik heb hulp nodig"],
       bedtime: ["Knijp in een kussen", "Adem als een draak", "Zeg: stop, ik heb hulp nodig"],
-      transition: ["Duw tegen de muur", "Zeg: stop, ik heb hulp nodig", "Knijp in een kussen"],
+      transition: ["Kies samen", "Duw tegen de muur", "Zeg: stop, ik heb hulp nodig"],
       unknown: ["Duw tegen de muur", "Knijp in een kussen", "Adem als een draak"]
     },
     moe: {
@@ -549,7 +549,7 @@ function fallbackStrategyForTask(task: Task, reason: HelpReason) {
       school: ["Kies samen", "Maak je lijf zwaar", "Zoek een rustig plekje"],
       selfCare: ["Maak je lijf zwaar", "Zoek een rustig plekje", "Kies samen"],
       eatDrink: ["Maak je lijf zwaar", "Zoek een rustig plekje", "Even niets"],
-      social: ["Vraag een knuffel", "Maak je lijf zwaar", "Kies dichtbij of ruimte"],
+      social: ["Kies samen", "Vraag een knuffel", "Kies dichtbij of ruimte"],
       active: ["Maak je lijf zwaar", "Zoek een rustig plekje", "Even niets"],
       appointment: ["Kies samen", "Vraag een knuffel", "Maak je lijf zwaar"],
       household: ["Maak je lijf zwaar", "Kies samen", "Zoek een rustig plekje"],
@@ -562,9 +562,9 @@ function fallbackStrategyForTask(task: Task, reason: HelpReason) {
       school: ["Kies samen", "Maak één kleine keuze", "Zeg: ik weet het even niet"],
       selfCare: ["Kies samen", "Maak één kleine keuze", "Zeg: ik weet het even niet"],
       eatDrink: ["Maak één kleine keuze", "Kies samen", "Zeg: ik weet het even niet"],
-      social: ["Zeg: ik weet het even niet", "Kies samen", "Vraag een knuffel"],
+      social: ["Kies samen", "Zeg: ik weet het even niet", "Vraag een knuffel"],
       active: ["Kies samen", "Maak één kleine keuze", "Adem zacht"],
-      appointment: ["Zeg: ik weet het even niet", "Kies samen", "Vraag een knuffel"],
+      appointment: ["Kies samen", "Zeg: ik weet het even niet", "Vraag een knuffel"],
       household: ["Maak één kleine keuze", "Kies samen", "Zeg: ik weet het even niet"],
       creative: ["Teken je warboel", "Kies samen", "Maak één kleine keuze"],
       bedtime: ["Kies samen", "Maak één kleine keuze", "Adem zacht"],
@@ -612,14 +612,14 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
       knuffel: ["Vraag een knuffel", "Pak iets zachts"],
       ademen: ["Hand op je hart"],
       creatief: ["Teken je wolk"],
-      praatMetOuder: ["Kies dichtbij of ruimte", "Vraag een knuffel"],
+      praatMetOuder: ["Kies samen", "Kies dichtbij of ruimte", "Vraag een knuffel"],
       rustigePlek: ["Zoek een rustig plekje", "Kruip onder een deken"]
     },
     boos: {
       bewegen: ["Duw tegen de muur", "Stamp 10 keer", "Draag iets zwaars"],
       ademen: ["Adem als een draak"],
       knuffel: ["Knijp in een kussen"],
-      praatMetOuder: ["Zeg: stop, ik heb hulp nodig"]
+      praatMetOuder: ["Kies samen", "Zeg: stop, ik heb hulp nodig"]
     },
     spannend: {
       ademen: ["Hand op je hart", "Adem zacht"],
@@ -649,7 +649,7 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
       rustigePlek: ["Zoek een rustig plekje", "Maak je lijf zwaar", "Maak het licht zachter"],
       evenAlleen: ["Even niets"],
       ademen: ["Adem zacht"],
-      praatMetOuder: ["Kies samen", "Vraag een knuffel"],
+      praatMetOuder: ["Kies samen", "Vraag een knuffel", "Kies dichtbij of ruimte"],
       knuffel: ["Vraag een knuffel", "Pak iets zachts"]
     },
     inDeWar: {
@@ -701,14 +701,14 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
   const emotionOnlyFallbacks: Partial<Record<EmotionType, string[]>> = {
     rustig: ["Geef je rustkracht water", "Bewaar dit gevoel"],
     blij: ["Kies iets fijns", "Bewaar dit gevoel"],
-    verdrietig: ["Vraag een knuffel", "Hand op je hart", "Teken je wolk"],
-    boos: ["Duw tegen de muur", "Adem als een draak", "Zeg: stop, ik heb hulp nodig"],
-    spannend: ["Hand op je hart", "Adem zacht", "Ga naar je rustige plek"],
+    verdrietig: ["Vraag een knuffel", "Kies samen", "Hand op je hart"],
+    boos: ["Duw tegen de muur", "Kies samen", "Adem als een draak"],
+    spannend: ["Kies samen", "Hand op je hart", "Ga naar je rustige plek"],
     teVeel: ["Ga naar je rustige plek", "Zet je koptelefoon op", "Maak het licht zachter"],
     overprikkeld: ["Ga naar je rustige plek", "Zet je koptelefoon op", "Maak het licht zachter"],
     druk: ["Spring 10 keer", "Schud je armen los", "Doe een dierenloop"],
     superDruk: ["Spring 10 keer", "Schud je armen los", "Doe een dierenloop"],
-    moe: ["Zoek een rustig plekje", "Adem zacht", "Even niets"],
+    moe: ["Kies samen", "Zoek een rustig plekje", "Adem zacht"],
     inDeWar: ["Kies samen", "Maak één kleine keuze", "Zeg: ik weet het even niet"],
     snapNiet: ["Kies samen", "Teken je warboel", "Maak één kleine keuze"],
     durfNiet: ["Kies samen", "Hand op je hart", "Vraag een knuffel"],
@@ -766,7 +766,7 @@ function defaultNeedForEmotion(emotion: EmotionType): NeedType {
 }
 
 function needCardLabel(need: NeedType, emotion?: EmotionType) {
-  if (need === "praatMetOuder" && emotion && ["snapNiet", "inDeWar", "durfNiet", "wilHulp", "weetIkNiet"].includes(emotion)) {
+  if (need === "praatMetOuder" && emotion && ["verdrietig", "spannend", "moe", "snapNiet", "inDeWar", "durfNiet", "wilHulp", "weetIkNiet"].includes(emotion)) {
     return "Samen doen";
   }
   return undefined;
