@@ -368,7 +368,7 @@ const startOfWeek = () => {
   date.setDate(date.getDate() - day + 1);
   return date.toISOString().slice(0, 10);
 };
-type HelpReason = Extract<EmotionType, "teVeel" | "boos" | "moe" | "inDeWar">;
+type HelpReason = Extract<EmotionType, "teVeel" | "boos" | "spannend" | "moe" | "inDeWar">;
 const taskVisualOptions: { key: TaskVisualKey; label: string; hint: string }[] = [
   { key: "wake", label: "Opstaan", hint: "ochtend, wakker worden" },
   { key: "dress", label: "Aankleden", hint: "kleren, jas, schoenen" },
@@ -458,6 +458,7 @@ const normalizeDayPartTaskOrder = async (dayPart: DayPart) => {
 const helpReasons: { id: HelpReason; label: string; need: NeedType; tips: string[] }[] = [
   { id: "teVeel", label: "Te veel", need: "rustigePlek", tips: ["Maak de taak kleiner.", "Kies minder prikkels: zachter licht, minder geluid.", "Doe eerst 5 rustige ademhalingen."] },
   { id: "boos", label: "Boos", need: "bewegen", tips: ["Stop even met de taak.", "Geef je lijf stevig werk.", "Vraag daarna samen wat de eerste kleine stap is."] },
+  { id: "spannend", label: "Spannend", need: "praatMetOuder", tips: ["Blijf niet alleen met de taak.", "Kies samen een eerste kleine stap.", "Laat iemand even bij je blijven."] },
   { id: "moe", label: "Moe", need: "rustigePlek", tips: ["Neem een korte pauze.", "Maak de taak lichter of doe alleen de eerste stap.", "Vraag of iemand even naast je blijft."] },
   { id: "inDeWar", label: "In de war", need: "praatMetOuder", tips: ["Vraag je ouder: geef mij twee keuzes.", "Laat iemand de taak voordoen.", "Doe samen alleen de eerste stap."] }
 ];
@@ -466,6 +467,8 @@ function helpOverlayText(reason: HelpReason) {
   switch (reason) {
     case "boos":
       return "Dit kan nu helpen als je boos bent.";
+    case "spannend":
+      return "Dit kan nu helpen als iets spannend voelt.";
     case "moe":
       return "Dit kan nu helpen als je moe bent.";
     case "inDeWar":
@@ -543,6 +546,20 @@ function fallbackStrategyForTask(task: Task, reason: HelpReason) {
       bedtime: ["Knijp in een kussen", "Adem als een draak", "Zeg: stop, ik heb hulp nodig"],
       transition: ["Kies samen", "Duw tegen de muur", "Zeg: stop, ik heb hulp nodig"],
       unknown: ["Duw tegen de muur", "Knijp in een kussen", "Adem als een draak"]
+    },
+    spannend: {
+      screen: ["Kies samen", "Ga naar je rustige plek", "Adem zacht"],
+      school: ["Kies samen", "Maak één kleine keuze", "Hand op je hart"],
+      selfCare: ["Kies samen", "Hand op je hart", "Maak één kleine keuze"],
+      eatDrink: ["Kies samen", "Maak één kleine keuze", "Adem zacht"],
+      social: ["Kies samen", "Vraag een knuffel", "Hand op je hart"],
+      active: ["Kies samen", "Hand op je hart", "Adem zacht"],
+      appointment: ["Kies samen", "Hand op je hart", "Vraag een knuffel"],
+      household: ["Kies samen", "Maak één kleine keuze", "Hand op je hart"],
+      creative: ["Kies samen", "Adem zacht", "Hand op je hart"],
+      bedtime: ["Hand op je hart", "Adem zacht", "Kies samen"],
+      transition: ["Kies samen", "Hand op je hart", "Maak één kleine keuze"],
+      unknown: ["Kies samen", "Hand op je hart", "Adem zacht"]
     },
     moe: {
       screen: ["Maak je lijf zwaar", "Maak het licht zachter", "Even niets"],
