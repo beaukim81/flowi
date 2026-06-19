@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { registerSW } from "virtual:pwa-register";
 import { ArrowLeft, BookOpen, CalendarDays, Check, Database, HeartHandshake, HelpCircle, Minus, Palette, Pause, Play, Plus, RotateCcw, ShieldCheck, Sparkles, Trash2, X } from "lucide-react";
 import { avatarAssets } from "../data/avatars";
@@ -13,7 +13,7 @@ import { seedDatabase } from "../db/seed";
 import { useLiveData } from "../hooks/useLiveData";
 import { useCurrentFlow } from "../state/appStore";
 import "../styles/index.css";
-import type { Avatar, CalmStrategy, DayPart, EmotionType, NeedType, PracticeExercise, Reward, Task, TaskTemplate, WeekDay } from "../types/schema";
+import type { Avatar, CalmStrategy, DayPart, EmotionHistoryEntry, EmotionType, NeedType, PracticeExercise, Reward, Task, TaskTemplate, WeekDay } from "../types/schema";
 import { AppShell, AvatarMascot, ChildTaskCard, DayPartCard, EmotionCard, ExerciseArt, icons, NeedCard, PageHeader, ParentCard, PrimaryButton, SecondaryButton, TaskArt, TaskCard } from "../components/ui";
 import type { TaskVisualKey } from "../utils/taskVisuals";
 
@@ -27,6 +27,14 @@ const dayParts: Record<DayPart, { title: string; icon: string }> = {
 
 const isDayPart = (value: string | null): value is DayPart => Boolean(value && value in dayParts);
 const safeReturnPath = (value: string | null) => value?.startsWith("/") ? value : null;
+const buildSearch = (params: Record<string, string | undefined>) => {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) search.set(key, value);
+  });
+  const result = search.toString();
+  return result ? `?${result}` : "";
+};
 const weekDays: { id: WeekDay; label: string; short: string }[] = [
   { id: "maandag", label: "Maandag", short: "Ma" },
   { id: "dinsdag", label: "Dinsdag", short: "Di" },
@@ -101,7 +109,8 @@ const shortExerciseTitle = (title: string) => ({
   "Kies uit je rustdoos": "Rustdoos",
   "Ga naar je rustige plek": "Rustige plek",
   "Zeg: stop, ik heb hulp nodig": "Vraag hulp",
-  "Pak iets zachts": "Iets zachts"
+  "Pak iets zachts": "Iets zachts",
+  "Kies samen": "Samen verder"
 } as Record<string, string>)[title] ?? title;
 const normalizeWeekDaySelection = (selection?: WeekDay[]) => selection?.length ? selection : weekDays.map((day) => day.id);
 const weekDaySelectionsOverlap = (left?: WeekDay[], right?: WeekDay[]) => {
@@ -248,7 +257,52 @@ const actionCompletionLabel = (title: string, emotion?: EmotionType) => {
   return "Je koos een helpend stapje.";
 };
 
-function growthResponseForReward(reward?: Reward) {
+function growthResponseForReward(reward?: Reward, history?: EmotionHistoryEntry) {
+  if (history) {
+    if (history.helpedRating === "Fijn gevoel vastgehouden" || history.emotionType === "blij") {
+      return {
+        title: "Flowi zag dat jij een fijn gevoel vasthield.",
+        subtitle: "De zon schijnt warm op jouw boom.",
+        careMode: "sun" as const
+      };
+    }
+    if (history.helpedRating === "Rustiger" || history.emotionType === "rustig") {
+      return {
+        title: "Flowi zag dat jij rust vond.",
+        subtitle: "Je boom krijgt rustig water om verder te groeien.",
+        careMode: "water" as const
+      };
+    }
+    if (history.emotionType === "verdrietig") {
+      return {
+        title: "Flowi zag dat jij liet zien dat je nabijheid nodig had.",
+        subtitle: "Je boom krijgt lieve hartjes voor jouw zachte stap.",
+        careMode: "heart" as const
+      };
+    }
+    if (history.emotionType === "spannend" || history.emotionType === "durfNiet") {
+      return {
+        title: "Flowi zag dat jij hulp zocht bij iets spannends.",
+        subtitle: "De zon schijnt even mee op jouw volgende stap.",
+        careMode: "sun" as const
+      };
+    }
+    if (history.emotionType === "boos") {
+      return {
+        title: "Flowi zag dat jij veilig met je grote gevoel omging.",
+        subtitle: "Je boom krijgt water na jouw sterke stap.",
+        careMode: "water" as const
+      };
+    }
+    if (history.emotionType === "teVeel" || history.emotionType === "overprikkeld" || history.emotionType === "moe") {
+      return {
+        title: "Flowi zag dat jij goed voelde wat je lijf nodig had.",
+        subtitle: "Je boom krijgt zachte zorg om verder te groeien.",
+        careMode: "heart" as const
+      };
+    }
+  }
+
   if (!reward) {
     return {
       title: "Flowi wacht bij jouw boom.",
@@ -986,6 +1040,9 @@ function ActionPage() {
   const isPositiveEmotion = selectedEmotion === "rustig" || selectedEmotion === "blij";
   const isHelpNowFlow = searchParams.get("source") === "help-now";
   const isCheckInDirectFlow = searchParams.get("source") === "check-in-direct";
+  const isTaskHelpFlow = searchParams.get("mode") === "task-help";
+  const returnTo = safeReturnPath(searchParams.get("returnTo")) ?? "/day";
+  const taskId = searchParams.get("taskId") ?? undefined;
   const action = calmStrategies.find((strategy) => strategy.id === actionId) ?? chooseStrategy(selectedEmotion, selectedNeed);
   const suggestedDuration = clampTimerSeconds(action.durationSeconds ?? 120);
   const [duration, setDuration] = useState(suggestedDuration);
@@ -1040,7 +1097,7 @@ function ActionPage() {
       navigate("/rewards");
       return;
     }
-    navigate("/reflection");
+    navigate(`/reflection${buildSearch({ mode: isTaskHelpFlow ? "task-help" : undefined, returnTo: isTaskHelpFlow ? returnTo : undefined, taskId: isTaskHelpFlow ? taskId : undefined })}`);
   };
   return (
     <>
@@ -1157,33 +1214,116 @@ function HelpNowPage() {
 
 function ReflectionPage() {
   const navigate = useNavigate();
-  const { selectedEmotion = "weetIkNiet", selectedNeed = "praatMetOuder", selectedActionId = calmStrategies[0].id } = useCurrentFlow();
-  const [note, setNote] = useState("");
+  const [searchParams] = useSearchParams();
+  const { selectedEmotion = "weetIkNiet", selectedNeed = "praatMetOuder", selectedActionId = calmStrategies[0].id, setEmotion, setNeed, setAction } = useCurrentFlow();
+  const isTaskHelpFlow = searchParams.get("mode") === "task-help";
+  const returnTo = safeReturnPath(searchParams.get("returnTo")) ?? "/day";
+  const taskId = searchParams.get("taskId") ?? undefined;
   const action = calmStrategies.find((strategy) => strategy.id === selectedActionId) ?? calmStrategies[0];
-  const save = async (rating: string) => {
-    await db.emotionHistory.add({ id: id(), childProfileId: "default-child", emotionType: selectedEmotion, needType: selectedNeed, actionId: selectedActionId, helpedRating: rating, note, createdAt: now() });
-    await db.rewards.add({ id: id(), childProfileId: "default-child", label: actionCompletionLabel(action.title, selectedEmotion), icon: "\uD83D\uDC9C", reason: action.title, earnedAt: now() });
-    navigate("/rewards");
+  const saveReflection = async (emotion: EmotionType, rating: string, giveReward = false) => {
+    await db.emotionHistory.add({
+      id: id(),
+      childProfileId: "default-child",
+      emotionType: emotion,
+      needType: emotion === "rustig" ? selectedNeed : defaultNeedForEmotion(emotion),
+      actionId: selectedActionId,
+      helpedRating: rating,
+      note: action.title,
+      createdAt: now()
+    });
+
+    if (giveReward) {
+      await db.rewards.add({
+        id: id(),
+        childProfileId: "default-child",
+        label: actionCompletionLabel(action.title, emotion),
+        icon: "\uD83D\uDC9C",
+        reason: action.title,
+        earnedAt: now()
+      });
+      navigate("/rewards");
+    }
   };
-  const reflectionChoices: { label: string; sublabel: string; emotion: EmotionType }[] = [
-    { label: "Rustiger", sublabel: "Mijn lijf voelt zachter", emotion: "rustig" },
-    { label: "Beetje beter", sublabel: "Het hielp een beetje", emotion: "blij" },
-    { label: "Nog niet", sublabel: "Ik heb nog hulp nodig", emotion: "spannend" },
-    { label: "Moeilijker", sublabel: "Dit paste nu niet", emotion: "verdrietig" }
-  ];
+
+  const reflectionChoices: { label: string; sublabel: string; emotion: EmotionType; reward?: boolean; completeTask?: boolean }[] = isTaskHelpFlow
+    ? [
+        { label: "Gelukt", sublabel: "Ik kan weer verder", emotion: "rustig", completeTask: true },
+        { label: "Nog boos", sublabel: "Ik heb nog hulp nodig", emotion: "boos" },
+        { label: "Nog verdrietig", sublabel: "Ik wil nabijheid", emotion: "verdrietig" },
+        { label: "Nog spannend", sublabel: "Doe het met mij samen", emotion: "spannend" },
+        { label: "Nog te veel", sublabel: "Alles komt nog hard binnen", emotion: "teVeel" },
+        { label: "Moe", sublabel: "Mijn lijf wil pauze", emotion: "moe" },
+        { label: "Weet ik niet", sublabel: "Help mij kiezen", emotion: "weetIkNiet" }
+      ]
+    : [
+        { label: "Rustiger", sublabel: "Mijn lijf voelt zachter", emotion: "rustig", reward: true },
+        { label: "Nog boos", sublabel: "Ik heb nog hulp nodig", emotion: "boos" },
+        { label: "Nog verdrietig", sublabel: "Ik wil nabijheid", emotion: "verdrietig" },
+        { label: "Nog spannend", sublabel: "Doe het met mij samen", emotion: "spannend" },
+        { label: "Nog te veel", sublabel: "Alles komt nog hard binnen", emotion: "teVeel" },
+        { label: "Moe", sublabel: "Mijn lijf wil pauze", emotion: "moe" },
+        { label: "Weet ik niet", sublabel: "Help mij kiezen", emotion: "weetIkNiet" }
+      ];
+
+  const handleChoice = async (emotion: EmotionType, reward = false, completeTask = false) => {
+    if (completeTask) {
+      await saveReflection(emotion, "Gelukt", false);
+      if (taskId) {
+        await db.taskCompletions.put({
+          id: `${taskId}-${today()}`,
+          childProfileId: "default-child",
+          taskId,
+          date: today(),
+          status: "done",
+          completedAt: now(),
+          moodBefore: selectedEmotion
+        });
+      }
+      navigate(returnTo);
+      return;
+    }
+    if (reward) {
+      if (isTaskHelpFlow) {
+        await saveReflection(emotion, "Rustiger", false);
+        navigate(returnTo);
+        return;
+      }
+      await saveReflection(emotion, "Rustiger", true);
+      return;
+    }
+
+    await saveReflection(emotion, "Nog niet", false);
+    const nextNeed = defaultNeedForEmotion(emotion);
+    const nextAction = chooseStrategy(emotion, nextNeed);
+    setEmotion(emotion);
+    setNeed(nextNeed);
+    setAction(nextAction.id);
+    navigate(`/action/${nextAction.id}${buildSearch({ source: "reflection-followup", mode: isTaskHelpFlow ? "task-help" : undefined, returnTo: isTaskHelpFlow ? returnTo : undefined, taskId: isTaskHelpFlow ? taskId : undefined })}`);
+  };
+
+  const handleTogether = async () => {
+    await saveReflection("wilHulp", "Samen verder", false);
+    const nextAction = chooseStrategy("wilHulp", "praatMetOuder");
+    setEmotion("wilHulp");
+    setNeed("praatMetOuder");
+    setAction(nextAction.id);
+    navigate(`/action/${nextAction.id}${buildSearch({ source: "reflection-followup", mode: isTaskHelpFlow ? "task-help" : undefined, returnTo: isTaskHelpFlow ? returnTo : undefined, taskId: isTaskHelpFlow ? taskId : undefined })}`);
+  };
+
   return (
     <>
       <div className="phone-screen px-4 pb-5 pt-4">
-        <PageHeader title="Wat hielp jou?" />
+        <PageHeader title="Hoe is het nu?" />
         <div className="grid grid-cols-2 gap-3">
           {reflectionChoices.map((choice) => (
             <EmotionCard
               key={choice.label}
               emotion={{ id: choice.emotion, label: choice.label, shortText: choice.sublabel, colors: "", marks: "reflectie" }}
-              onClick={() => save(choice.label)}
+              onClick={() => void handleChoice(choice.emotion, choice.reward, choice.completeTask)}
             />
           ))}
         </div>
+        <SecondaryButton className="mt-4 w-full" onClick={() => void handleTogether()}>Samen verder</SecondaryButton>
       </div>
     </>
   );
@@ -1244,11 +1384,12 @@ function ParentGate({ children }: { children: React.ReactNode }) {
   );
 }
 
-function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose: () => void; onNeedsHelp?: (reason: HelpReason) => void }) {
+function HelpStartOverlay({ task, onClose, onNeedsHelp, returnTo }: { task: Task; onClose: () => void; onNeedsHelp?: (reason: HelpReason) => void; returnTo: string }) {
   const navigate = useNavigate();
   const [reason, setReason] = useState<HelpReason | null>(null);
   const selectedHelp = reason ? helpReasons.find((item) => item.id === reason) : null;
   const strategy = reason ? fallbackStrategyForTask(task, reason) : null;
+  const isTogetherSuggestion = strategy?.title === "Kies samen";
   return (
     <div className="help-start-overlay fixed inset-0 z-50 grid place-items-end bg-navy/24 px-3 pt-10 backdrop-blur-sm sm:place-items-center">
       <section className="help-start-panel w-full max-w-md rounded-[1.9rem] bg-white p-4 shadow-[0_24px_70px_rgba(31,33,91,.24)]">
@@ -1272,28 +1413,29 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
       {selectedHelp && strategy ? (
         <div className="fixed inset-0 z-[60] grid place-items-end bg-navy/28 px-3 pb-24 pt-6 backdrop-blur-sm sm:place-items-center sm:p-3" onClick={() => setReason(null)}>
           <section className="help-suggestion-overlay w-full max-w-md rounded-[2rem] p-4 shadow-[0_24px_52px_rgba(50,44,108,.24)] ring-1 ring-lavender/12" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="text-left">
-                <h2 className="text-xl font-black text-navy">Flowi helpt!</h2>
-                <p className="mt-1 text-sm font-semibold leading-6 text-navy/72">{helpOverlayText(selectedHelp.id)}</p>
-                {helpOverlayFollowUp(task, selectedHelp.id) ? <p className="mt-1 text-sm font-semibold leading-6 text-navy/56">{helpOverlayFollowUp(task, selectedHelp.id)}</p> : null}
-              </div>
+            <div className="flex items-start justify-end gap-3">
               <button type="button" aria-label="Voorstel sluiten" onClick={() => setReason(null)} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/66 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.78)]">
                 {"\u00D7"}
               </button>
             </div>
             <button
               type="button"
-              className="help-suggestion-cta mt-4 block w-full rounded-[1.9rem] text-left transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30"
-              onClick={() => navigate(`/action/${strategy.id}`)}
+              className="help-suggestion-cta mt-2 block w-full rounded-[1.9rem] text-left transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-lavender/30"
+              onClick={() => navigate(`/action/${strategy.id}${buildSearch({ mode: "task-help", returnTo, taskId: task.id })}`)}
             >
-              <div className="flowi-picture-card help-suggestion-card min-h-[16rem]">
+              <div className={`flowi-picture-card help-suggestion-card min-h-[16rem] ${isTogetherSuggestion ? "flowi-picture-card-breathe" : ""}`}>
                 <span className="flowi-picture-art">
                   <ExerciseArt title={strategy.title} compact />
                 </span>
                 <span className="flowi-picture-label">{shortExerciseTitle(strategy.title)}</span>
               </div>
             </button>
+            {!isTogetherSuggestion ? (
+              <div className="mt-3 text-left">
+                <p className="text-sm font-semibold leading-6 text-navy/72">{helpOverlayText(selectedHelp.id)}</p>
+                {helpOverlayFollowUp(task, selectedHelp.id) ? <p className="mt-1 text-sm font-semibold leading-6 text-navy/56">{helpOverlayFollowUp(task, selectedHelp.id)}</p> : null}
+              </div>
+            ) : null}
           </section>
         </div>
       ) : null}
@@ -1324,6 +1466,7 @@ function DayPage() {
 
 function DayPartPage() {
   const { dayPart = "ochtend" } = useParams();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const part = dayPart as DayPart;
   const { data: tasks, reload } = useLiveData(() => db.tasks.where("dayPart").equals(part).toArray(), [] as Task[], [part]);
@@ -1365,7 +1508,7 @@ function DayPartPage() {
           </div>
         )}
       </div>
-      {helpTask ? <HelpStartOverlay task={helpTask} onClose={() => setHelpTask(null)} onNeedsHelp={(reason) => markNeedsHelp(helpTask, reason)} /> : null}
+      {helpTask ? <HelpStartOverlay task={helpTask} returnTo={`${location.pathname}${location.search}`} onClose={() => setHelpTask(null)} onNeedsHelp={(reason) => markNeedsHelp(helpTask, reason)} /> : null}
       </div>
     </>
   );
@@ -1933,6 +2076,7 @@ function TaskLibraryPage() {
 
 function RewardsPage() {
   const { data: rewards } = useLiveData(() => db.rewards.orderBy("earnedAt").reverse().toArray(), [], []);
+  const { data: emotionHistory } = useLiveData(() => db.emotionHistory.orderBy("createdAt").reverse().toArray(), [], []);
   const growthRewards = rewards.filter((reward) => reward.label !== "Ik maakte het af");
   const weekStart = startOfWeek();
   const weekRewards = growthRewards
@@ -1955,7 +2099,8 @@ function RewardsPage() {
   const careFallLefts = ["calc(var(--tree-x) + .15rem)", "calc(var(--tree-x) + .25rem)", "calc(var(--tree-x) + .35rem)", "calc(var(--tree-x) + .45rem)", "calc(var(--tree-x) + .55rem)"];
   const latestReward = growthRewards[0];
   const latestWeekReward = weekGrowthMoments[weekGrowthMoments.length - 1];
-  const growthMessage = growthResponseForReward(latestReward ?? latestWeekReward);
+  const latestHistory = emotionHistory[0];
+  const growthMessage = growthResponseForReward(latestReward ?? latestWeekReward, latestHistory);
   const careMode = growthMessage.careMode;
   return (
     <div className="phone-screen growth-garden px-4 pb-5 pt-2">

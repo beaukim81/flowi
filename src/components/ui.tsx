@@ -285,6 +285,7 @@ export function PracticeArt({ category, title, compact = false }: { category: st
 
 function exerciseVisualKey(title: string) {
   const text = title.toLowerCase();
+  if (text.includes("kies samen")) return "planTogether";
   if (text.includes("handen tegen elkaar")) return "handsPress";
   if (text.includes("dierenloop")) return "animalWalk";
   if (text.includes("schud je armen")) return "shakeArms";
@@ -340,7 +341,7 @@ function exerciseVisualKey(title: string) {
 }
 
 export function ExerciseArt({ title, compact = false }: { title: string; compact?: boolean }) {
-  if (title.toLowerCase().includes("knuffel")) {
+  if (title.toLowerCase().includes("knuffel") || title.toLowerCase().includes("kies samen")) {
     return (
       <span className={`exercise-art exercise-art-custom ${compact ? "compact" : ""}`} aria-hidden>
         <img
