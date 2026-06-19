@@ -1,5 +1,14 @@
 {
+  "cleanUrls": true,
   "rewrites": [
+    {
+      "source": "/privacy-policy",
+      "destination": "/privacy-policy.html"
+    },
+    {
+      "source": "/child-safety",
+      "destination": "/child-safety.html"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
