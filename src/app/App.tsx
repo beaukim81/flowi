@@ -655,10 +655,11 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
     inDeWar: {
       praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet"],
       rustigePlek: ["Maak één kleine keuze"],
-      ademen: ["Adem zacht"]
+      ademen: ["Adem zacht"],
+      creatief: ["Teken je warboel"]
     },
     snapNiet: {
-      praatMetOuder: ["Kies samen", "Zeg: ik weet het even niet"],
+      praatMetOuder: ["Kies samen", "Maak één kleine keuze", "Zeg: ik weet het even niet"],
       creatief: ["Teken je warboel"],
       rustigePlek: ["Maak één kleine keuze"],
       ademen: ["Adem zacht"]
@@ -670,7 +671,7 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
       ademen: ["Hand op je hart", "Adem zacht"]
     },
     wilHulp: {
-      praatMetOuder: ["Zeg: stop, ik heb hulp nodig", "Kies samen"],
+      praatMetOuder: ["Kies samen", "Zeg: stop, ik heb hulp nodig"],
       knuffel: ["Vraag een knuffel", "Pak iets zachts"]
     },
     weetIkNiet: {
@@ -710,8 +711,8 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
     moe: ["Zoek een rustig plekje", "Adem zacht", "Even niets"],
     inDeWar: ["Kies samen", "Maak één kleine keuze", "Zeg: ik weet het even niet"],
     snapNiet: ["Kies samen", "Teken je warboel", "Maak één kleine keuze"],
-    durfNiet: ["Hand op je hart", "Vraag een knuffel", "Kies samen"],
-    wilHulp: ["Zeg: stop, ik heb hulp nodig", "Kies samen"],
+    durfNiet: ["Kies samen", "Hand op je hart", "Vraag een knuffel"],
+    wilHulp: ["Kies samen", "Zeg: stop, ik heb hulp nodig"],
     weetIkNiet: ["Maak één kleine keuze", "Kies samen", "Adem zacht"]
   };
 
@@ -741,6 +742,41 @@ function emotionForNeed(need: NeedType): EmotionType {
     creatief: "rustig"
   };
   return map[need];
+}
+
+function defaultNeedForEmotion(emotion: EmotionType): NeedType {
+  const map: Partial<Record<EmotionType, NeedType>> = {
+    teVeel: "rustigePlek",
+    overprikkeld: "rustigePlek",
+    snapNiet: "praatMetOuder",
+    inDeWar: "praatMetOuder",
+    durfNiet: "praatMetOuder",
+    wilHulp: "praatMetOuder",
+    weetIkNiet: "praatMetOuder",
+    moe: "rustigePlek",
+    boos: "bewegen",
+    verdrietig: "knuffel",
+    spannend: "praatMetOuder",
+    druk: "bewegen",
+    superDruk: "bewegen",
+    rustig: "ademen",
+    blij: "creatief"
+  };
+  return map[emotion] ?? "praatMetOuder";
+}
+
+function needCardLabel(need: NeedType, emotion?: EmotionType) {
+  if (need === "praatMetOuder" && emotion && ["snapNiet", "inDeWar", "durfNiet", "wilHulp", "weetIkNiet"].includes(emotion)) {
+    return "Samen doen";
+  }
+  return undefined;
+}
+
+function needPageTitle(emotion?: EmotionType) {
+  if (!emotion) return "Wat heb je nu nodig?";
+  if (emotion === "rustig" || emotion === "blij") return "Wat wil je nu doen?";
+  if (["snapNiet", "inDeWar", "durfNiet", "wilHulp", "weetIkNiet", "teVeel", "overprikkeld"].includes(emotion)) return "Wat helpt nu?";
+  return "Wat heb je nu nodig?";
 }
 
 function helpNowNeedForTitle(title: string): NeedType {
@@ -790,13 +826,24 @@ function CheckInPage() {
 
 function UnsureEmotionPage() {
   const navigate = useNavigate();
-  const { setEmotion } = useCurrentFlow();
+  const { setEmotion, setNeed, setAction } = useCurrentFlow();
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
       <PageHeader title="Je koos: weet ik niet" />
       <div className="grid grid-cols-2 gap-3">
         {unsureEmotions.map((emotion) => (
-          <EmotionCard key={emotion.id} emotion={emotion} onClick={() => { setEmotion(emotion.id); navigate("/need"); }} />
+          <EmotionCard
+            key={emotion.id}
+            emotion={emotion}
+            onClick={() => {
+              const strategy = chooseStrategy(emotion.id);
+              const need = defaultNeedForEmotion(emotion.id);
+              setEmotion(emotion.id);
+              setNeed(need);
+              setAction(strategy.id);
+              navigate(`/action/${strategy.id}?source=check-in-direct`);
+            }}
+          />
         ))}
       </div>
     </div>
@@ -806,30 +853,29 @@ function UnsureEmotionPage() {
 function NeedPage() {
   const navigate = useNavigate();
   const { selectedEmotion, setNeed, setAction } = useCurrentFlow();
-  const { data: profile } = useProfile();
   const isPositiveEmotion = selectedEmotion === "rustig" || selectedEmotion === "blij";
   const guidedNeedsByEmotion: Partial<Record<EmotionType, NeedType[]>> = {
     rustig: ["ademen", "creatief"],
     blij: ["creatief", "ademen", "praatMetOuder"],
-    verdrietig: ["knuffel", "praatMetOuder", "creatief", "rustigePlek"],
-    boos: ["bewegen", "praatMetOuder", "knuffel", "ademen"],
-    spannend: ["praatMetOuder", "ademen", "rustigePlek", "knuffel"],
-    overprikkeld: ["rustigePlek", "koptelefoon", "evenAlleen", "ademen"],
-    teVeel: ["rustigePlek", "koptelefoon", "evenAlleen", "ademen"],
+    verdrietig: ["knuffel", "praatMetOuder", "rustigePlek", "creatief"],
+    boos: ["bewegen", "praatMetOuder", "ademen", "knuffel"],
+    spannend: ["praatMetOuder", "knuffel", "ademen", "rustigePlek"],
+    overprikkeld: ["rustigePlek", "koptelefoon", "ademen"],
+    teVeel: ["rustigePlek", "koptelefoon", "ademen"],
     druk: ["bewegen", "ademen", "praatMetOuder"],
     superDruk: ["bewegen", "ademen", "praatMetOuder"],
     moe: ["rustigePlek", "evenAlleen", "knuffel", "praatMetOuder"],
-    snapNiet: ["praatMetOuder", "rustigePlek", "creatief", "ademen"],
-    inDeWar: ["praatMetOuder", "rustigePlek", "creatief", "ademen"],
-    durfNiet: ["praatMetOuder", "knuffel", "ademen", "rustigePlek"],
+    snapNiet: ["praatMetOuder", "creatief", "ademen"],
+    inDeWar: ["praatMetOuder", "creatief", "ademen"],
+    durfNiet: ["praatMetOuder", "knuffel", "ademen"],
     wilHulp: ["praatMetOuder", "knuffel"],
-    weetIkNiet: ["praatMetOuder", "rustigePlek", "ademen", "creatief"]
+    weetIkNiet: ["praatMetOuder", "rustigePlek", "creatief"]
   };
   const preferredNeeds = selectedEmotion ? guidedNeedsByEmotion[selectedEmotion] : undefined;
   const filteredNeeds = preferredNeeds?.length ? needs.filter((need) => preferredNeeds.includes(need.id)) : needs;
   return (
     <div className="phone-screen px-4 pb-5 pt-4">
-      <PageHeader title={isPositiveEmotion ? "Wat wil je nu doen?" : "Wat heb je nu nodig?"} />
+      <PageHeader title={needPageTitle(selectedEmotion)} />
       {isPositiveEmotion ? (
         <section className="mb-4 rounded-[1.55rem] bg-gradient-to-b from-mint/16 via-white to-sky/12 p-4 shadow-card">
           <h2 className="text-lg font-black text-navy">Dit voelt al goed</h2>
@@ -846,6 +892,7 @@ function NeedPage() {
           <NeedCard
             key={need.id}
             need={need}
+            label={needCardLabel(need.id, selectedEmotion)}
             onClick={() => {
               const strategy = chooseStrategy(selectedEmotion, need.id);
               setNeed(need.id);
@@ -866,6 +913,7 @@ function ActionPage() {
   const { selectedEmotion, selectedNeed } = useCurrentFlow();
   const isPositiveEmotion = selectedEmotion === "rustig" || selectedEmotion === "blij";
   const isHelpNowFlow = searchParams.get("source") === "help-now";
+  const isCheckInDirectFlow = searchParams.get("source") === "check-in-direct";
   const action = calmStrategies.find((strategy) => strategy.id === actionId) ?? chooseStrategy(selectedEmotion, selectedNeed);
   const suggestedDuration = clampTimerSeconds(action.durationSeconds ?? 120);
   const [duration, setDuration] = useState(suggestedDuration);
@@ -966,7 +1014,7 @@ function ActionPage() {
           <button type="button" onClick={() => setTimerOpen(true)} className="mt-5 min-h-12 w-full rounded-[1.35rem] bg-white px-5 font-extrabold text-lavender shadow-card">Timer gebruiken</button>
         )}
         <div className="mt-4 grid gap-2">
-          <SecondaryButton onClick={() => navigate("/need")}>Iets anders kiezen</SecondaryButton>
+          <SecondaryButton onClick={() => navigate("/need")}>{isCheckInDirectFlow ? "Toch iets anders kiezen" : "Iets anders kiezen"}</SecondaryButton>
         </div>
       </section>
 
