@@ -6,7 +6,7 @@ Dit document kun je gebruiken als kant-en-klare basis voor Google Play Console.
 
 - **Appnaam:** `Flowi`
 - **Ontwikkelaarsnaam / aanbieder:** `Flowi by Kim`
-- **Support e-mail:** `mailz4kim@gmail.com`
+- **Support e-mail:** `studiomikkie@gmail.com`
 - **Privacy policy URL:** gebruik de live URL van `https://[jouw-domein-of-vercel-url]/privacy-policy`
 - **Kind & veiligheid URL:** optioneel als extra verwijzing: `https://[jouw-domein-of-vercel-url]/child-safety`
 
@@ -115,7 +115,7 @@ Gebruik deze formulering als toelichting:
 
 Als Play Console om supportgegevens vraagt:
 
-- **Support e-mail:** `mailz4kim@gmail.com`
+- **Support e-mail:** `studiomikkie@gmail.com`
 - **Website:** mag leeg blijven als dit niet verplicht is in het betreffende veld
 
 ## Wat je nog moet aanleveren in Play Console

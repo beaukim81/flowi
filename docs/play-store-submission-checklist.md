@@ -14,7 +14,7 @@ Dit is de laatste lijst om Flowi echt klaar te zetten voor Google Play.
 ## Vastgezet voor publicatie
 
 - Publieke aanbieder: `Flowi by Kim`
-- Publiek support e-mailadres: `mailz4kim@gmail.com`
+- Publiek support e-mailadres: `studiomikkie@gmail.com`
 - Developer account:
   - nog aan te maken
   - valt daardoor onder de nieuwere Play Console-regels voor persoonlijke accounts
