@@ -167,6 +167,47 @@ const exerciseCaregiverTip = (exercise: PracticeExercise) => ({
   "wiebelen-stoppen": "Samen het verschil voelen tussen bewegen en stil worden maakt deze oefening vaak sterk. Korte, duidelijke stiltes zijn meestal genoeg.",
   "rustdoos-kiezen": "Rustig samen kiezen uit één ding tegelijk helpt vaak meer dan veel opties aanbieden. Zo blijft het overzichtelijk."
 } as Record<string, string>)[exercise.id] ?? "Blijf rustig dichtbij en houd de oefening klein en duidelijk.";
+
+const simplifiedExerciseSteps = (exercise: PracticeExercise) => {
+  const custom: Partial<Record<string, string[]>> = {
+    "blaadjesadem": ["Handen op je buik.", "Adem in.", "Blaas zacht uit."],
+    "ballonadem": ["Hand op je buik.", "Buik groot.", "Buik weer klein."],
+    "bloem-kaars": ["Ruik de bloem.", "Adem in.", "Blaas de kaars uit."],
+    "hand-op-hart": ["Hand op je hart.", "Adem in.", "Adem uit."],
+    "zware-deken": ["Ga zitten of liggen.", "Laat je lijf zwaar worden.", "Rust nog even."],
+    "kijk-een-ding": ["Kies een ding.", "Kijk er rustig naar.", "Adem drie keer."],
+    "vijf-dingen-zien": ["Noem 5 dingen die je ziet.", "Noem 4 dingen die je voelt.", "Noem 3 dingen die je hoort."],
+    "muur-duwen": ["Zet je voeten stevig.", "Duw tegen de muur.", "Laat weer los."],
+    "spring-ster": ["Sta stevig.", "Spring 10 keer.", "Sta weer stil."],
+    "armen-schudden": ["Schud je handen.", "Schud je armen.", "Stop langzaam."],
+    "dierenloop": ["Kies een dier.", "Loop als dat dier.", "Loop rustig terug."],
+    "eerste-stap": ["Kies een taak.", "Doe alleen stap 1.", "Stop daarna even."],
+    "mini-keuze": ["Kies 1 klein ding.", "Kies hulp of alleen.", "1 keuze is genoeg."],
+    "vraag-hulp": ["Zeg: wil je mij helpen?", "Wijs aan wat lastig is.", "Doe het samen."],
+    "stop-zin": ["Zet je voeten neer.", "Zeg: stop, ik heb hulp nodig.", "Adem uit."],
+    "teken-wolk": ["Pak papier.", "Teken een wolk.", "Teken je gevoel erin."],
+    "kleur-rust": ["Kies 2 kleuren.", "Kleur langzaam.", "Stop als het goed voelt."],
+    "schildpad-pauze": ["Ga zitten.", "Maak jezelf klein.", "Kom langzaam omhoog."],
+    "voeten-voelen": ["Zet je voeten neer.", "Druk in de vloer.", "Adem uit."],
+    "kaak-los": ["Maak je voorhoofd zacht.", "Laat je kaken los.", "Adem uit."],
+    "robot-lappenpop": ["Maak je lijf stevig.", "Tel tot 3.", "Maak je lijf slap."],
+    "handen-duwen": ["Handen tegen elkaar.", "Duw 5 tellen.", "Laat los."],
+    "slakkenstap": ["Sta op.", "Zet een langzame stap.", "Doe nog een stap."],
+    "waterpauze": ["Pak water.", "Neem een slok.", "Neem nog een slok."],
+    "geluid-zachter": ["Maak geluid zachter.", "Of houd je oren dicht.", "Adem uit."],
+    "licht-zachter": ["Vraag om zachter licht.", "Kijk weg van fel licht.", "Knipper rustig."],
+    "wacht-hand": ["Steek een hand op.", "Tel je vingers.", "Wacht nog even."],
+    "samen-plan": ["Zeg wat lastig is.", "Kies samen stap 1.", "Begin met stap 1."],
+    "duimkeuze": ["Duim omhoog: lukt.", "Duim opzij: beetje hulp.", "Duim omlaag: stop even."],
+    "veilig-boos": ["Ga naar een veilige plek.", "Stamp of duw stevig.", "Stop en adem uit."],
+    "slaapadem": ["Ga zitten of liggen.", "Adem in.", "Adem langer uit."],
+    "regenboog-adem": ["Wijs met je vinger.", "Adem omhoog.", "Adem omlaag."],
+    "wiebelen-stoppen": ["Wiebel 5 tellen.", "Stop helemaal stil.", "Voel je voeten."],
+    "rustdoos-kiezen": ["Kijk in je rustdoos.", "Kies 1 ding.", "Gebruik het even."]
+  };
+
+  return custom[exercise.id] ?? exercise.steps.slice(0, 3);
+};
 const actionHelpOptions = (title: string) => {
   const text = title.toLowerCase();
   if (text.includes("knuffel") || text.includes("zachts") || text.includes("kussen")) return ["Blijf even bij mij", "Doe het met mij samen", "Help mij weer rustig worden"];
@@ -479,6 +520,20 @@ function helpOverlayText(reason: HelpReason) {
   }
 }
 
+function helpOverlayFollowUp(task: Task, reason: HelpReason) {
+  const context = inferTaskContext(task);
+  if (reason === "boos" && ["school", "selfCare", "appointment", "transition"].includes(context)) {
+    return "Eerst rustig worden. Daarna kies je samen stap 1.";
+  }
+  if (reason === "spannend") {
+    return "Je hoeft het niet alleen te doen.";
+  }
+  if (reason === "inDeWar") {
+    return "Samen klein maken helpt vaak het best.";
+  }
+  return "";
+}
+
 type HelpTaskContext =
   | "selfCare"
   | "eatDrink"
@@ -537,15 +592,15 @@ function fallbackStrategyForTask(task: Task, reason: HelpReason) {
     boos: {
       social: ["Kies samen", "Zeg: stop, ik heb hulp nodig", "Knijp in een kussen"],
       appointment: ["Kies samen", "Zeg: stop, ik heb hulp nodig", "Knijp in een kussen"],
-      school: ["Duw tegen de muur", "Stamp 10 keer", "Zeg: stop, ik heb hulp nodig"],
-      selfCare: ["Duw tegen de muur", "Knijp in een kussen", "Stamp 10 keer"],
+      school: ["Kies samen", "Duw tegen de muur", "Zeg: stop, ik heb hulp nodig"],
+      selfCare: ["Kies samen", "Duw tegen de muur", "Knijp in een kussen"],
       eatDrink: ["Knijp in een kussen", "Duw tegen de muur", "Adem als een draak"],
       active: ["Duw tegen de muur", "Stamp 10 keer", "Adem als een draak"],
       household: ["Duw tegen de muur", "Knijp in een kussen", "Stamp 10 keer"],
       creative: ["Knijp in een kussen", "Adem als een draak", "Zeg: stop, ik heb hulp nodig"],
       bedtime: ["Knijp in een kussen", "Adem als een draak", "Zeg: stop, ik heb hulp nodig"],
       transition: ["Kies samen", "Duw tegen de muur", "Zeg: stop, ik heb hulp nodig"],
-      unknown: ["Duw tegen de muur", "Knijp in een kussen", "Adem als een draak"]
+      unknown: ["Kies samen", "Duw tegen de muur", "Adem als een draak"]
     },
     spannend: {
       screen: ["Kies samen", "Ga naar je rustige plek", "Adem zacht"],
@@ -718,7 +773,7 @@ function chooseStrategy(emotion?: EmotionType, need?: NeedType) {
   const emotionOnlyFallbacks: Partial<Record<EmotionType, string[]>> = {
     rustig: ["Geef je rustkracht water", "Bewaar dit gevoel"],
     blij: ["Kies iets fijns", "Bewaar dit gevoel"],
-    verdrietig: ["Vraag een knuffel", "Kies samen", "Hand op je hart"],
+    verdrietig: ["Vraag een knuffel", "Kies samen", "Zoek een rustig plekje"],
     boos: ["Duw tegen de muur", "Kies samen", "Adem als een draak"],
     spannend: ["Kies samen", "Hand op je hart", "Ga naar je rustige plek"],
     teVeel: ["Ga naar je rustige plek", "Zet je koptelefoon op", "Maak het licht zachter"],
@@ -1220,6 +1275,8 @@ function HelpStartOverlay({ task, onClose, onNeedsHelp }: { task: Task; onClose:
             <div className="flex items-start justify-between gap-3">
               <div className="text-left">
                 <h2 className="text-xl font-black text-navy">Flowi helpt!</h2>
+                <p className="mt-1 text-sm font-semibold leading-6 text-navy/72">{helpOverlayText(selectedHelp.id)}</p>
+                {helpOverlayFollowUp(task, selectedHelp.id) ? <p className="mt-1 text-sm font-semibold leading-6 text-navy/56">{helpOverlayFollowUp(task, selectedHelp.id)}</p> : null}
               </div>
               <button type="button" aria-label="Voorstel sluiten" onClick={() => setReason(null)} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/66 text-lavender shadow-[inset_0_1px_0_rgba(255,255,255,.78)]">
                 {"\u00D7"}
@@ -2068,7 +2125,7 @@ function PracticePage() {
         <section className="mt-3 rounded-[1.5rem] bg-white/92 p-4 shadow-card">
           <h2 className="font-black">Doe maar zo</h2>
           <ol className="mt-2 grid gap-2">
-            {activeExercise.steps.map((step, index) => <li key={step} className="flex gap-3 rounded-2xl bg-lavender/8 p-3 text-sm font-medium leading-6 text-navy/68"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-lavender shadow-card">{index + 1}</span>{step}</li>)}
+            {simplifiedExerciseSteps(activeExercise).map((step, index) => <li key={step} className="flex gap-3 rounded-2xl bg-lavender/8 p-3 text-sm font-medium leading-6 text-navy/68"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-lavender shadow-card">{index + 1}</span>{step}</li>)}
           </ol>
         </section>
       </div>
